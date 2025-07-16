@@ -1,4 +1,3 @@
-import * as React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
 import Button from "@/components/buttons/Button";

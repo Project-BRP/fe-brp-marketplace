@@ -1,5 +1,4 @@
 import Typography from "@/components/Typography";
-import React from "react";
 import EmailForm from "./EmailForm";
 import { useRouter } from "next/navigation";
 import { IoArrowForward } from "react-icons/io5";
