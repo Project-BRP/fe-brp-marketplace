@@ -35,10 +35,10 @@ const ProductCard = ({
   };
 
   return (
-    <Card className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-border">
-      <CardContent className="p-0">
+    <Card className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-border flex flex-col justify-between">
+      <CardContent className="p-0 h-full flex flex-col justify-start">
         {/* Product Image */}
-        <div className="relative overflow-hidden rounded-t-lg">
+        <div className="relative overflow-hidden rounded-t-lg flex flex-col justify-between">
           <NextImage
             src="/dashboard/Hero.jpg" // Fallback to placeholder if no image provided
             alt={name}
@@ -65,19 +65,16 @@ const ProductCard = ({
           </p>
 
           {/* Price */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <span className="text-2xl font-bold text-primary">
-                {formatPrice(price)}
-              </span>
-              <span className="text-muted-foreground text-sm ml-1">
-                /{unit}
-              </span>
-            </div>
-          </div>
         </div>
       </CardContent>
-
+      <div className="flex items-center justify-between mb-4 px-5">
+        <div>
+          <span className="text-2xl font-bold text-primary">
+            {formatPrice(price)}
+          </span>
+          <span className="text-muted-foreground text-sm ml-1">/{unit}</span>
+        </div>
+      </div>
       <CardFooter className="p-4 pt-0 flex gap-2">
         <Button
           variant="outline"
@@ -89,8 +86,9 @@ const ProductCard = ({
           Detail
         </Button>
         <Button
+          variant="green"
           size="sm"
-          className="flex-1 bg-gradient-primary hover:bg-primary-dark shadow-button"
+          className="flex-1 hover:bg-primary-dark shadow-button"
           onClick={() => onAddToCart(id)}
         >
           <ShoppingCart className="h-4 w-4 mr-2" />

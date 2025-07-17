@@ -4,6 +4,7 @@ import { Filter, X, Search } from "lucide-react";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/buttons/Button";
 import LabelText from "@/components/form/LabelText";
+import { Input } from "@/components/InputLovable";
 
 interface FilterBarProps {
   onFilterChange: (filters: FilterOptions) => void;
@@ -127,7 +128,7 @@ const FilterBar = ({ onFilterChange, activeFilters }: FilterBarProps) => {
             </LabelText>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input
+              <Input
                 placeholder="Nama produk..."
                 value={activeFilters.searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
@@ -170,7 +171,7 @@ const FilterBar = ({ onFilterChange, activeFilters }: FilterBarProps) => {
               Range Harga (IDR)
             </LabelText>
             <div className="flex items-center gap-2">
-              <input
+              <Input
                 type="number"
                 placeholder="Min"
                 value={activeFilters.priceRange.min || ""}
@@ -179,7 +180,7 @@ const FilterBar = ({ onFilterChange, activeFilters }: FilterBarProps) => {
                 id={""}
               />
               <span className="text-muted-foreground">-</span>
-              <input
+              <Input
                 type="number"
                 placeholder="Max"
                 value={activeFilters.priceRange.max || ""}

@@ -250,14 +250,17 @@ const Index = () => {
               </Typography>
               <div className="flex flex-wrap gap-4">
                 <Button
+                  variant="green"
                   size="lg"
-                  className="bg-gradient-primary hover:bg-primary-dark shadow-button"
+                  className="hover:bg-primary-dark shadow-button"
+                  onClick={() => {
+                    const catalogSection =
+                      document.querySelector("#catalog-section");
+                    catalogSection?.scrollIntoView({ behavior: "smooth" });
+                  }}
                 >
                   <Leaf className="h-5 w-5 mr-2" />
                   Lihat Katalog
-                </Button>
-                <Button variant="outline" size="lg" className="hover:bg-accent">
-                  Pelajari Lebih Lanjut
                 </Button>
               </div>
             </div>
@@ -315,7 +318,7 @@ const Index = () => {
       </section>
 
       {/* Products Catalog */}
-      <section className="py-12 px-4">
+      <section className="py-12 px-4 catalog-section" id="catalog-section">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">

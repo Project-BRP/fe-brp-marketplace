@@ -30,18 +30,6 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
             </div>
           </div>
 
-          {/* Search Bar - Hidden on mobile */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Cari pupuk NPK (contoh: 15-15-15)"
-                className="pl-10 border-border focus:ring-primary"
-                id={""}
-              />
-            </div>
-          </div>
-
           {/* Cart and Mobile Menu */}
           <div className="flex items-center space-x-4">
             {/* Cart Button */}
