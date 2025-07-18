@@ -12,6 +12,9 @@ import Button from "@/components/buttons/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Separator } from "@/components/Separator";
+import NextImage from "@/components/NextImage";
+import Typography from "@/components/Typography";
+import { Input } from "@/components/InputLovable";
 
 interface ProductDetailProps {
   productId: string;
@@ -85,11 +88,14 @@ const ProductDetail = ({
         <div className="space-y-4">
           <Card className="border-border shadow-card">
             <CardContent className="p-0">
-              {/* <img
-								src={product.image.src}
-								alt={product.name}
-								className="w-full h-96 object-cover rounded-lg"
-							/> */}
+              <NextImage
+                src="/dashboard/Hero.jpg"
+                alt={product.name}
+                className="w-full h-full object-cover"
+                imgClassName="object-cover w-full h-full"
+                width={600}
+                height={400}
+              />
             </CardContent>
           </Card>
 
@@ -97,20 +103,35 @@ const ProductDetail = ({
           <div className="grid grid-cols-3 gap-2">
             <Card className="border-border">
               <CardContent className="p-3 text-center">
-                <Leaf className="h-6 w-6 text-primary mx-auto mb-1" />
-                <p className="text-xs text-muted-foreground">Organik</p>
+                <Leaf className="size-4 sm:size-6 text-primary mx-auto mb-1" />
+                <Typography
+                  variant="p"
+                  className="text-xs md:text-xs text-muted-foreground"
+                >
+                  Organik
+                </Typography>
               </CardContent>
             </Card>
             <Card className="border-border">
               <CardContent className="p-3 text-center">
-                <Package className="h-6 w-6 text-primary mx-auto mb-1" />
-                <p className="text-xs text-muted-foreground">50kg</p>
+                <Package className="size-4 sm:size-6 text-primary mx-auto mb-1" />
+                <Typography
+                  variant="p"
+                  className="text-xs md:text-xs text-muted-foreground"
+                >
+                  50kg
+                </Typography>
               </CardContent>
             </Card>
             <Card className="border-border">
               <CardContent className="p-3 text-center">
-                <Award className="h-6 w-6 text-primary mx-auto mb-1" />
-                <p className="text-xs text-muted-foreground">Premium</p>
+                <Award className="size-4 sm:size-6 text-primary mx-auto mb-1" />
+                <Typography
+                  variant="p"
+                  className="text-xs md:text-xs text-muted-foreground"
+                >
+                  Premium
+                </Typography>
               </CardContent>
             </Card>
           </div>
@@ -119,41 +140,56 @@ const ProductDetail = ({
         {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <Badge
-              variant="secondary"
-              className="mb-3 bg-primary text-primary-foreground"
-            >
-              NPK {product.npkFormula}
+            <Badge variant="secondary" className="mb-3 bg-primary ">
+              <Typography
+                variant="p"
+                className="text-sm md:text-sm text-primary-foreground"
+              >
+                Pupuk {product.npkFormula}
+              </Typography>
             </Badge>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+
+            <Typography
+              variant="h1"
+              className="text-xl md:text-3xl font-bold text-foreground mb-2"
+            >
               {product.name}
-            </h1>
-            <p className="text-muted-foreground text-lg">
+            </Typography>
+            <Typography
+              variant="p"
+              className="text-muted-foreground text-sm md:text-lg leading-relaxed"
+            >
               {product.description}
-            </p>
+            </Typography>
           </div>
 
           {/* Price and Purchase */}
           <Card className="border-border shadow-card">
             <CardContent className="p-6">
               <div className="space-y-4">
-                <div>
-                  <span className="text-3xl font-bold text-primary">
+                <div className="flex flex-row items-center justify-center">
+                  <Typography variant="h3" className="font-bold text-primary">
                     {formatPrice(product.price)}
-                  </span>
-                  <span className="text-muted-foreground ml-2">
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    className="text-muted-foreground ml-2"
+                  >
                     / {product.unit}
-                  </span>
+                  </Typography>
                 </div>
 
                 <Separator />
 
                 {/* Quantity Selector */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
+                <div className="flex flex-row items-center justify-center gap-4">
+                  <Typography
+                    variant="h4"
+                    className="font-semibold text-foreground"
+                  >
                     Jumlah
-                  </label>
-                  <div className="flex items-center gap-3">
+                  </Typography>
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -162,13 +198,13 @@ const ProductDetail = ({
                       <Minus className="h-4 w-4" />
                     </Button>
 
-                    <input
+                    <Input
                       type="number"
                       value={quantity}
                       onChange={(e) =>
                         setQuantity(Math.max(1, parseInt(e.target.value) || 1))
                       }
-                      className="w-20 text-center"
+                      className="w-20 text-center text-sm sm:text-base lg:text-lg"
                       min="1"
                       id={""}
                     />
@@ -186,22 +222,34 @@ const ProductDetail = ({
                 {/* Total Price */}
                 <div className="bg-accent p-4 rounded-lg">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-foreground">
+                    <Typography
+                      variant="h6"
+                      className="font-medium text-foreground"
+                    >
                       Total Harga:
-                    </span>
-                    <span className="text-xl font-bold text-primary">
+                    </Typography>
+                    <Typography
+                      variant="h3"
+                      className=" font-bold text-primary"
+                    >
                       {formatPrice(totalPrice)}
-                    </span>
+                    </Typography>
                   </div>
                 </div>
 
                 {/* Add to Cart Button */}
                 <Button
+                  variant="green"
                   onClick={handleAddToCart}
-                  className="w-full bg-gradient-primary hover:bg-primary-dark shadow-button text-lg py-6"
+                  className="w-full  hover:bg-primary-dark shadow-button text-lg py-6"
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
-                  Tambah ke Keranjang
+                  <Typography
+                    variant="h5"
+                    className="text-primary-foreground font-semibold"
+                  >
+                    Tambah ke Keranjang
+                  </Typography>
                 </Button>
               </div>
             </CardContent>
@@ -210,14 +258,20 @@ const ProductDetail = ({
           {/* Product Benefits */}
           <Card className="border-border shadow-card">
             <CardHeader>
-              <CardTitle className="text-lg">Manfaat & Keunggulan</CardTitle>
+              <CardTitle>
+                <Typography variant="h3" className="font-bold">
+                  Manfaat & Keunggulan
+                </Typography>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
                 {product.benefits.map((benefit, index) => (
                   <li key={index} className="flex items-start">
                     <div className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0" />
-                    <span className="text-muted-foreground">{benefit}</span>
+                    <Typography variant="p" className="text-muted-foreground">
+                      {benefit}
+                    </Typography>
                   </li>
                 ))}
               </ul>
@@ -231,63 +285,97 @@ const ProductDetail = ({
         {/* Composition */}
         <Card className="border-border shadow-card">
           <CardHeader>
-            <CardTitle>Komposisi</CardTitle>
+            <CardTitle>
+              <Typography variant="h3" className="font-bold">
+                Komposisi
+              </Typography>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Nitrogen (N):</span>
-              <span className="font-medium text-foreground">
+              <Typography variant="p" className="text-muted-foreground">
+                Nitrogen (N):
+              </Typography>
+              <Typography variant="p" className="font-medium text-foreground">
                 {product.composition.nitrogen}
-              </span>
+              </Typography>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Fosfor (P):</span>
-              <span className="font-medium text-foreground">
+              <Typography variant="p" className="text-muted-foreground">
+                Fosfor (P):
+              </Typography>
+              <Typography variant="p" className="font-medium text-foreground">
                 {product.composition.phosphor}
-              </span>
+              </Typography>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Kalium (K):</span>
-              <span className="font-medium text-foreground">
+              <Typography variant="p" className="text-muted-foreground">
+                Kalium (K):
+              </Typography>
+              <Typography variant="p" className="font-medium text-foreground">
                 {product.composition.potassium}
-              </span>
+              </Typography>
             </div>
             <Separator />
-            <p className="text-sm text-muted-foreground">
+            <Typography variant="p" className="text-sm text-muted-foreground">
               {product.composition.other}
-            </p>
+            </Typography>
           </CardContent>
         </Card>
 
         {/* Specifications */}
         <Card className="border-border shadow-card">
           <CardHeader>
-            <CardTitle>Spesifikasi</CardTitle>
+            <CardTitle>
+              <Typography variant="h3" className="font-bold">
+                Spesifikasi
+              </Typography>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Berat:</span>
-              <span className="font-medium text-foreground">
+              <Typography variant="p" className="text-muted-foreground">
+                Berat:
+              </Typography>
+              <Typography
+                variant="p"
+                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
+              >
                 {product.specifications.weight}
-              </span>
+              </Typography>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Kemasan:</span>
-              <span className="font-medium text-foreground">
+              <Typography variant="p" className="text-muted-foreground">
+                Kemasan:
+              </Typography>
+              <Typography
+                variant="p"
+                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
+              >
                 {product.specifications.packaging}
-              </span>
+              </Typography>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Penyimpanan:</span>
-              <span className="font-medium text-foreground">
+              <Typography variant="p" className="text-muted-foreground">
+                Penyimpanan:
+              </Typography>
+              <Typography
+                variant="p"
+                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
+              >
                 {product.specifications.storage}
-              </span>
+              </Typography>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Masa Simpan:</span>
-              <span className="font-medium text-foreground">
+              <Typography variant="p" className="text-muted-foreground">
+                Masa Simpan:
+              </Typography>
+              <Typography
+                variant="p"
+                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
+              >
                 {product.specifications.expiry}
-              </span>
+              </Typography>
             </div>
           </CardContent>
         </Card>
@@ -296,12 +384,19 @@ const ProductDetail = ({
       {/* Usage Instructions */}
       <Card className="border-border shadow-card mt-6">
         <CardHeader>
-          <CardTitle>Cara Penggunaan</CardTitle>
+          <CardTitle>
+            <Typography variant="h3" className="font-bold">
+              Cara Penggunaan
+            </Typography>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground leading-relaxed">
+          <Typography
+            variant="p"
+            className="text-muted-foreground leading-relaxed"
+          >
             {product.usage}
-          </p>
+          </Typography>
         </CardContent>
       </Card>
     </div>
