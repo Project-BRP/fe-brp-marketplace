@@ -156,11 +156,17 @@ const Index = () => {
 
   if (currentPage === "product-detail") {
     return (
-      <ProductDetail
-        productId={selectedProductId}
-        onBack={() => setCurrentPage("catalog")}
-        onAddToCart={handleAddToCart}
-      />
+      <>
+        <Navbar
+          cartItemCount={cartItemCount}
+          onCartClick={() => setCurrentPage("cart")}
+        />
+        <ProductDetail
+          productId={selectedProductId}
+          onBack={() => setCurrentPage("catalog")}
+          onAddToCart={handleAddToCart}
+        />
+      </>
     );
   }
 
