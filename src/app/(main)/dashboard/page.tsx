@@ -233,14 +233,14 @@ const Index = () => {
               </Badge>
               <Typography
                 variant="h2"
-                className="text-4xl lg:text-6xl font-bold text-foreground leading-tight"
+                className="text-3xl sm:text-4xl md:text-4xl lg:text-6xl font-bold text-foreground leading-tight"
               >
                 Solusi Terbaik untuk
                 <span className="text-primary"> Pertanian Modern</span>
               </Typography>
               <Typography
                 variant="p"
-                className="text-xl text-muted-foreground leading-relaxed"
+                className="sm:text-xl md:text-xl text-base text-muted-foreground leading-relaxed"
               >
                 PT. Bumi Rekayasa Persada menyediakan pupuk NPK berkualitas
                 tinggi untuk meningkatkan produktivitas pertanian Anda.
