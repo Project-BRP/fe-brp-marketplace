@@ -6,6 +6,8 @@ import { Textarea } from "@/components/TextArea";
 import { RadioGroup, RadioGroupItem } from "@/components/RadioGroup";
 import { Separator } from "@/components/Separator";
 import { CartItem } from "./Cart";
+import Typography from "@/components/Typography";
+import { Input } from "@/components/InputLovable";
 
 interface CheckoutProps {
   cartItems: CartItem[];
@@ -149,14 +151,19 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <User className="h-5 w-5 mr-2 text-primary" />
-                  Informasi Pelanggan
+                  <Typography
+                    variant="h6"
+                    className="text-lg font-bold sm:text-xl md:text-2xl"
+                  >
+                    Informasi Pelanggan
+                  </Typography>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label htmlFor="name">Nama Lengkap *</label>
-                    <input
+                    <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) =>
@@ -168,7 +175,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="phone">Nomor Telepon *</label>
-                    <input
+                    <Input
                       id="phone"
                       type="tel"
                       value={formData.phone}
@@ -182,7 +189,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="email">Email</label>
-                  <input
+                  <Input
                     id="email"
                     type="email"
                     value={formData.email}
@@ -198,7 +205,12 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <MapPin className="h-5 w-5 mr-2 text-primary" />
-                  Alamat Pengiriman
+                  <Typography
+                    variant="h6"
+                    className="min-[400px]:text-2xl text-lg font-bold"
+                  >
+                    Alamat Pengiriman
+                  </Typography>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -217,7 +229,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <label htmlFor="city">Kota/Kabupaten *</label>
-                    <input
+                    <Input
                       id="city"
                       value={formData.city}
                       onChange={(e) =>
@@ -229,7 +241,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="postalCode">Kode Pos *</label>
-                    <input
+                    <Input
                       id="postalCode"
                       value={formData.postalCode}
                       onChange={(e) =>
@@ -241,7 +253,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="province">Provinsi *</label>
-                    <input
+                    <Input
                       id="province"
                       value={formData.province}
                       onChange={(e) =>
@@ -271,7 +283,12 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Truck className="h-5 w-5 mr-2 text-primary" />
-                  Metode Pengiriman
+                  <Typography
+                    variant="h6"
+                    className="min-[400px]:text-2xl text-lg font-bold"
+                  >
+                    Metode Pengiriman
+                  </Typography>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -316,7 +333,12 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CreditCard className="h-5 w-5 mr-2 text-primary" />
-                  Metode Pembayaran
+                  <Typography
+                    variant="h6"
+                    className="min-[400px]:text-2xl text-lg font-bold"
+                  >
+                    Metode Pembayaran
+                  </Typography>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -354,7 +376,14 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
         <div className="lg:col-span-1">
           <Card className="border-border shadow-card sticky top-6">
             <CardHeader>
-              <CardTitle>Ringkasan Pesanan</CardTitle>
+              <CardTitle>
+                <Typography
+                  variant="h6"
+                  className="min-[400px]:text-2xl text-lg font-bold"
+                >
+                  Ringkasan Pesanan
+                </Typography>
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Order Items */}
@@ -362,7 +391,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex justify-between items-start"
+                    className="flex justify-between items-start gap-4"
                   >
                     <div className="flex-1">
                       <p className="font-medium text-foreground text-sm">
@@ -409,9 +438,10 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
 
               {/* Submit Button */}
               <Button
+                variant="green"
                 type="submit"
                 onClick={handleSubmit}
-                className="w-full bg-gradient-primary hover:bg-primary-dark shadow-button text-lg py-6"
+                className="w-full  hover:bg-primary-dark shadow-button text-lg py-6"
               >
                 Buat Pesanan
               </Button>
