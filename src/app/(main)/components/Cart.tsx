@@ -3,6 +3,8 @@ import Button from "@/components/buttons/Button";
 import { Badge } from "@/components/Badge";
 import { Separator } from "@/components/Separator";
 import { ShoppingCart, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
+import { Input } from "@/components/InputLovable";
+import Typography from "@/components/Typography";
 
 export interface CartItem {
   id: string;
@@ -69,14 +71,23 @@ const Cart = ({
     <Card className="border-border shadow-card">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center">
-            <ShoppingCart className="h-5 w-5 mr-2 text-primary" />
-            Keranjang Belanja
-            <Badge
-              variant="secondary"
-              className="ml-2 bg-primary text-primary-foreground"
-            >
-              {totalItems} item
+          <div className="flex items-start min-[400px]:items-center min-[360px]:flex-row flex-col gap-3">
+            <div className="flex flex-row justify-center items-center">
+              <ShoppingCart className="size-7 min-[400px]:size-5 mr-2 text-primary" />
+              <Typography
+                variant="h6"
+                className="min-[400px]:text-2xl text-lg font-bold"
+              >
+                Keranjang Belanja
+              </Typography>
+            </div>
+            <Badge variant="secondary" className="ml-2 bg-primary ">
+              <Typography
+                variant="p"
+                className="text-base min-[400px]:text-sm md:text-sm text-primary-foreground"
+              >
+                {totalItems} item
+              </Typography>
             </Badge>
           </div>
         </CardTitle>
@@ -84,75 +95,82 @@ const Cart = ({
 
       <CardContent className="space-y-4">
         {/* Cart Items */}
-        <div className="space-y-4 max-h-96 overflow-y-auto">
+        <div className="space-y-4 max-h-96 overflow-y-auto w-full">
           {items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-4 p-4 bg-accent rounded-lg"
+              className="flex items-start gap-4 p-4 bg-accent rounded-lg w-full"
             >
-              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
+              <div className="min-w-16 min-h-16 bg-muted rounded-lg flex items-center justify-center truncate">
                 <span className="text-xs text-muted-foreground font-medium">
                   NPK
                 </span>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-foreground truncate">
-                  {item.name}
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  NPK {item.npkFormula}
-                </p>
-                <p className="text-sm font-medium text-primary">
-                  {formatPrice(item.price)} / {item.unit}
-                </p>
+              <div className="w-full flex flex-col gap-4 sm:flex-row justify-start sm:justify-center items-start sm:items-center">
+                <div className="flex-1 w-full flex flex-col gap-2 sm:gap-0">
+                  <h4 className="font-medium text-foreground overflow-clip text-sm sm:text-xl">
+                    {item.name}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    NPK {item.npkFormula}
+                  </p>
+                  <p className="text-sm font-medium text-primary">
+                    {formatPrice(item.price)} / {item.unit}
+                  </p>
+                </div>
+
+                <div className="flex flex-row gap-2 sm:gap-4">
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-0 sm:gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="size-5 h-8 sm:size-8 p-0"
+                      onClick={() =>
+                        handleQuantityChange(item.id, item.quantity - 1)
+                      }
+                    >
+                      <Minus className="size-2 p-0 sm:size-3" />
+                    </Button>
+
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(
+                          item.id,
+                          parseInt(e.target.value) || 1,
+                        )
+                      }
+                      className="w-10 sm:w-16 text-center h-8"
+                      min="1"
+                      id={""}
+                    />
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="size-5 h-8 sm:size-8 p-0"
+                      onClick={() =>
+                        handleQuantityChange(item.id, item.quantity + 1)
+                      }
+                    >
+                      <Plus className="size-2 p-0 sm:size-3" />
+                    </Button>
+                  </div>
+
+                  {/* Remove Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => onRemoveItem(item.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-
-              {/* Quantity Controls */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() =>
-                    handleQuantityChange(item.id, item.quantity - 1)
-                  }
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-
-                <input
-                  type="number"
-                  value={item.quantity}
-                  onChange={(e) =>
-                    handleQuantityChange(item.id, parseInt(e.target.value) || 1)
-                  }
-                  className="w-16 text-center h-8"
-                  min="1"
-                  id={""}
-                />
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() =>
-                    handleQuantityChange(item.id, item.quantity + 1)
-                  }
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-
-              {/* Remove Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                onClick={() => onRemoveItem(item.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </div>
           ))}
         </div>
@@ -168,9 +186,9 @@ const Cart = ({
             </span>
           </div>
 
-          <div className="flex justify-between items-center text-lg">
+          <div className="flex sm:flex-row flex-col justify-center gap-2 sm:justify-between items-center text-lg">
             <span className="font-semibold text-foreground">Total Harga:</span>
-            <span className="font-bold text-primary text-xl">
+            <span className="font-bold text-primary text-2xl">
               {formatPrice(totalPrice)}
             </span>
           </div>
@@ -180,7 +198,8 @@ const Cart = ({
 
         {/* Checkout Button */}
         <Button
-          className="w-full bg-gradient-primary hover:bg-primary-dark shadow-button text-lg py-6"
+          variant="green"
+          className="w-full hover:bg-primary-dark shadow-button text-sm sm:text-lg py-6"
           onClick={onCheckout}
         >
           Lanjut ke Pembayaran

@@ -7,9 +7,8 @@ import ProductDetail from "../components/ProductDetail";
 import Checkout from "../components/Checkout";
 import { Card, CardContent } from "@/components/Card";
 
-import { Leaf, Truck, Award, Users } from "lucide-react";
-// import heroImage from "@/assets/hero-fertilizer.jpg";
-// import leafPattern from "@/assets/leaf-pattern.jpg";
+import { Truck, Award, Users, Leaf, ArrowLeft } from "lucide-react";
+
 import Button from "@/components/buttons/Button";
 import { Badge } from "@/components/Badge";
 import Navbar from "@/layouts/Navbar";
@@ -172,29 +171,27 @@ const Index = () => {
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPage("cart")}
         />
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-foreground mb-6">
-            Keranjang Belanja
-          </h1>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Button
-                variant="ghost"
-                onClick={() => setCurrentPage("catalog")}
-                className="mb-4 hover:bg-accent"
-              >
-                ← Lanjut Belanja
-              </Button>
-            </div>
-            <div>
-              <Cart
-                items={cartItems}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                onCheckout={() => setCurrentPage("checkout")}
-              />
-            </div>
-          </div>
+        <div className="container mx-auto px-4 py-6 flex flex-col gap-6">
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentPage("catalog")}
+            className="hover:bg-accent border rounded-full flex flex-row items-center justify-center gap-3 p-4 w-fit"
+          >
+            <ArrowLeft className="size-5" />
+            <Typography
+              variant="p"
+              className="hidden min-[400px]:block text-sm font-semibold text-foreground"
+            >
+              Kembali ke Katalog
+            </Typography>
+          </Button>
+
+          <Cart
+            items={cartItems}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onCheckout={() => setCurrentPage("checkout")}
+          />
         </div>
       </div>
     );
