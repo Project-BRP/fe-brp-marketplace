@@ -1,6 +1,5 @@
 import { Badge } from "@/components/Badge";
 import Button from "@/components/buttons/Button";
-import { Input } from "@/components/InputLovable";
 import { ShoppingCart, Search, Menu } from "lucide-react";
 
 interface NavbarProps {
@@ -14,24 +13,24 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Company Name */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">
                 B
               </span>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">
+            <div className="hidden sm:block">
+              <h1 className="text-sm sm:text-xl font-bold text-foreground">
                 PT. Bumi Rekayasa Persada Marketplace
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className=" text-sm text-muted-foreground">
                 Pupuk Berkualitas untuk Pertanian Modern
               </p>
             </div>
           </div>
 
           {/* Cart and Mobile Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2">
             {/* Cart Button */}
             <Button
               variant="outline"
@@ -39,7 +38,7 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
               className="relative hover:bg-accent"
               onClick={onCartClick}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
+              <ShoppingCart className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Keranjang</span>
               {cartItemCount > 0 && (
                 <Badge
@@ -50,23 +49,6 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
                 </Badge>
               )}
             </Button>
-
-            {/* Mobile Menu Button */}
-            <Button variant="ghost" size="sm" className="md:hidden">
-              <Menu className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Search Bar */}
-        <div className="md:hidden mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <input
-              placeholder="Cari pupuk NPK..."
-              className="pl-10 border-border focus:ring-primary"
-              id={""}
-            />
           </div>
         </div>
       </div>
