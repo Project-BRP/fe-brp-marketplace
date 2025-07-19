@@ -1,20 +1,19 @@
 import { FormProvider, useForm } from "react-hook-form";
-
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
 import Typography from "@/components/Typography";
 import { REG_EMAIL, REG_PASS } from "@/constants/regex";
 import { useEmailMutation } from "../../hooks/LoginEmail";
-import { IEmailForm } from "@/types/email";
+import { ILoginForm } from "@/types/email";
 
 export default function EmailForm(): JSX.Element {
-  const methods = useForm<IEmailForm>({
+  const methods = useForm<ILoginForm>({
     mode: "onTouched",
   });
 
   const { handleSubmit } = methods;
   const { handleLoginEmail } = useEmailMutation();
-  const onSubmit = async (data: IEmailForm) => {
+  const onSubmit = async (data: ILoginForm) => {
     await handleLoginEmail(data);
   };
 

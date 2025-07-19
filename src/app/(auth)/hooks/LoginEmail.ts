@@ -1,16 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { ApiError, ApiResponse } from "@/types/api";
-
-interface EmailFormRequest {
-  email: string;
-  password: string;
-}
-
-interface EmailFormResponse {
-  resultCode: number;
-  resultMessage: string;
-}
+import { IAuthResponse, ILoginForm } from "@/types/email";
 
 const url =
   process.env.NEXT_PUBLIC_RUN_MODE === "development"
@@ -23,12 +14,12 @@ export const useEmailMutation = () => {
     isPending,
     data: handleLoginData,
   } = useMutation<
-    AxiosResponse<ApiResponse<EmailFormResponse>>,
+    AxiosResponse<ApiResponse<IAuthResponse>>,
     AxiosError<ApiError>,
-    EmailFormRequest
+    ILoginForm
   >({
-    mutationFn: async (data: EmailFormRequest) => {
-      const res = await axios.post<ApiResponse<EmailFormResponse>>(url, data);
+    mutationFn: async (data: ILoginForm) => {
+      const res = await axios.post<ApiResponse<IAuthResponse>>(url, data);
 
       return res;
     },

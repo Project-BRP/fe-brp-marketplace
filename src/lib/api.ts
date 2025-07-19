@@ -17,10 +17,10 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 
-  withCredentials: false,
+  withCredentials: true,
 });
 
-api.defaults.withCredentials = false;
+api.defaults.withCredentials = true;
 const isBrowser = typeof window !== "undefined";
 
 api.interceptors.request.use(function (config) {

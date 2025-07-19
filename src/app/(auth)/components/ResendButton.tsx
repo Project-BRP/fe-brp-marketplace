@@ -1,7 +1,9 @@
 "use client";
 import Button from "@/components/buttons/Button";
 import { useEffect, useState } from "react";
-import { useEmailMutation } from "../hooks/LoginEmail";
+
+import { IRegisterData } from "@/types/email";
+import { useRegister } from "../hooks/useRegister";
 
 const RESEND_TIME = 60; // Durasi countdown dalam detik
 const STORAGE_KEY = "resend_expiry_time";
@@ -10,10 +12,10 @@ const isBrowser = typeof window !== "undefined";
 export default function ResendButton({
   formData,
 }: {
-  formData: { email: string; password: string };
+  formData: IRegisterData;
 }) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
-  const { handleLoginEmail } = useEmailMutation();
+  const { handleRegister } = useRegister();
   useEffect(() => {
     // Cek apakah ada waktu expiry yang tersimpan di localStorage
     if (isBrowser) {
@@ -43,7 +45,7 @@ export default function ResendButton({
     if (isBrowser) localStorage.setItem(STORAGE_KEY, expiryTime.toString());
     setTimeLeft(RESEND_TIME);
 
-    await handleLoginEmail(formData);
+    await handleRegister(formData);
   };
 
   return (
