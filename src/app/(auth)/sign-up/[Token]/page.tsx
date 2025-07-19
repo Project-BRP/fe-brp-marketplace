@@ -2,19 +2,17 @@
 
 import Typography from "@/components/Typography";
 import Lottie from "lottie-react";
-import { useParams, useRouter } from "next/dist/client/components/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useVerifEmail } from "../../hooks/useVerifEmail";
 
 export default function SignUpWithToken() {
-  const router = useRouter();
   const [animationData, setAnimationData] = useState(null);
-  const successVerif = useRef(false);
   const hasCalled = useRef(false);
   const params = useParams();
   const token = params.Token;
 
-  const { handleVerifEmail } = useVerifEmail(successVerif);
+  const { handleVerifEmail } = useVerifEmail();
 
   useEffect(() => {
     fetch("/animation/plant.json")
@@ -23,21 +21,15 @@ export default function SignUpWithToken() {
   }, []);
 
   useEffect(() => {
-    if (!token || hasCalled.current) return;
+    const verifyEmail = async () => {
+      if (!token || hasCalled.current) return;
 
-    hasCalled.current = true;
-    handleVerifEmail({ token });
+      hasCalled.current = true;
+      await handleVerifEmail({ token });
+    };
+
+    verifyEmail();
   }, [token]);
-
-  useEffect(() => {
-    if (successVerif.current) {
-      const timeout = setTimeout(() => {
-        router.push("/dashboard");
-      }, 3000);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [successVerif.current]);
 
   if (!animationData) {
     return (

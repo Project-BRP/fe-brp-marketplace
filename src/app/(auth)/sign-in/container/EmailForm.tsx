@@ -6,6 +6,7 @@ import { REG_EMAIL, REG_PASS } from "@/constants/regex";
 import { useEmailMutation } from "../../hooks/LoginEmail";
 import { ILoginForm } from "@/types/email";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function EmailForm(): JSX.Element {
   const route = useRouter();
@@ -17,10 +18,13 @@ export default function EmailForm(): JSX.Element {
   const { handleLoginEmail, isSuccess } = useEmailMutation();
   const onSubmit = async (data: ILoginForm) => {
     await handleLoginEmail(data);
+  };
+
+  useEffect(() => {
     if (isSuccess) {
       route.push("/dashboard");
     }
-  };
+  }, [isSuccess, methods]);
 
   return (
     <FormProvider {...methods}>

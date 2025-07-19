@@ -6,8 +6,10 @@ import { ApiError } from "next/dist/server/api-utils";
 import { ApiResponse } from "@/types/api";
 import { IAuthResponse, IVerifEmail } from "@/types/email";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-export function useVerifEmail(successVerif: React.MutableRefObject<boolean>) {
+export function useVerifEmail() {
+  const router = useRouter();
   const {
     mutateAsync: handleVerifEmail,
     isPending,
@@ -22,7 +24,7 @@ export function useVerifEmail(successVerif: React.MutableRefObject<boolean>) {
     },
     onSuccess: () => {
       toast.success("Verifikasi Email berhasil");
-      successVerif.current = true;
+      router.push("/dashboard");
     },
     onError: (error: AxiosError<ApiError>) => {
       const message =

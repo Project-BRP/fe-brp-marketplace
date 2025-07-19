@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 
 export const useEmailMutation = () => {
   const {
-    mutate: handleLoginEmail,
+    mutateAsync: handleLoginEmail,
     isPending,
     data: handleLoginData,
     isSuccess,

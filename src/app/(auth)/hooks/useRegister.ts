@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 
 export function useRegister() {
   const {
-    mutateAsync: handleRegister,
+    mutate: handleRegister,
     isPending,
     data: handleRegisterData,
     isSuccess,

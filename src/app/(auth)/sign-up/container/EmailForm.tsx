@@ -8,6 +8,7 @@ import { REG_EMAIL, REG_PASS } from "@/constants/regex";
 
 import { IRegisterData, IRegisterForm } from "@/types/email";
 import { useRegister } from "../../hooks/useRegister";
+import { useEffect } from "react";
 
 export default function EmailForm({
   setDataregis,
@@ -21,15 +22,18 @@ export default function EmailForm({
   });
 
   const { handleSubmit } = methods;
-  const { handleRegister, isPending, isSuccess, handleRegisterData } =
-    useRegister();
+  const { handleRegister, isPending, isSuccess } = useRegister();
   const onSubmit = async (data: IRegisterForm) => {
     const { confirmPassword, ...body } = data;
     await handleRegister(body);
-
-    setDataregis(body);
-    setDoneEmail(true);
   };
+
+  useEffect(() => {
+    if (isSuccess) {
+      setDoneEmail(true);
+      setDataregis(methods.getValues());
+    }
+  }, [isSuccess, setDoneEmail, setDataregis, methods]);
 
   return (
     <FormProvider {...methods}>
