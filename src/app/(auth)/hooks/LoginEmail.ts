@@ -1,28 +1,29 @@
 import { useMutation } from "@tanstack/react-query";
-import axios, { AxiosError, AxiosResponse } from "axios";
-import { ApiError, ApiResponse } from "@/types/api";
+import { AxiosError } from "axios";
+import { ApiError } from "@/types/api";
 import { IAuthResponse, ILoginForm } from "@/types/email";
-
-const url =
-  process.env.NEXT_PUBLIC_RUN_MODE === "development"
-    ? process.env.NEXT_PUBLIC_API_URL_DEV + `auth/local/email`
-    : process.env.NEXT_PUBLIC_API_URL_PROD + `auth/email`;
+import api from "@/lib/api";
+import toast from "react-hot-toast";
 
 export const useEmailMutation = () => {
   const {
-    mutateAsync: handleLoginEmail,
+    mutate: handleLoginEmail,
     isPending,
     data: handleLoginData,
-  } = useMutation<
-    AxiosResponse<ApiResponse<IAuthResponse>>,
-    AxiosError<ApiError>,
-    ILoginForm
-  >({
+    isSuccess,
+  } = useMutation<IAuthResponse, AxiosError<ApiError>, ILoginForm>({
     mutationFn: async (data: ILoginForm) => {
-      const res = await axios.post<ApiResponse<IAuthResponse>>(url, data);
-
-      return res;
+      const res = await api.post<IAuthResponse>(`/auth/login`, data);
+      return res.data;
+    },
+    onSuccess: (success: IAuthResponse) => {
+      toast.success(success.message);
+    },
+    onError: (error: AxiosError<ApiError>) => {
+      const message =
+        error.response?.data?.message || "Terjadi kesalahan saat mendaftar.";
+      toast.error(message);
     },
   });
-  return { handleLoginEmail, isPending, handleLoginData };
+  return { handleLoginEmail, isPending, handleLoginData, isSuccess };
 };

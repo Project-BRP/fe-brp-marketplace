@@ -12,7 +12,6 @@ export default function SignUpPage() {
         reverseOrder={false}
         gutter={8}
         toastOptions={{
-          // Batasi jumlah toast yang muncul bersamaan
           duration: 3000,
         }}
       />

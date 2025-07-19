@@ -5,16 +5,21 @@ import Typography from "@/components/Typography";
 import { REG_EMAIL, REG_PASS } from "@/constants/regex";
 import { useEmailMutation } from "../../hooks/LoginEmail";
 import { ILoginForm } from "@/types/email";
+import { useRouter } from "next/navigation";
 
 export default function EmailForm(): JSX.Element {
+  const route = useRouter();
   const methods = useForm<ILoginForm>({
     mode: "onTouched",
   });
 
   const { handleSubmit } = methods;
-  const { handleLoginEmail } = useEmailMutation();
+  const { handleLoginEmail, isSuccess } = useEmailMutation();
   const onSubmit = async (data: ILoginForm) => {
     await handleLoginEmail(data);
+    if (isSuccess) {
+      route.push("/dashboard");
+    }
   };
 
   return (
