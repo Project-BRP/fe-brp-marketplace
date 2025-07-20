@@ -16,7 +16,7 @@ export type IRegisterData = Omit<IRegisterForm, "confirmPassword">;
 
 export interface IAuthResponse {
   status: string;
-  resultCode: number;
+  code: number;
   message: string;
 }
 
@@ -33,3 +33,16 @@ export type IUpdateUserData = Partial<Pick<User, "name">> & {
   oldPassword?: string;
   password?: string;
 };
+
+export interface IForgotPasswordForm {
+  email: string;
+}
+
+export interface IResetPasswordForm {
+  password: string;
+  confirmPassword: string;
+}
+
+export interface IResetPasswordVariable extends IResetPasswordForm {
+  token: string;
+}

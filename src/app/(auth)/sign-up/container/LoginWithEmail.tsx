@@ -5,8 +5,10 @@ import { IoArrowForward } from "react-icons/io5";
 import React from "react";
 import { MailCheck } from "lucide-react";
 import ResendButton from "../../components/ResendButton";
+import { useRegister } from "../../hooks/useRegister";
 
 export default function LoginWithEmail(): JSX.Element {
+  const { handleRegister } = useRegister();
   const [doneEmail, setDoneEmail] = React.useState(false);
   const [dataRegis, setDataRegis] = React.useState({
     email: "",
@@ -42,7 +44,10 @@ export default function LoginWithEmail(): JSX.Element {
                 <Typography variant="p" className="font-semibold">
                   Email tidak ada di inbox atau spam?
                 </Typography>
-                <ResendButton formData={dataRegis} />
+                <ResendButton
+                  formData={dataRegis}
+                  handleData={handleRegister}
+                />
               </div>
             </div>
           </>

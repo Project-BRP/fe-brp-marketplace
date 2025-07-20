@@ -2,20 +2,18 @@
 import Button from "@/components/buttons/Button";
 import { useEffect, useState } from "react";
 
-import { IRegisterData } from "@/types/auth";
-import { useRegister } from "../hooks/useRegister";
-
 const RESEND_TIME = 60; // Durasi countdown dalam detik
 const STORAGE_KEY = "resend_expiry_time";
 const isBrowser = typeof window !== "undefined";
 
-export default function ResendButton({
+export default function ResendButton<T>({
   formData,
+  handleData,
 }: {
-  formData: IRegisterData;
+  formData: T;
+  handleData: (data: T) => void;
 }) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
-  const { handleRegister } = useRegister();
   useEffect(() => {
     // Cek apakah ada waktu expiry yang tersimpan di localStorage
     if (isBrowser) {
@@ -45,7 +43,7 @@ export default function ResendButton({
     if (isBrowser) localStorage.setItem(STORAGE_KEY, expiryTime.toString());
     setTimeLeft(RESEND_TIME);
 
-    await handleRegister(formData);
+    await handleData(formData);
   };
 
   return (

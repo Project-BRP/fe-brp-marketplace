@@ -1,28 +1,30 @@
+"use client";
 import { FormProvider, useForm } from "react-hook-form";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
 import Typography from "@/components/Typography";
-import { REG_EMAIL, REG_PASS } from "@/constants/regex";
-import { useEmailMutation } from "../../hooks/LoginEmail";
-import { ILoginForm } from "@/types/auth";
-import { useRouter } from "next/navigation";
+import { REG_PASS } from "@/constants/regex";
+import { useResetPasswordMutation } from "../../../hooks/useResetPassword";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { IResetPasswordForm } from "@/types/auth";
 
-export default function EmailForm(): JSX.Element {
+export default function PasswordForm(): JSX.Element {
+  const { Token } = useParams();
   const route = useRouter();
-  const methods = useForm<ILoginForm>({
+  const methods = useForm<IResetPasswordForm>({
     mode: "onTouched",
   });
 
-  const { handleSubmit } = methods;
-  const { handleLoginEmail, isSuccess } = useEmailMutation();
-  const onSubmit = async (data: ILoginForm) => {
-    await handleLoginEmail(data);
+  const { handleSubmit, watch } = methods;
+  const { handleResetPassword, isSuccess } = useResetPasswordMutation();
+  const onSubmit = async (data: IResetPasswordForm) => {
+    await handleResetPassword({ ...data, token: Token as string });
   };
 
   useEffect(() => {
     if (isSuccess) {
-      route.push("/dashboard");
+      route.push("/sign-in");
     }
   }, [isSuccess, methods]);
 
@@ -33,26 +35,12 @@ export default function EmailForm(): JSX.Element {
         className="input w-full flex flex-col gap-4 justify-center items-center"
       >
         <Input
-          id="email"
-          label="Masukkan Email Anda"
-          helperTextClassName="xl:text-base lg:text-base md:text-sm"
-          className="w-full rounded-lg border-2 border-[#BBBCBF] p-2 lg:p-3 sm:p-2.5 placeholder:font-normal xl:text-base lg:text-base md:text-sm placeholder:xl:text-base placeholder:lg:text-base placeholder:md:text-sm"
-          placeholder="Input Your Email"
-          validation={{
-            required: "Email tidak boleh kosong!",
-            pattern: {
-              value: REG_EMAIL,
-              message: "Email tidak valid!",
-            },
-          }}
-        />
-        <Input
           id="password"
           type="password"
-          label="Masukkan Password Anda"
+          label="Masukkan Password Baru Anda"
           helperTextClassName="xl:text-base lg:text-base md:text-sm"
           className="w-full rounded-lg border-2 border-[#BBBCBF] p-2 lg:p-3 sm:p-2.5 placeholder:font-normal xl:text-base lg:text-base md:text-sm placeholder:xl:text-base placeholder:lg:text-base placeholder:md:text-sm"
-          placeholder="Masukkan Password Anda"
+          placeholder="Masukkan Password Baru Anda"
           validation={{
             required: "Password tidak boleh kosong!",
             pattern: {
@@ -62,15 +50,19 @@ export default function EmailForm(): JSX.Element {
             },
           }}
         />
-        <div className="flex flex-row-reverse w-full">
-          <Typography
-            variant="p"
-            className="text-xs sm:text-base md:text-base font-medium hover:text-black cursor-pointer text-muted-foreground"
-            onClick={() => route.push("/forget-password")}
-          >
-            Lupa Password?
-          </Typography>
-        </div>
+        <Input
+          id="confirmPassword"
+          type="password"
+          label="Konfirmasi Password Baru Anda"
+          helperTextClassName="xl:text-base lg:text-base md:text-sm"
+          className="w-full rounded-lg border-2 border-[#BBBCBF] p-2 lg:p-3 sm:p-2.5 placeholder:font-normal xl:text-base lg:text-base md:text-sm placeholder:xl:text-base placeholder:lg:text-base placeholder:md:text-sm"
+          placeholder="Konfirmasi Password Baru Anda"
+          validation={{
+            required: "Konfirmasi password tidak boleh kosong!",
+            validate: (value) =>
+              value === watch("password") || "Password tidak cocok!",
+          }}
+        />
         <Button
           type="submit"
           variant="green"
@@ -80,7 +72,7 @@ export default function EmailForm(): JSX.Element {
             variant="p"
             className="text-white text-[10px] xl:text-base lg:text-base md:text-sm"
           >
-            Masuk
+            Reset Password
           </Typography>
         </Button>
       </form>
