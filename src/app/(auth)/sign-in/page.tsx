@@ -7,14 +7,6 @@ import { Toaster } from "react-hot-toast";
 export default function SignInPage() {
   return (
     <Layout withFooter={false} withNavbar={false}>
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        gutter={8}
-        toastOptions={{
-          duration: 3000,
-        }}
-      />
       <main className="relative bg-none w-full m-0 flex min-h-screen items-center justify-center gap-4 p-2 lg:flex-row lg:px-8 lg:py-12 ">
         <LoginWithEmail />
         <section className="w-full h-full -z-[100] absolute top-0 bottom-0 right-0 min-h-screen overflow-hidden">

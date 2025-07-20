@@ -3,26 +3,19 @@ export interface ILoginForm {
   password: string;
 }
 
+export type ILoginRequest = ILoginForm;
+
 export interface IRegisterForm extends ILoginForm {
   name: string;
   confirmPassword: string;
 }
 
-export interface ILoginRequest {
-  email: string;
-  password: string;
-}
+export type IRegisterData = Omit<IRegisterForm, "confirmPassword">;
 
 export interface IAuthResponse {
   status: string;
   resultCode: number;
   message: string;
-}
-
-export interface IRegisterData {
-  email: string;
-  name: string;
-  password: string;
 }
 
 export interface IVerifEmail {

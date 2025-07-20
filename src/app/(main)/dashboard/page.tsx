@@ -15,10 +15,12 @@ import Navbar from "@/layouts/Navbar";
 import FilterBar, { FilterOptions } from "../components/FilterBar";
 import Typography from "@/components/Typography";
 import NextImage from "@/components/NextImage";
+import useUserStore from "@/store/userStore";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
 const Index = () => {
+  const { userData } = useUserStore();
   const [currentPage, setCurrentPage] = useState<PageView>("catalog");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -158,6 +160,9 @@ const Index = () => {
     return (
       <>
         <Navbar
+          name={userData.name}
+          email={userData.email}
+          photoProfile={null}
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPage("cart")}
         />
@@ -174,6 +179,9 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-earth">
         <Navbar
+          name={userData.name}
+          email={userData.email}
+          photoProfile={null}
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPage("cart")}
         />
@@ -207,6 +215,9 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-earth">
         <Navbar
+          name={userData.name}
+          email={userData.email}
+          photoProfile={null}
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPage("cart")}
         />
@@ -222,6 +233,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-earth">
       <Navbar
+        name={userData.name}
+        email={userData.email}
+        photoProfile={null}
         cartItemCount={cartItemCount}
         onCartClick={() => setCurrentPage("cart")}
       />
