@@ -40,17 +40,14 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
   }, [getUserData, refetch, setUserData]);
 
   // Correctly handles the FormData object from the modal
-  const handleUpdate = async (formData: IUpdateUserData) => {
+  const handleUpdate = async (formData: IUpdateUserData | FormData) => {
     try {
       await updateUserProfile(formData);
-      // On success, refetch user data to get the latest info
       const { data } = await refetch();
       if (data) {
         setUserData(data.data);
       }
-      setIsModalOpen(false); // Close modal on success
     } catch (updateError) {
-      // You can add a user-facing error message here (e.g., using a toast library)
       console.error("Failed to update profile from Navbar");
     }
   };

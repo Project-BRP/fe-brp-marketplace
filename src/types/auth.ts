@@ -29,10 +29,10 @@ export interface IUpdateUserResponse extends Omit<IAuthResponse, "resultCode"> {
   code: number;
 }
 
-export type IUpdateUserData = Partial<Pick<User, "name">> & {
-  oldPassword?: string;
-  password?: string;
-};
+export type IUpdateUserData =
+  | { name: string }
+  | { oldPassword: string; password: string }
+  | { image: FormData };
 
 export interface IForgotPasswordForm {
   email: string;

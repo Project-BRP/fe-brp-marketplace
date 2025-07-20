@@ -40,6 +40,12 @@ export default function NextImage({
   );
   const widthIsSet = className?.includes("w-") ?? false;
 
+  const isAbsoluteUrl =
+    typeof src === "string" &&
+    (src.startsWith("http") || src.startsWith("blob:"));
+
+  const finalSrc = isAbsoluteUrl || serverStaticImg ? src : "/images" + src;
+
   return (
     <figure
       style={!widthIsSet ? { width: `${width}px` } : undefined}
@@ -51,7 +57,7 @@ export default function NextImage({
           status === "loading" &&
             clsxm("animate-pulse bg-red-50", blurClassName),
         )}
-        src={serverStaticImg ? src : "/images" + src}
+        src={finalSrc} // Gunakan src yang sudah diperbaiki
         width={width}
         height={height}
         alt={alt}

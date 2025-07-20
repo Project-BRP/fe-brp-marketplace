@@ -12,8 +12,13 @@ export function useUpdateUser() {
     isPending: isUpdating,
     isSuccess,
     isError,
-  } = useMutation<IUpdateUserResponse, AxiosError<ApiError>, IUpdateUserData>({
-    mutationFn: async (data: IUpdateUserData) => {
+  } = useMutation<
+    IUpdateUserResponse,
+    AxiosError<ApiError>,
+    IUpdateUserData | FormData
+  >({
+    mutationFn: async (data: IUpdateUserData | FormData) => {
+      console.log(data);
       const res = await api.patch("/auth/users/me", data);
       return res.data;
     },
@@ -21,11 +26,13 @@ export function useUpdateUser() {
       toast.success(success.message);
     },
     onError: (error: AxiosError<ApiError>) => {
+      console.log(error);
       const message =
         error.response?.data?.message || "Terjadi kesalahan saat mendaftar.";
       toast.error(message);
     },
   });
+
   return {
     updateUserProfile,
     handleUpdateUserData,

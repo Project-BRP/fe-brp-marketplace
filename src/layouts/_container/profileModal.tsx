@@ -17,8 +17,8 @@ import Input from "@/components/form/Input";
 // --- Main Profile Modal Component ---
 type FormValues = {
   name: string;
-  oldPassword?: string;
-  newPassword?: string;
+  oldPassword: string;
+  newPassword: string;
 };
 
 export interface UserProfile {
@@ -31,10 +31,7 @@ interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfile;
-  onUpdate: (
-    formData: IUpdateUserData,
-    photoFile?: File | null,
-  ) => Promise<void>;
+  onUpdate: (formData: IUpdateUserData | FormData) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -46,19 +43,12 @@ export const ProfileModal = ({
   isUpdating,
 }: ProfileModalProps) => {
   const methods = useForm<FormValues>({ mode: "onTouched" });
-  const {
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { isDirty },
-  } = methods;
+  const { handleSubmit, reset, watch } = methods;
 
   const [editMode, setEditMode] = useState<"none" | "name" | "password">(
     "none",
   );
 
-  // State for photo handling
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     user.photoProfile,
@@ -67,7 +57,6 @@ export const ProfileModal = ({
 
   const newPasswordValue = watch("newPassword");
 
-  // Reset form and component state when modal is opened or user data changes
   useEffect(() => {
     if (isOpen) {
       reset({ name: user.name || "", oldPassword: "", newPassword: "" });
@@ -81,9 +70,8 @@ export const ProfileModal = ({
     }
   }, [isOpen, user, reset]);
 
-  // Create a preview URL for a newly selected image
   useEffect(() => {
-    if (selectedFile) {
+    if (selectedFile instanceof File) {
       const objectUrl = URL.createObjectURL(selectedFile);
       setPreviewUrl(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
@@ -102,10 +90,7 @@ export const ProfileModal = ({
     }
   };
 
-  // --- Handlers for inline edits ---
-
   const handleCancelEdit = () => {
-    // Reset form fields to original user data
     reset({ name: user.name || "", oldPassword: "", newPassword: "" });
     setEditMode("none");
   };
@@ -125,8 +110,18 @@ export const ProfileModal = ({
 
   const handleSavePhoto = async () => {
     if (selectedFile) {
-      await onUpdate({}, selectedFile);
-      setSelectedFile(null); // Clear after saving
+      const formData = new FormData();
+      formData.append("image", selectedFile);
+      // console.log("Mengecek isi FormData:");
+      // for (const pair of formData.entries()) {
+      // 	// pair[0] adalah key ('image')
+      // 	// pair[1] adalah value (objek File)
+      // 	console.log(pair[0] + ":", pair[1]);
+      // }
+      // --------------------------------
+      console.log(selectedFile);
+      await onUpdate(formData);
+      setSelectedFile(null);
     }
   };
 
@@ -152,7 +147,7 @@ export const ProfileModal = ({
 
           {/* Modal Body */}
           <div className="p-6 space-y-6">
-            {/* Profile Picture Section */}
+            {/* Bagian Foto Profil */}
             <div className="relative w-32 h-32 mx-auto group">
               <div className="w-full h-full rounded-full bg-muted flex items-center justify-center overflow-hidden">
                 {previewUrl ? (
@@ -163,7 +158,6 @@ export const ProfileModal = ({
                     height={128}
                     className="rounded-full"
                     imgClassName="object-cover w-full h-full"
-                    serverStaticImg={!selectedFile}
                   />
                 ) : (
                   <User className="w-16 h-16 text-muted-foreground" />
@@ -185,9 +179,9 @@ export const ProfileModal = ({
               />
             </div>
 
-            {/* User Info Section */}
+            {/* Bagian Info Pengguna */}
             <div className="space-y-4">
-              {/* Name Section */}
+              {/* Bagian Nama */}
               <div className="space-y-1">
                 <Typography
                   variant="p"
@@ -259,7 +253,7 @@ export const ProfileModal = ({
                 </Typography>
               </div>
 
-              {/* Password Section */}
+              {/* Bagian Password */}
               <div className="space-y-2">
                 {editMode === "password" ? (
                   <div className="space-y-4 pt-2">
