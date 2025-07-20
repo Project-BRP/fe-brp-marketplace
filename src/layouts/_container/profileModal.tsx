@@ -13,6 +13,7 @@ import Button from "@/components/buttons/Button";
 import Typography from "@/components/Typography";
 import { IUpdateUserData } from "@/types/auth";
 import Input from "@/components/form/Input";
+import ImageCropper from "./ImageCropper";
 
 // --- Main Profile Modal Component ---
 type FormValues = {
@@ -50,6 +51,7 @@ export const ProfileModal = ({
   );
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     user.photoProfile,
   );
@@ -70,14 +72,6 @@ export const ProfileModal = ({
     }
   }, [isOpen, user, reset]);
 
-  useEffect(() => {
-    if (selectedFile instanceof File) {
-      const objectUrl = URL.createObjectURL(selectedFile);
-      setPreviewUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-  }, [selectedFile]);
-
   if (!isOpen) return null;
 
   const handleFileSelect = () => {
@@ -86,8 +80,23 @@ export const ProfileModal = ({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setSelectedFile(event.target.files[0]);
+      setSelectedFile(null);
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageToCrop(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
+  };
+
+  const handleCrop = (croppedImage: Blob) => {
+    const file = new File([croppedImage], "profile.jpg", {
+      type: "image/jpeg",
+    });
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setImageToCrop(null);
   };
 
   const handleCancelEdit = () => {
@@ -112,14 +121,6 @@ export const ProfileModal = ({
     if (selectedFile) {
       const formData = new FormData();
       formData.append("image", selectedFile);
-      // console.log("Mengecek isi FormData:");
-      // for (const pair of formData.entries()) {
-      // 	// pair[0] adalah key ('image')
-      // 	// pair[1] adalah value (objek File)
-      // 	console.log(pair[0] + ":", pair[1]);
-      // }
-      // --------------------------------
-      console.log(selectedFile);
       await onUpdate(formData);
       setSelectedFile(null);
     }
@@ -127,6 +128,13 @@ export const ProfileModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300">
+      {imageToCrop && (
+        <ImageCropper
+          imageSrc={imageToCrop}
+          onCrop={handleCrop}
+          onClose={() => setImageToCrop(null)}
+        />
+      )}
       <FormProvider {...methods}>
         <div className="bg-background rounded-lg shadow-xl w-full h-full sm:h-auto sm:max-w-md transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale">
           {/* Modal Header */}
@@ -316,7 +324,7 @@ export const ProfileModal = ({
           {/* Modal Footer */}
           <div className="flex justify-end gap-3 p-4 border-t border-border">
             <Button type="button" variant="outline" onClick={onClose}>
-              Close
+              Tutup
             </Button>
             <Button
               type="button"
@@ -325,7 +333,7 @@ export const ProfileModal = ({
               disabled={isUpdating || !selectedFile}
             >
               {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Photo
+              Simpan Photo
             </Button>
           </div>
         </div>
