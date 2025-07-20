@@ -1,34 +1,49 @@
 "use client";
 
+import {
+  Camera,
+  Check,
+  Edit2,
+  KeyRound,
+  Loader2,
+  LogOut,
+  User,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+
 import NextImage from "@/components/NextImage";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
+import { REG_PASS } from "@/constants/regex";
 import { IUpdateUserData } from "@/types/auth";
-import { Camera, Check, Edit2, KeyRound, Loader2, User, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
 import ImageCropper from "./ImageCropper";
 
-// --- Main Profile Modal Component ---
+// --- Form Values Type ---
 type FormValues = {
   name: string;
   oldPassword: string;
   newPassword: string;
 };
 
+// --- User Profile Interface ---
 export interface UserProfile {
   name: string | null;
   email: string | null;
   photoProfile: string | null;
 }
 
+// --- Component Props Interface ---
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfile;
   onUpdate: (formData: IUpdateUserData | FormData) => Promise<void>;
   isUpdating: boolean;
+  onLogout: () => void;
+  isLoggingOut: boolean;
 }
 
 export const ProfileModal = ({
@@ -37,6 +52,8 @@ export const ProfileModal = ({
   user,
   onUpdate,
   isUpdating,
+  onLogout,
+  isLoggingOut,
 }: ProfileModalProps) => {
   const methods = useForm<FormValues>({ mode: "onTouched" });
   const { handleSubmit, reset, watch } = methods;
@@ -44,7 +61,6 @@ export const ProfileModal = ({
   const [editMode, setEditMode] = useState<"none" | "name" | "password">(
     "none",
   );
-
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
@@ -54,6 +70,7 @@ export const ProfileModal = ({
 
   const newPasswordValue = watch("newPassword");
 
+  // Effect to reset form state when the modal opens
   useEffect(() => {
     if (isOpen) {
       reset({ name: user.name || "", oldPassword: "", newPassword: "" });
@@ -69,18 +86,15 @@ export const ProfileModal = ({
 
   if (!isOpen) return null;
 
-  const handleFileSelect = () => {
-    fileInputRef.current?.click();
-  };
+  // --- Event Handlers ---
+  const handleFileSelect = () => fileInputRef.current?.click();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setSelectedFile(null);
+    if (event.target.files?.[0]) {
+      setSelectedFile(null); // Reset selected file before cropping
       const file = event.target.files[0];
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageToCrop(reader.result as string);
-      };
+      reader.onloadend = () => setImageToCrop(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -135,7 +149,7 @@ export const ProfileModal = ({
           {/* Modal Header */}
           <div className="flex items-center justify-between p-4 border-b border-border">
             <Typography variant="h6" weight="bold">
-              Profil Pengguna
+              User Profile
             </Typography>
             <Button
               type="button"
@@ -150,7 +164,7 @@ export const ProfileModal = ({
 
           {/* Modal Body */}
           <div className="p-6 space-y-6">
-            {/* Bagian Foto Profil */}
+            {/* Profile Picture Section */}
             <div className="relative w-32 h-32 mx-auto group">
               <div className="w-full h-full rounded-full bg-muted flex items-center justify-center overflow-hidden">
                 {previewUrl ? (
@@ -182,9 +196,9 @@ export const ProfileModal = ({
               />
             </div>
 
-            {/* Bagian Info Pengguna */}
+            {/* User Info Section */}
             <div className="space-y-4">
-              {/* Bagian Nama */}
+              {/* Name Field */}
               <div className="space-y-1">
                 <Typography
                   variant="p"
@@ -239,7 +253,7 @@ export const ProfileModal = ({
                 )}
               </div>
 
-              {/* Email */}
+              {/* Email Field */}
               <div className="space-y-1">
                 <Typography
                   variant="p"
@@ -256,30 +270,32 @@ export const ProfileModal = ({
                 </Typography>
               </div>
 
-              {/* Bagian Password */}
+              {/* Password Section */}
               <div className="space-y-2">
                 {editMode === "password" ? (
                   <div className="space-y-4 pt-2">
                     <Input
                       id="oldPassword"
-                      label="Password Lama"
+                      label="Old Password"
                       type="password"
                       placeholder="Masukkan password lama Anda"
                       validation={{
                         required: newPasswordValue
-                          ? "Password lama wajib diisi"
+                          ? "Password lama tidak boleh kosong"
                           : false,
                       }}
                     />
                     <Input
                       id="newPassword"
-                      label="Password Baru"
+                      label="New Password"
                       type="password"
                       placeholder="Masukkan password baru Anda"
                       validation={{
-                        minLength: {
-                          value: 8,
-                          message: "Password baru minimal 8 karakter",
+                        required: "Password tidak boleh kosong!",
+                        pattern: {
+                          value: REG_PASS,
+                          message:
+                            "Password harus mengandung huruf besar, huruf kecil, angka, simbol, dan minimal 8 karakter!",
                         },
                       }}
                     />
@@ -309,7 +325,7 @@ export const ProfileModal = ({
                     onClick={() => setEditMode("password")}
                     disabled={editMode === "name"}
                   >
-                    <KeyRound className="mr-2 size-4" /> Ubah Password
+                    <KeyRound className="mr-2 size-4" /> Ganti Password
                   </Button>
                 )}
               </div>
@@ -317,19 +333,33 @@ export const ProfileModal = ({
           </div>
 
           {/* Modal Footer */}
-          <div className="flex justify-end gap-3 p-4 border-t border-border">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Tutup
-            </Button>
+          <div className="flex items-center justify-between p-4 border-t border-border">
             <Button
               type="button"
-              variant="green"
-              onClick={handleSavePhoto}
-              disabled={isUpdating || !selectedFile}
+              variant="red"
+              onClick={onLogout}
+              disabled={isLoggingOut}
+              className="flex items-center gap-2"
             >
-              {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Simpan Photo
+              <LogOut className="size-4" />
+              {isLoggingOut ? "Logging out..." : "Log Out"}
             </Button>
+            <div className="flex gap-3">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Tutup
+              </Button>
+              <Button
+                type="button"
+                variant="green"
+                onClick={handleSavePhoto}
+                disabled={isUpdating || !selectedFile}
+              >
+                {isUpdating && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Simpan Foto
+              </Button>
+            </div>
           </div>
         </div>
       </FormProvider>

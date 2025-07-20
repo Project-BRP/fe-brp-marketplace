@@ -1,17 +1,18 @@
 "use client";
-import getUser from "@/app/(auth)/hooks/getUser";
-import { Badge } from "@/components/Badge";
-import NextImage from "@/components/NextImage";
-import Button from "@/components/buttons/Button";
 
-import Typography from "@/components/Typography";
-
-import useUserStore from "@/store/userStore";
-import { IUpdateUserData } from "@/types/auth";
 import { ShoppingCart, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+import getUser from "@/app/(auth)/hooks/getUser";
+import { Badge } from "@/components/Badge";
+import NextImage from "@/components/NextImage";
+import Typography from "@/components/Typography";
+import Button from "@/components/buttons/Button";
+import useUserStore from "@/store/userStore";
+import { IUpdateUserData } from "@/types/auth";
 import { ProfileModal } from "./_container/profileModal";
+import { useLogout } from "./hooks/useLogout";
 import { useUpdateUser } from "./hooks/useUpdateUser";
 
 export interface NavbarProps {
@@ -26,10 +27,11 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { updateUserProfile, isUpdating } = useUpdateUser();
+  const { handleLogout, isLoggingOut } = useLogout();
 
+  // Effect to synchronize user data on component mount
   useEffect(() => {
     const syncUser = async () => {
-      // Use existing data if available, otherwise refetch
       const dataToSync = getUserData?.data ?? (await refetch())?.data?.data;
       if (dataToSync) {
         setUserData(dataToSync);
@@ -39,7 +41,7 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
     syncUser();
   }, [getUserData, refetch, setUserData]);
 
-  // Correctly handles the FormData object from the modal
+  // Handler for updating user profile
   const handleUpdate = async (formData: IUpdateUserData | FormData) => {
     try {
       await updateUserProfile(formData);
@@ -48,18 +50,18 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
         setUserData(data.data);
       }
     } catch (updateError) {
-      console.error("Failed to update profile from Navbar");
+      console.error("Failed to update profile from Navbar:", updateError);
     }
   };
 
   return (
     <>
-      <header className="bg-background border-b border-border sticky top-0 z-50 flex justify-center items-center">
-        <div className="px-4 py-4 w-full">
+      <header className="bg-background border-b border-border sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between w-full gap-4">
             {/* Logo and Company Name */}
-            <div className="flex items-center gap-3 w-fit">
-              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-lg">
                   B
                 </span>
@@ -67,40 +69,30 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
               <div className="hidden sm:block">
                 <Typography
                   variant="h6"
-                  font="Inter"
                   weight="bold"
                   className="text-foreground"
                 >
-                  PT. Bumi Rekayasa Persada Marketplace
+                  PT. Bumi Rekayasa Persada
                 </Typography>
                 <Typography
                   variant="p"
-                  font="Inter"
-                  className="text-muted-foreground"
+                  className="text-muted-foreground text-sm"
                 >
-                  Pupuk Berkualitas untuk Pertanian Modern
+                  Marketplace
                 </Typography>
               </div>
             </div>
 
-            {/* Cart and User Actions */}
-            <div className="flex items-center gap-2 sm:gap-4 md:gap-6 lg:gap-8 w-fit">
-              {/* Cart Button */}
+            {/* Actions: Cart and User/Auth */}
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
-                size="sm"
-                className="relative hover:bg-accent flex gap-2 p-2"
+                size="base"
+                className="relative h-10 p-2 flex items-center gap-2"
                 onClick={onCartClick}
               >
-                <ShoppingCart className="size-4 sm:size-5 " />
-                <Typography
-                  variant="p"
-                  font="Inter"
-                  className="hidden sm:inline"
-                >
-                  Keranjang
-                </Typography>
-
+                <ShoppingCart className="size-5" />
+                <span className="hidden sm:inline">Keranjang</span>
                 {cartItemCount > 0 && (
                   <Badge
                     variant="destructive"
@@ -111,77 +103,58 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
                 )}
               </Button>
 
-              {/* User Profile / Auth Buttons */}
               {userData?.name ? (
-                <>
-                  <Button
-                    onClick={() => setIsModalOpen(true)} // Open modal on click
-                    variant="green"
-                    className="w-full flex flex-row gap-2 justify-center items-center outline-none border-none p-2 min-w-min"
-                  >
-                    <Typography
-                      variant="p"
-                      font="Inter"
-                      weight="semibold"
-                      className="text-white text-center hidden min-[450px]:inline whitespace-nowrap"
-                    >
-                      Halo, {userData.name.split(" ").slice(0, 2).join(" ")}
-                    </Typography>
-
-                    {userData.photoProfile ? (
-                      <NextImage
-                        src={
-                          process.env.NEXT_PUBLIC_IMAGE_URL +
-                          userData.photoProfile
-                        }
-                        alt="profile"
-                        width={37}
-                        height={36}
-                        serverStaticImg={true}
-                        className="rounded-full"
-                        imgClassName="object-cover w-full h-full rounded-full"
-                      />
-                    ) : (
-                      <User className=" size-4 sm:size-5 text-white" />
-                    )}
-                  </Button>
-                </>
+                <Button
+                  onClick={() => setIsModalOpen(true)}
+                  variant="green"
+                  size="base"
+                  className="h-10 p-2 flex items-center gap-2"
+                >
+                  <span className="hidden min-[450px]:inline whitespace-nowrap font-semibold">
+                    Halo, {userData.name.split(" ")[0]}
+                  </span>
+                  {userData.photoProfile ? (
+                    <NextImage
+                      src={
+                        process.env.NEXT_PUBLIC_IMAGE_URL +
+                        userData.photoProfile
+                      }
+                      alt="profile"
+                      width={28}
+                      height={28}
+                      className="rounded-full"
+                      imgClassName="object-cover w-full h-full rounded-full"
+                    />
+                  ) : (
+                    <User className="size-5 text-white" />
+                  )}
+                </Button>
               ) : (
-                <>
+                <div className="flex items-center gap-2 sm:gap-3">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="base"
                     onClick={() => router.push("/sign-up")}
+                    className="h-10 px-4"
                   >
-                    <Typography
-                      font="Inter"
-                      weight="semibold"
-                      className="text-black text-center sm:text-[10px] min-[664px]:text-xs lg:text-base hover:text-slate-500 hover:font-bold"
-                    >
-                      Daftar
-                    </Typography>
+                    Daftar
                   </Button>
                   <Button
                     variant="green"
+                    size="base"
                     onClick={() => router.push("/sign-in")}
-                    size="sm"
+                    className="h-10 px-4"
                   >
-                    <Typography
-                      font="Inter"
-                      weight="semibold"
-                      className="text-white sm:text-[10px] min-[664px]:text-xs lg:text-base hover:text-slate-200 hover:font-bold"
-                    >
-                      Masuk
-                    </Typography>
+                    Masuk
                   </Button>
-                </>
+                </div>
               )}
             </div>
           </div>
         </div>
       </header>
 
-      {/* Render the Modal */}
+      {/* Profile Modal */}
       {userData && (
         <ProfileModal
           isOpen={isModalOpen}
@@ -193,6 +166,8 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
           }}
           onUpdate={handleUpdate}
           isUpdating={isUpdating}
+          onLogout={handleLogout}
+          isLoggingOut={isLoggingOut}
         />
       )}
     </>
