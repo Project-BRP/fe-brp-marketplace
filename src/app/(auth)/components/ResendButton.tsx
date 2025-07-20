@@ -2,7 +2,7 @@
 import Button from "@/components/buttons/Button";
 import { useEffect, useState } from "react";
 
-import { IRegisterData } from "@/types/email";
+import { IRegisterData } from "@/types/auth";
 import { useRegister } from "../hooks/useRegister";
 
 const RESEND_TIME = 60; // Durasi countdown dalam detik

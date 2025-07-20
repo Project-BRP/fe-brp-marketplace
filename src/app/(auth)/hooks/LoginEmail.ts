@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { ApiError } from "@/types/api";
-import { IAuthResponse, ILoginForm } from "@/types/email";
+import { IAuthResponse, ILoginForm } from "@/types/auth";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 

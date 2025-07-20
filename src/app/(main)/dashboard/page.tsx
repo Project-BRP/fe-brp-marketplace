@@ -160,9 +160,6 @@ const Index = () => {
     return (
       <>
         <Navbar
-          name={userData.name}
-          email={userData.email}
-          photoProfile={null}
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPage("cart")}
         />
@@ -179,9 +176,6 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-earth">
         <Navbar
-          name={userData.name}
-          email={userData.email}
-          photoProfile={null}
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPage("cart")}
         />
@@ -215,9 +209,6 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-earth">
         <Navbar
-          name={userData.name}
-          email={userData.email}
-          photoProfile={null}
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPage("cart")}
         />
@@ -233,9 +224,6 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-earth">
       <Navbar
-        name={userData.name}
-        email={userData.email}
-        photoProfile={null}
         cartItemCount={cartItemCount}
         onCartClick={() => setCurrentPage("cart")}
       />

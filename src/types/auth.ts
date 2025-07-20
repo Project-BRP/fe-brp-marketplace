@@ -1,3 +1,5 @@
+import { User } from "./users";
+
 export interface ILoginForm {
   email: string;
   password: string;
@@ -21,3 +23,13 @@ export interface IAuthResponse {
 export interface IVerifEmail {
   token: string | string[];
 }
+
+export interface IUpdateUserResponse extends Omit<IAuthResponse, "resultCode"> {
+  data: Omit<User, "role">;
+  code: number;
+}
+
+export type IUpdateUserData = Partial<Pick<User, "name">> & {
+  oldPassword?: string;
+  password?: string;
+};

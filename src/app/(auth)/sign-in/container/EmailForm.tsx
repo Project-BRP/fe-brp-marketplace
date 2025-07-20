@@ -4,7 +4,7 @@ import Input from "@/components/form/Input";
 import Typography from "@/components/Typography";
 import { REG_EMAIL, REG_PASS } from "@/constants/regex";
 import { useEmailMutation } from "../../hooks/LoginEmail";
-import { ILoginForm } from "@/types/email";
+import { ILoginForm } from "@/types/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 

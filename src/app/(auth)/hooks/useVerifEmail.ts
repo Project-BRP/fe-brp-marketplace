@@ -4,7 +4,7 @@ import api from "@/lib/api"; // pastikan path ini benar
 import { AxiosError, AxiosResponse } from "axios";
 import { ApiError } from "next/dist/server/api-utils";
 import { ApiResponse } from "@/types/api";
-import { IAuthResponse, IVerifEmail } from "@/types/email";
+import { IAuthResponse, IVerifEmail } from "@/types/auth";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 

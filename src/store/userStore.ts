@@ -14,6 +14,7 @@ const useUserStore = create<UserState>((set) => ({
     name: "",
     email: "",
     role: "",
+    photoProfile: "",
   },
   setUserData: (user) => set({ userData: user }),
   resetUserData: () =>
@@ -23,6 +24,7 @@ const useUserStore = create<UserState>((set) => ({
         name: "",
         email: "",
         role: "",
+        photoProfile: "",
       },
     }),
 }));
