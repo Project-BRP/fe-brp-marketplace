@@ -1,11 +1,11 @@
 import Typography from "@/components/Typography";
-import EmailForm from "./EmailForm";
-import { useRouter } from "next/navigation";
-import { IoArrowForward } from "react-icons/io5";
-import React from "react";
 import { MailCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { IoArrowForward } from "react-icons/io5";
 import ResendButton from "../../components/ResendButton";
 import { useRegister } from "../../hooks/useRegister";
+import EmailForm from "./EmailForm";
 
 export default function LoginWithEmail(): JSX.Element {
   const { handleRegister } = useRegister();

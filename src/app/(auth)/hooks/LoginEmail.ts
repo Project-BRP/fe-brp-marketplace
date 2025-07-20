@@ -1,8 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+import api from "@/lib/api";
 import { ApiError } from "@/types/api";
 import { IAuthResponse, ILoginForm } from "@/types/auth";
-import api from "@/lib/api";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 
 export const useEmailMutation = () => {

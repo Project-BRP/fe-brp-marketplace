@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { Badge } from "@/components/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import { Input } from "@/components/InputLovable";
+import NextImage from "@/components/NextImage";
+import { Separator } from "@/components/Separator";
+import Typography from "@/components/Typography";
+import Button from "@/components/buttons/Button";
 import {
   ArrowLeft,
-  Plus,
-  Minus,
-  ShoppingCart,
-  Leaf,
-  Package,
   Award,
+  Leaf,
+  Minus,
+  Package,
+  Plus,
+  ShoppingCart,
 } from "lucide-react";
-import Button from "@/components/buttons/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { Badge } from "@/components/Badge";
-import { Separator } from "@/components/Separator";
-import NextImage from "@/components/NextImage";
-import Typography from "@/components/Typography";
-import { Input } from "@/components/InputLovable";
+import { useState } from "react";
 
 interface ProductDetailProps {
   productId: string;

@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { ArrowLeft, CreditCard, Truck, MapPin, User } from "lucide-react";
-import Button from "@/components/buttons/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { Textarea } from "@/components/TextArea";
+import { Input } from "@/components/InputLovable";
 import { RadioGroup, RadioGroupItem } from "@/components/RadioGroup";
 import { Separator } from "@/components/Separator";
-import { CartItem } from "./Cart";
+import { Textarea } from "@/components/TextArea";
 import Typography from "@/components/Typography";
-import { Input } from "@/components/InputLovable";
+import Button from "@/components/buttons/Button";
+import { ArrowLeft, CreditCard, MapPin, Truck, User } from "lucide-react";
+import { useState } from "react";
+import { CartItem } from "./Cart";
 
 interface CheckoutProps {
   cartItems: CartItem[];

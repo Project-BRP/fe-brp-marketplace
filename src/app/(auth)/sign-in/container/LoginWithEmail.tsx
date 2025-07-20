@@ -1,7 +1,7 @@
 import Typography from "@/components/Typography";
-import EmailForm from "./EmailForm";
-import { IoArrowForward } from "react-icons/io5";
 import { useRouter } from "next/navigation";
+import { IoArrowForward } from "react-icons/io5";
+import EmailForm from "./EmailForm";
 
 export default function LoginWithEmail(): JSX.Element {
   const router = useRouter();

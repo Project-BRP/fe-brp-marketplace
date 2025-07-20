@@ -1,10 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import Button from "@/components/buttons/Button";
 import { Badge } from "@/components/Badge";
-import { Separator } from "@/components/Separator";
-import { ShoppingCart, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { Input } from "@/components/InputLovable";
+import { Separator } from "@/components/Separator";
 import Typography from "@/components/Typography";
+import Button from "@/components/buttons/Button";
+import { ArrowRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 
 export interface CartItem {
   id: string;

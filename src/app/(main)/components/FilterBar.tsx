@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { Filter, X, Search } from "lucide-react";
 import { Badge } from "@/components/Badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import { Input } from "@/components/InputLovable";
 import Button from "@/components/buttons/Button";
 import LabelText from "@/components/form/LabelText";
-import { Input } from "@/components/InputLovable";
+import { Filter, Search, X } from "lucide-react";
+import { useState } from "react";
 
 interface FilterBarProps {
   onFilterChange: (filters: FilterOptions) => void;

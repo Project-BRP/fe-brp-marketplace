@@ -1,12 +1,12 @@
 "use client";
-import { FormProvider, useForm } from "react-hook-form";
+import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
-import Typography from "@/components/Typography";
 import { REG_EMAIL } from "@/constants/regex";
-import { useForgotPasswordMutation } from "../../hooks/useForgotPassword";
 import { IForgotPasswordForm } from "@/types/auth";
 import { useEffect } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { useForgotPasswordMutation } from "../../hooks/useForgotPassword";
 
 export default function EmailForm({
   setEmail,

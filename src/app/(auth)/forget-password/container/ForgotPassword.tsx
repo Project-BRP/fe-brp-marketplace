@@ -1,10 +1,10 @@
 "use client";
 import Typography from "@/components/Typography";
-import EmailForm from "./EmailForm";
-import React from "react";
 import { MailCheck } from "lucide-react";
+import React from "react";
 import ResendButton from "../../components/ResendButton";
 import { useForgotPasswordMutation } from "../../hooks/useForgotPassword";
+import EmailForm from "./EmailForm";
 
 export default function ForgotPassword(): JSX.Element {
   const { handleForgotPassword } = useForgotPasswordMutation();

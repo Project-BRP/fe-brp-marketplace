@@ -1,7 +1,7 @@
 import api from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
-import { User } from "@/types/users";
 import { ApiResponse } from "@/types/api";
+import { User } from "@/types/users";
+import { useQuery } from "@tanstack/react-query";
 
 export default function getUser() {
   const {

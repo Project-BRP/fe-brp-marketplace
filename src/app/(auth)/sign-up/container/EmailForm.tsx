@@ -1,14 +1,14 @@
 "use client";
 import { FormProvider, useForm } from "react-hook-form";
 
+import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
-import Typography from "@/components/Typography";
 import { REG_EMAIL, REG_PASS } from "@/constants/regex";
 
 import { IRegisterData, IRegisterForm } from "@/types/auth";
-import { useRegister } from "../../hooks/useRegister";
 import { useEffect } from "react";
+import { useRegister } from "../../hooks/useRegister";
 
 export default function EmailForm({
   setDataregis,

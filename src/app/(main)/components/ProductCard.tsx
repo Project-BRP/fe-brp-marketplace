@@ -1,8 +1,8 @@
-import { Eye, ShoppingCart } from "lucide-react";
 import { Badge } from "@/components/Badge";
-import Button from "@/components/buttons/Button";
 import { Card, CardContent, CardFooter } from "@/components/Card";
 import NextImage from "@/components/NextImage";
+import Button from "@/components/buttons/Button";
+import { Eye, ShoppingCart } from "lucide-react";
 
 interface ProductCardProps {
   id: string;

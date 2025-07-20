@@ -1,12 +1,11 @@
+import api from "@/lib/api"; // pastikan path ini benar
+import { IAuthResponse, IVerifEmail } from "@/types/auth";
 // src/hooks/useVerifEmail.ts
 import { useMutation } from "@tanstack/react-query";
-import api from "@/lib/api"; // pastikan path ini benar
-import { AxiosError, AxiosResponse } from "axios";
+import { AxiosError } from "axios";
 import { ApiError } from "next/dist/server/api-utils";
-import { ApiResponse } from "@/types/api";
-import { IAuthResponse, IVerifEmail } from "@/types/auth";
-import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export function useVerifEmail() {
   const router = useRouter();

@@ -1,8 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { IUpdateUserData, IUpdateUserResponse } from "@/types/auth";
+import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { ApiError } from "next/dist/server/api-utils";
-import { IUpdateUserResponse, IUpdateUserData } from "@/types/auth";
 import toast from "react-hot-toast";
 
 export function useUpdateUser() {

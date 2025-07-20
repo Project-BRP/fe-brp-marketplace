@@ -2,7 +2,6 @@
 import NextImage from "@/components/NextImage";
 import Layout from "@/layouts/Layout";
 import LoginWithEmail from "./container/LoginWithEmail";
-import { Toaster } from "react-hot-toast";
 
 export default function SignUpPage() {
   return (

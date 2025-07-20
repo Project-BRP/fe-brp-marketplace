@@ -1,12 +1,12 @@
-import { FormProvider, useForm } from "react-hook-form";
+import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
-import Typography from "@/components/Typography";
 import { REG_EMAIL, REG_PASS } from "@/constants/regex";
-import { useEmailMutation } from "../../hooks/LoginEmail";
 import { ILoginForm } from "@/types/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { useEmailMutation } from "../../hooks/LoginEmail";
 
 export default function EmailForm(): JSX.Element {
   const route = useRouter();

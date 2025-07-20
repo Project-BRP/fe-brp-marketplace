@@ -2,20 +2,20 @@
 import { useState } from "react";
 import ProductCard from "../components/ProductCard";
 
-import Cart, { CartItem } from "../components/Cart";
-import ProductDetail from "../components/ProductDetail";
-import Checkout from "../components/Checkout";
 import { Card, CardContent } from "@/components/Card";
+import Cart, { CartItem } from "../components/Cart";
+import Checkout from "../components/Checkout";
+import ProductDetail from "../components/ProductDetail";
 
-import { Truck, Award, Users, Leaf, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Award, Leaf, Truck, Users } from "lucide-react";
 
-import Button from "@/components/buttons/Button";
 import { Badge } from "@/components/Badge";
-import Navbar from "@/layouts/Navbar";
-import FilterBar, { FilterOptions } from "../components/FilterBar";
-import Typography from "@/components/Typography";
 import NextImage from "@/components/NextImage";
+import Typography from "@/components/Typography";
+import Button from "@/components/buttons/Button";
+import Navbar from "@/layouts/Navbar";
 import useUserStore from "@/store/userStore";
+import FilterBar, { FilterOptions } from "../components/FilterBar";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 

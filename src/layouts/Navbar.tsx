@@ -1,18 +1,18 @@
 "use client";
 import getUser from "@/app/(auth)/hooks/getUser";
 import { Badge } from "@/components/Badge";
-import Button from "@/components/buttons/Button";
 import NextImage from "@/components/NextImage";
+import Button from "@/components/buttons/Button";
 
 import Typography from "@/components/Typography";
 
 import useUserStore from "@/store/userStore";
+import { IUpdateUserData } from "@/types/auth";
 import { ShoppingCart, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProfileModal } from "./_container/profileModal";
 import { useUpdateUser } from "./hooks/useUpdateUser";
-import { IUpdateUserData } from "@/types/auth";
 
 export interface NavbarProps {
   cartItemCount?: number;

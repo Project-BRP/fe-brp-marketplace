@@ -1,13 +1,13 @@
 "use client";
-import { FormProvider, useForm } from "react-hook-form";
+import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
-import Typography from "@/components/Typography";
 import { REG_PASS } from "@/constants/regex";
-import { useResetPasswordMutation } from "../../../hooks/useResetPassword";
+import { IResetPasswordForm } from "@/types/auth";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { IResetPasswordForm } from "@/types/auth";
+import { FormProvider, useForm } from "react-hook-form";
+import { useResetPasswordMutation } from "../../../hooks/useResetPassword";
 
 export default function PasswordForm(): JSX.Element {
   const { Token } = useParams();

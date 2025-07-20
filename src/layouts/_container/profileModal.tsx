@@ -1,18 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import {
-  useForm,
-  FormProvider,
-  SubmitHandler,
-  useFormContext,
-} from "react-hook-form";
-import { User, X, Camera, Loader2, KeyRound, Edit2, Check } from "lucide-react";
 import NextImage from "@/components/NextImage";
-import Button from "@/components/buttons/Button";
 import Typography from "@/components/Typography";
-import { IUpdateUserData } from "@/types/auth";
+import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
+import { IUpdateUserData } from "@/types/auth";
+import { Camera, Check, Edit2, KeyRound, Loader2, User, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import ImageCropper from "./ImageCropper";
 
 // --- Main Profile Modal Component ---
