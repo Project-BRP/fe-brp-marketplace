@@ -5,39 +5,14 @@ import { Separator } from "@/components/Separator";
 import { Textarea } from "@/components/TextArea";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import { CartItem, OrderData } from "@/types/order";
 import { ArrowLeft, CreditCard, MapPin, Truck, User } from "lucide-react";
 import { useState } from "react";
-import { CartItem } from "./Cart";
 
 interface CheckoutProps {
   cartItems: CartItem[];
   onBack: () => void;
   onOrderSubmit: (orderData: OrderData) => void;
-}
-
-interface OrderData {
-  customer: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  shipping: {
-    address: string;
-    city: string;
-    postalCode: string;
-    province: string;
-    notes?: string;
-    method: string;
-  };
-  payment: {
-    method: string;
-  };
-  items: CartItem[];
-  summary: {
-    subtotal: number;
-    shippingCost: number;
-    total: number;
-  };
 }
 
 const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {

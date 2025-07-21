@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import * as React from "react";
-import { AdminLayout } from "./_container/adminLayout";
+import { AdminLayout } from "./_container/AdminLayout";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",

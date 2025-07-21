@@ -3,7 +3,7 @@ import { useState } from "react";
 import ProductCard from "../components/ProductCard";
 
 import { Card, CardContent } from "@/components/Card";
-import Cart, { CartItem } from "../components/Cart";
+import Cart from "../components/Cart";
 import Checkout from "../components/Checkout";
 import ProductDetail from "../components/ProductDetail";
 
@@ -14,13 +14,12 @@ import NextImage from "@/components/NextImage";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
-import useUserStore from "@/store/userStore";
+import { CartItem } from "@/types/order";
 import FilterBar, { FilterOptions } from "../components/FilterBar";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
 const Index = () => {
-  const { userData } = useUserStore();
   const [currentPage, setCurrentPage] = useState<PageView>("catalog");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -139,14 +138,6 @@ const Index = () => {
   const handleRemoveItem = (id: string) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
-
-  interface OrderData {
-    customerName: string;
-    address: string;
-    phoneNumber: string;
-    items: CartItem[];
-    totalPrice: number;
-  }
 
   const handleOrderSubmit = () => {
     alert("Pesanan berhasil dibuat! Terima kasih telah berbelanja.");

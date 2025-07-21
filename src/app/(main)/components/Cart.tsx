@@ -4,17 +4,8 @@ import { Input } from "@/components/InputLovable";
 import { Separator } from "@/components/Separator";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import { CartItem } from "@/types/order";
 import { ArrowRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-
-export interface CartItem {
-  id: string;
-  name: string;
-  npkFormula: string;
-  price: number;
-  unit: string;
-  quantity: number;
-  image?: string;
-}
 
 interface CartProps {
   items: CartItem[];
