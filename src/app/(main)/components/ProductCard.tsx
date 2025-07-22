@@ -45,7 +45,7 @@ const ProductCard = ({
               variant="secondary"
               className="absolute top-3 left-3 bg-primary text-primary-foreground shadow-button"
             >
-              NPK {displayVariant.composition}
+              {product.productType?.name ?? `${displayVariant.id}`}
             </Badge>
           )}
         </div>
