@@ -20,7 +20,6 @@ export default function AdminNavbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { updateUserProfile, isUpdating } = useUpdateUser();
   const { handleLogout, isLoggingOut } = useLogout();
-
   useEffect(() => {
     const syncUser = async () => {
       const dataToSync = getUserData?.data ?? (await refetch())?.data?.data;
@@ -47,7 +46,7 @@ export default function AdminNavbar() {
     <>
       <header className="bg-background border-b border-border sticky top-0 z-40">
         {/* The container is now inside the header to constrain content but not the background */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-end h-16">
             {userData?.name ? (
               <Button
