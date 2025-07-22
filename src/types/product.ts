@@ -5,6 +5,15 @@ export interface ProductResponse {
   currentPage: number;
 }
 
+export interface ProductTypesResponse
+  extends Omit<ProductResponse, "products"> {
+  productTypes: ProductType[];
+}
+
+export interface PackagingResponse extends Omit<ProductResponse, "products"> {
+  packagings: Packaging[];
+}
+
 // Represents the structure of a single product variant
 export interface ProductVariant {
   id: string;
@@ -36,14 +45,14 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  productTypeId: string | null;
+  productTypeId?: string;
   storageInstructions: string;
   expiredDurationInYears: number;
   usageInstructions: string;
   benefits: string;
   createdAt: string;
   updatedAt: string;
-  productType?: ProductType | null;
+  productType: ProductType;
   variants: ProductVariant[];
 }
 
@@ -51,7 +60,7 @@ export interface Product {
 export interface CreateProductPayload {
   name: string;
   description: string;
-  productTypeId: string;
+  productTypeId?: string;
   storageInstructions: string;
   expiredDurationInYears: number;
   usageInstructions: string;
