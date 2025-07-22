@@ -1,4 +1,8 @@
 "use client";
+import {
+  useDeleteProduct,
+  useGetAllProducts,
+} from "@/app/(main)/hooks/useProduct";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import {
@@ -9,6 +13,14 @@ import {
   DialogTrigger,
 } from "@/components/Dialog";
 import { Input } from "@/components/InputLovable";
+import NextImage from "@/components/NextImage";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/Select";
 import {
   Table,
   TableBody,
@@ -18,99 +30,76 @@ import {
   TableRow,
 } from "@/components/Table";
 import Button from "@/components/buttons/Button";
+import {
+  Edit,
+  Filter,
+  Loader2,
+  Package,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 
-import NextImage from "@/components/NextImage"; // Import NextImage
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/Select";
-import { Textarea } from "@/components/TextArea";
-import LabelText from "@/components/form/LabelText";
-import { Edit, Filter, Package, Plus, Search, Trash2 } from "lucide-react";
-
-// Mock data produk
-const products = [
-  {
-    id: 1,
-    name: "NPK 15-15-15",
-    image: "/dashboard/Hero.jpg", // Updated image path
-    price: 150000,
-    stock: 120,
-    npk: "15-15-15",
-    description:
-      "Pupuk majemuk dengan kandungan nitrogen, fosfor, dan kalium seimbang",
-  },
-  {
-    id: 2,
-    name: "NPK 16-16-16",
-    image: "/dashboard/Hero.jpg", // Updated image path
-    price: 165000,
-    stock: 95,
-    npk: "16-16-16",
-    description:
-      "Pupuk premium dengan kandungan NPK tinggi untuk hasil maksimal",
-  },
-  {
-    id: 3,
-    name: "NPK 13-6-27",
-    image: "/dashboard/Hero.jpg", // Updated image path
-    price: 140000,
-    stock: 78,
-    npk: "13-6-27",
-    description: "Pupuk khusus untuk fase pembungaan dengan kalium tinggi",
-  },
-  {
-    id: 4,
-    name: "NPK 12-12-17",
-    image: "/dashboard/Hero.jpg", // Updated image path
-    price: 135000,
-    stock: 156,
-    npk: "12-12-17",
-    description: "Pupuk serbaguna untuk berbagai jenis tanaman",
-  },
-  {
-    id: 5,
-    name: "NPK 13-8-27-4",
-    image: "/dashboard/Hero.jpg", // Updated image path
-    price: 160000,
-    stock: 89,
-    npk: "13-8-27-4",
-    description: "Pupuk dengan tambahan sulfur untuk hasil optimal",
-  },
-];
-
-const npkOptions = [
-  "Semua",
-  "15-15-15",
-  "16-16-16",
-  "13-6-27",
-  "12-12-17",
-  "13-8-27-4",
-];
+// NOTE: This component still needs form handling logic for creating/editing products.
 
 export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedNPK, setSelectedNPK] = useState("Semua");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesNPK = selectedNPK === "Semua" || product.npk === selectedNPK;
-    return matchesSearch && matchesNPK;
-  });
+  const { data: products = [], isLoading, isError } = useGetAllProducts();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+
+  // Safely filter products, ensuring variants exists before filtering
+  const filteredProducts =
+    products?.filter((product) => {
+      const matchesSearch = product.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      // Use optional chaining (?.) to safely access variants
+      const matchesNPK =
+        selectedNPK === "Semua" ||
+        product.variants?.some((v) => v.composition.includes(selectedNPK));
+      return matchesSearch && matchesNPK;
+    }) ?? []; // Default to an empty array if products is undefined
+
+  // Safely generate NPK options for the filter dropdown
+  const npkOptions = [
+    "Semua",
+    ...Array.from(
+      new Set(
+        products
+          ?.flatMap((p) => p.variants?.map((v) => v.composition) ?? [])
+          .filter(Boolean) ?? [], // Filter out any undefined values
+      ),
+    ),
+  ];
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
+      minimumFractionDigits: 0,
     }).format(price);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center text-red-500">
+        Failed to load products. Please try again later.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -136,42 +125,8 @@ export default function AdminProducts() {
             <DialogHeader>
               <DialogTitle>Tambah Produk Baru</DialogTitle>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                <LabelText>Nama Produk</LabelText>
-                <Input id="productName" placeholder="NPK 15-15-15" />
-              </div>
-              <div className="space-y-2">
-                <LabelText>Kandungan NPK</LabelText>
-                <Input id="npkContent" placeholder="15-15-15" />
-              </div>
-              <div className="space-y-2">
-                <LabelText>Harga (Rp)</LabelText>
-                <Input id="price" type="number" placeholder="150000" />
-              </div>
-              <div className="space-y-2">
-                <LabelText>Stok</LabelText>
-                <Input id="stock" type="number" placeholder="100" />
-              </div>
-              <div className="col-span-2 space-y-2">
-                <LabelText>Deskripsi</LabelText>
-                <Textarea id="description" placeholder="Deskripsi produk..." />
-              </div>
-              <div className="col-span-2 space-y-2">
-                <LabelText>Gambar Produk</LabelText>
-                <Input id="image" type="file" accept="image/*" />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsAddDialogOpen(false)}
-              >
-                Batal
-              </Button>
-              <Button onClick={() => setIsAddDialogOpen(false)}>
-                Simpan Produk
-              </Button>
+            <div className="py-4 text-center">
+              Product creation form goes here.
             </div>
           </DialogContent>
         </Dialog>
@@ -227,10 +182,8 @@ export default function AdminProducts() {
             <TableHeader>
               <TableRow>
                 <TableHead>Produk</TableHead>
-                <TableHead>NPK</TableHead>
-                <TableHead>Harga</TableHead>
-                <TableHead>Stok</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Tipe</TableHead>
+                <TableHead>Harga (varian termurah)</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -240,7 +193,11 @@ export default function AdminProducts() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <NextImage
-                        src="/dashboard/Hero.jpg"
+                        // Safely access the image URL with optional chaining
+                        src={
+                          product.variants?.[0]?.imageUrl ??
+                          "/dashboard/Hero.jpg"
+                        }
                         alt={product.name}
                         width={48}
                         height={48}
@@ -256,18 +213,19 @@ export default function AdminProducts() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{product.npk}</Badge>
+                    <Badge variant="outline">
+                      {product.productType?.name ?? "N/A"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {formatPrice(product.price)}
-                  </TableCell>
-                  <TableCell>{product.stock} karung</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={product.stock > 50 ? "default" : "destructive"}
-                    >
-                      {product.stock > 50 ? "Tersedia" : "Stok Terbatas"}
-                    </Badge>
+                    {/* Safely access variants before calculating price */}
+                    {product.variants?.length > 0
+                      ? formatPrice(
+                          Math.min(
+                            ...product.variants.map((v) => v.priceRupiah),
+                          ),
+                        )
+                      : "N/A"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -278,6 +236,8 @@ export default function AdminProducts() {
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive"
+                        onClick={() => deleteProduct(product.id)}
+                        disabled={isDeleting}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

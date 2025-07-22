@@ -1,21 +1,19 @@
 "use client";
-import { useState } from "react";
-import ProductCard from "../components/ProductCard";
-
-import { Card, CardContent } from "@/components/Card";
-import Cart from "../components/Cart";
-import Checkout from "../components/Checkout";
-import ProductDetail from "../components/ProductDetail";
-
-import { ArrowLeft, Award, Leaf, Truck, Users } from "lucide-react";
-
 import { Badge } from "@/components/Badge";
+import { Card, CardContent } from "@/components/Card";
 import NextImage from "@/components/NextImage";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
 import { CartItem } from "@/types/order";
+import { ArrowLeft, Award, Leaf, Loader2, Truck, Users } from "lucide-react";
+import { useState } from "react";
+import Cart from "../components/Cart";
+import Checkout from "../components/Checkout";
 import FilterBar, { FilterOptions } from "../components/FilterBar";
+import ProductCard from "../components/ProductCard";
+import ProductDetail from "../components/ProductDetail";
+import { useGetAllProducts } from "../hooks/useProduct";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
@@ -29,87 +27,51 @@ const Index = () => {
     searchTerm: "",
   });
 
-  // Mock products data
-  const allProducts = [
-    {
-      id: "1",
-      name: "Pupuk NPK 15-15-15 Premium",
-      npkFormula: "15-15-15",
-      description:
-        "Pupuk majemuk lengkap dengan kandungan seimbang untuk semua jenis tanaman",
-      price: 125000,
-      unit: "karung 50kg",
-    },
-    {
-      id: "2",
-      name: "Pupuk NPK 16-16-16 Super",
-      npkFormula: "16-16-16",
-      description:
-        "Formula tinggi nitrogen untuk pertumbuhan vegetatif yang optimal",
-      price: 135000,
-      unit: "karung 50kg",
-    },
-    {
-      id: "3",
-      name: "Pupuk NPK 12-12-17 Khusus Buah",
-      npkFormula: "12-12-17",
-      description: "Tinggi kalium untuk pembungaan dan pembuahan yang maksimal",
-      price: 130000,
-      unit: "karung 50kg",
-    },
-    {
-      id: "4",
-      name: "Pupuk NPK 13-6-27 Potassium Plus",
-      npkFormula: "13-6-27",
-      description: "Tinggi kalium untuk tanaman buah dan sayuran",
-      price: 140000,
-      unit: "karung 50kg",
-    },
-    {
-      id: "5",
-      name: "Pupuk NPK 13-8-27-4 Complete",
-      npkFormula: "13-8-27-4",
-      description:
-        "Formula lengkap dengan unsur mikro untuk hasil panen optimal",
-      price: 150000,
-      unit: "karung 50kg",
-    },
-    {
-      id: "6",
-      name: "Pupuk NPK 14-14-14 Standard",
-      npkFormula: "14-14-14",
-      description: "Pupuk serbaguna untuk berbagai jenis tanaman pertanian",
-      price: 120000,
-      unit: "karung 50kg",
-    },
-  ];
+  const { data: allProducts = [], isLoading, isError } = useGetAllProducts();
 
-  // Filter products based on active filters
-  const filteredProducts = allProducts.filter((product) => {
-    const matchesNPK =
-      filters.npkFormula.length === 0 ||
-      filters.npkFormula.includes(product.npkFormula);
-    const matchesPrice =
-      (filters.priceRange.min === 0 ||
-        product.price >= filters.priceRange.min) &&
-      (filters.priceRange.max === 0 || product.price <= filters.priceRange.max);
-    const matchesSearch =
-      !filters.searchTerm ||
-      product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      product.npkFormula.includes(filters.searchTerm);
+  // FIX: Updated filtering logic to use `variants` and handle undefined cases safely.
+  const filteredProducts =
+    allProducts?.filter((product) => {
+      // Ensure product and its variants exist before filtering
+      if (!product?.variants || product.variants.length === 0) {
+        return false;
+      }
 
-    return matchesNPK && matchesPrice && matchesSearch;
-  });
+      const matchesNPK =
+        filters.npkFormula.length === 0 ||
+        product.variants.some((v) =>
+          filters.npkFormula.includes(v.composition),
+        );
+
+      const minPrice = Math.min(...product.variants.map((v) => v.priceRupiah));
+      const maxPrice = Math.max(...product.variants.map((v) => v.priceRupiah));
+
+      const matchesPrice =
+        (filters.priceRange.min === 0 || maxPrice >= filters.priceRange.min) &&
+        (filters.priceRange.max === 0 || minPrice <= filters.priceRange.max);
+
+      const matchesSearch =
+        !filters.searchTerm ||
+        product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        product.variants.some((v) =>
+          v.composition.includes(filters.searchTerm),
+        );
+
+      return matchesNPK && matchesPrice && matchesSearch;
+    }) ?? []; // Default to an empty array if allProducts is not an array
 
   const handleAddToCart = (productId: string, quantity: number = 1) => {
     const product = allProducts.find((p) => p.id === productId);
-    if (!product) return;
+    // FIX: Use `variants` and check for its existence
+    if (!product?.variants?.length) return;
+
+    const mainVariant = product.variants[0];
 
     setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === productId);
+      const existingItem = prev.find((item) => item.id === mainVariant.id);
       if (existingItem) {
         return prev.map((item) =>
-          item.id === productId
+          item.id === mainVariant.id
             ? { ...item, quantity: item.quantity + quantity }
             : item,
         );
@@ -117,12 +79,13 @@ const Index = () => {
         return [
           ...prev,
           {
-            id: product.id,
+            id: mainVariant.id,
             name: product.name,
-            npkFormula: product.npkFormula,
-            price: product.price,
-            unit: product.unit,
+            npkFormula: mainVariant.composition,
+            price: mainVariant.priceRupiah,
+            unit: mainVariant.weight,
             quantity,
+            image: mainVariant.imageUrl,
           },
         ];
       }
@@ -325,25 +288,37 @@ const Index = () => {
             </p>
           </div>
 
-          {/* Filter Bar */}
           <FilterBar onFilterChange={setFilters} activeFilters={filters} />
 
-          {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                {...product}
-                onViewDetail={(id) => {
-                  setSelectedProductId(id);
-                  setCurrentPage("product-detail");
-                }}
-                onAddToCart={(id) => handleAddToCart(id)}
-              />
-            ))}
-          </div>
+          {isLoading && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+          )}
 
-          {filteredProducts.length === 0 && (
+          {isError && (
+            <div className="text-center py-12 text-red-500">
+              Gagal memuat produk. Silakan coba lagi nanti.
+            </div>
+          )}
+
+          {!isLoading && !isError && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onViewDetail={(id) => {
+                    setSelectedProductId(id);
+                    setCurrentPage("product-detail");
+                  }}
+                  onAddToCart={(id) => handleAddToCart(id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {!isLoading && filteredProducts.length === 0 && (
             <div className="text-center py-12">
               <p className="text-lg text-muted-foreground">
                 Tidak ada produk yang sesuai dengan filter yang dipilih.
