@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
-import { ApiResponse, ApiReturn } from "@/types/api";
+import { ApiResponse } from "@/types/api";
 import { Packaging, ProductType, ProductTypesResponse } from "@/types/product";
 
 export const useProductTypes = () => {
@@ -15,12 +15,19 @@ export const useProductTypes = () => {
   });
 };
 
+const packagings = [
+  { id: "Karung_50kg", name: "Karung 50kg" },
+  { id: "Karung_25kg", name: "Karung 25kg" },
+  { id: "Botol_1L", name: "Botol 1 Liter" },
+  { id: "Sachet_1kg", name: "Sachet 1kg" },
+];
+
 export const usePackagings = () => {
   return useQuery<Packaging[]>({
     queryKey: ["packagings"],
-    queryFn: async () => {
-      const res = await api.get<ApiReturn<Packaging[]>>("/packagings");
-      return res.data.data;
+    queryFn: () => {
+      // const res = await api.get<ApiReturn<Packaging[]>>("/packagings");
+      return packagings;
     },
   });
 };

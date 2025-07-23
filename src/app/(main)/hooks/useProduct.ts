@@ -15,9 +15,11 @@ export const useGetAllProducts = (params: GetAllProductsParams) => {
     queryKey: ["products", params],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
+
       if (params.page) queryParams.set("page", String(params.page));
       if (params.limit) queryParams.set("limit", String(params.limit));
       if (params.search) queryParams.set("search", params.search);
+
       if (params.productTypeId && params.productTypeId !== "Semua") {
         queryParams.set("productTypeId", params.productTypeId);
       }

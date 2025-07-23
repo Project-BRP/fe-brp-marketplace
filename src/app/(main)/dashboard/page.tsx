@@ -9,7 +9,7 @@ import {
   Truck,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 
 import Cart from "@/app/(main)/components/Cart";
@@ -42,37 +42,66 @@ const Index = () => {
   // --- Filtering & Pagination State ---
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("Semua");
+  const [selectedPackaging, setSelectedPackaging] = useState("Semua");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(6);
+
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
   // --- Data Fetching ---
+  // Fetch based on server-supported filters (search, productType)
   const {
     data: productData,
     isLoading,
     isError,
   } = useGetAllProducts({
-    page,
-    limit,
+    limit: 1000, // Fetch a large list for client-side filtering
     search: debouncedSearchTerm,
     productTypeId: selectedType,
   });
   const { data: packagings = [], isLoading: isLoadingPackagings } =
     usePackagings();
 
-  // A separate query to get a full list for the detail page lookup.
-  // This could be optimized later by fetching a single product by ID on the detail page.
-  const { data: allProductsData } = useGetAllProducts({ limit: 1000 });
+  // --- Client-Side Filtering ---
+  const clientFilteredProducts = useMemo(() => {
+    const initialProducts = productData?.products ?? [];
+    return initialProducts.filter((product) => {
+      const hasMatchingPackaging =
+        selectedPackaging === "Semua" ||
+        product.variants.some((v) => v.packagingId === selectedPackaging);
+      if (!hasMatchingPackaging) return false;
 
-  // --- Derived State ---
-  // Correctly extract products and pagination info from the new response structure
-  const products = productData?.products ?? [];
-  const totalPages = productData?.totalPages ?? 1;
-  const currentPageNum = productData?.currentPage ?? 1;
+      const min = minPrice ? Number(minPrice) : 0;
+      const max = maxPrice ? Number(maxPrice) : Infinity;
+      const hasMatchingPrice = product.variants.some(
+        (v) => v.priceRupiah >= min && v.priceRupiah <= max,
+      );
+      if (!hasMatchingPrice) return false;
+      return true;
+    });
+  }, [productData, selectedPackaging, minPrice, maxPrice]);
+
+  // --- Client-Side Pagination ---
+  const paginatedProducts = useMemo(() => {
+    const totalPages = Math.ceil(clientFilteredProducts.length / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const productsOnPage = clientFilteredProducts.slice(startIndex, endIndex);
+    return { products: productsOnPage, totalPages, currentPage: page };
+  }, [clientFilteredProducts, page, limit]);
 
   // --- Event Handlers ---
+  const handleFilterChange =
+    (setter: React.Dispatch<React.SetStateAction<string>>) =>
+    (value: string) => {
+      setPage(1);
+      setter(value);
+    };
+
   const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= totalPages) {
+    if (newPage > 0 && newPage <= paginatedProducts.totalPages) {
       setPage(newPage);
       document
         .querySelector("#catalog-section")
@@ -80,20 +109,9 @@ const Index = () => {
     }
   };
 
-  const handleFilterTypeChange = (value: string) => {
-    setPage(1); // Reset to first page on filter change
-    setSelectedType(value);
-  };
-
-  const handleSearchChange = (value: string) => {
-    setPage(1); // Reset to first page on search
-    setSearchTerm(value);
-  };
-
   const handleAddToCart = (product: Product, quantity: number = 1) => {
     if (!product?.variants?.length) return;
     const mainVariant = product.variants[0];
-
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.id === mainVariant.id);
       if (existingItem) {
@@ -102,39 +120,33 @@ const Index = () => {
             ? { ...item, quantity: item.quantity + quantity }
             : item,
         );
-      } else {
-        return [
-          ...prev,
-          {
-            id: mainVariant.id,
-            name: product.name,
-            npkFormula: mainVariant.composition,
-            price: mainVariant.priceRupiah,
-            unit: mainVariant.weight,
-            quantity,
-            image: mainVariant.imageUrl,
-          },
-        ];
       }
+      return [
+        ...prev,
+        {
+          id: mainVariant.id,
+          name: product.name,
+          npkFormula: mainVariant.composition,
+          price: mainVariant.priceRupiah,
+          unit: mainVariant.weight,
+          quantity,
+          image: mainVariant.imageUrl,
+        },
+      ];
     });
   };
 
-  const handleUpdateQuantity = (id: string, quantity: number) => {
+  const handleUpdateQuantity = (id: string, quantity: number) =>
     setCartItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
     );
-  };
-
-  const handleRemoveItem = (id: string) => {
+  const handleRemoveItem = (id: string) =>
     setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
   const handleOrderSubmit = () => {
-    alert("Pesanan berhasil dibuat! Terima kasih telah berbelanja.");
+    alert("Pesanan berhasil dibuat!");
     setCartItems([]);
     setCurrentPageView("catalog");
   };
-
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // --- Render Functions ---
@@ -148,28 +160,22 @@ const Index = () => {
         </div>
       );
     }
-
-    if (isError) {
+    if (isError)
       return (
         <div className="text-center py-12 text-red-500">
-          Gagal memuat produk. Silakan coba lagi nanti.
+          Gagal memuat produk.
         </div>
       );
-    }
-
-    if (products.length === 0) {
+    if (paginatedProducts.products.length === 0)
       return (
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground">
-            Tidak ada produk yang sesuai dengan filter yang dipilih.
-          </p>
+        <div className="text-center py-12 text-muted-foreground">
+          Tidak ada produk yang ditemukan.
         </div>
       );
-    }
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+        {paginatedProducts.products.map((product) => (
           <ProductCard
             key={product.id}
             product={product}
@@ -187,6 +193,7 @@ const Index = () => {
 
   // --- Page Render Logic ---
   if (currentPageView === "product-detail") {
+    const productList = productData?.products ?? [];
     return (
       <>
         <Navbar
@@ -197,7 +204,6 @@ const Index = () => {
           productId={selectedProductId}
           onBack={() => setCurrentPageView("catalog")}
           onAddToCart={(id, qty) => {
-            const productList = allProductsData?.products ?? [];
             const product = productList.find((p) => p.id === id);
             if (product) handleAddToCart(product, qty);
           }}
@@ -276,7 +282,7 @@ const Index = () => {
                 variant="h2"
                 className="text-3xl sm:text-4xl md:text-4xl lg:text-6xl font-bold text-foreground leading-tight"
               >
-                Solusi Terbaik untuk
+                Solusi Terbaik untuk{" "}
                 <span className="text-primary"> Pertanian Modern</span>
               </Typography>
               <Typography
@@ -291,11 +297,11 @@ const Index = () => {
                   variant="green"
                   size="lg"
                   className="hover:bg-primary-dark shadow-button"
-                  onClick={() => {
-                    const catalogSection =
-                      document.querySelector("#catalog-section");
-                    catalogSection?.scrollIntoView({ behavior: "smooth" });
-                  }}
+                  onClick={() =>
+                    document
+                      .querySelector("#catalog-section")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
                 >
                   <Leaf className="h-5 w-5 mr-2" />
                   Lihat Katalog
@@ -369,33 +375,39 @@ const Index = () => {
 
           <FilterBar
             searchTerm={searchTerm}
-            onSearchChange={handleSearchChange}
+            onSearchChange={handleFilterChange(setSearchTerm)}
             selectedType={selectedType}
-            onTypeChange={handleFilterTypeChange}
+            onTypeChange={handleFilterChange(setSelectedType)}
+            selectedPackaging={selectedPackaging}
+            onPackagingChange={handleFilterChange(setSelectedPackaging)}
+            minPrice={minPrice}
+            onMinPriceChange={handleFilterChange(setMinPrice)}
+            maxPrice={maxPrice}
+            onMaxPriceChange={handleFilterChange(setMaxPrice)}
           />
 
           <div className="mt-8 min-h-[400px]">{renderCatalogContent()}</div>
 
           {/* Pagination */}
-          {totalPages > 1 && !isLoading && !isError && (
+          {paginatedProducts.totalPages > 1 && !isLoading && !isError && (
             <div className="flex justify-center items-center gap-4 mt-12">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(page - 1)}
-                disabled={currentPageNum === 1}
+                disabled={page === 1}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Sebelumnya
               </Button>
               <span className="text-sm font-medium">
-                Halaman {currentPageNum} dari {totalPages}
+                Halaman {page} dari {paginatedProducts.totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(page + 1)}
-                disabled={currentPageNum === totalPages}
+                disabled={page === paginatedProducts.totalPages}
               >
                 Berikutnya
                 <ChevronRight className="h-4 w-4 ml-1" />
