@@ -54,6 +54,7 @@ import {
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { CreateProductPayload, Product } from "@/types/product";
+import ProductForm from "./_components/ProductForm";
 
 const initialAdvancedFilters: AdvancedFilters = {
   productTypeId: "Semua",
@@ -63,14 +64,14 @@ const initialAdvancedFilters: AdvancedFilters = {
 };
 
 export default function AdminProducts() {
-  // --- Modal and Editing State ---
+  // --- State Modal dan Editing ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // --- Filtering & Pagination State ---
+  // --- State Filter & Paginasi ---
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -79,29 +80,34 @@ export default function AdminProducts() {
     initialAdvancedFilters,
   );
 
-  // --- Data Fetching ---
+  // --- Pengambilan Data ---
   const {
     data: productData,
     isLoading,
     isError,
   } = useGetAllProducts({
-    limit: 1000, // Fetch all to filter on client
+    limit: 1000, // Ambil semua untuk filter di sisi client
     search: debouncedSearchTerm,
     productTypeId: advancedFilters.productTypeId,
   });
   const { data: productTypes = [] } = useProductTypes();
   const { data: packagings = [] } = usePackagings();
 
-  // --- Mutations ---
+  // --- Mutasi Data ---
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
-  // --- Client-side Filtering Logic ---
+  // --- Logika Filter di Sisi Client ---
   const clientFilteredProducts = useMemo(() => {
     const initialProducts = productData?.products ?? [];
     return initialProducts.filter((product) => {
       const { packagingIds, minPrice, maxPrice } = advancedFilters;
+
+      // Allow products without variants
+      if (!product.variants || product.variants.length === 0) {
+        return true;
+      }
 
       const hasMatchingPackaging =
         packagingIds.length === 0 ||
@@ -121,7 +127,7 @@ export default function AdminProducts() {
     });
   }, [productData, advancedFilters]);
 
-  // --- Pagination Logic ---
+  // --- Logika Paginasi ---
   const paginatedProducts = useMemo(() => {
     const totalPages = Math.ceil(clientFilteredProducts.length / limit);
     const startIndex = (page - 1) * limit;
@@ -130,7 +136,50 @@ export default function AdminProducts() {
     return { products: productsOnPage, totalPages };
   }, [clientFilteredProducts, page, limit]);
 
-  // --- Helper Functions ---
+  // --- Debugging ---
+  useMemo(() => {
+    if (
+      productData?.products.some(
+        (product) => product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
+      )
+    ) {
+      console.log(
+        "productData contains the product:",
+        productData.products.find(
+          (product) =>
+            product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
+        ),
+      );
+    }
+    if (
+      clientFilteredProducts.some(
+        (product) => product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
+      )
+    ) {
+      console.log(
+        "clientFilteredProducts contains the product:",
+        clientFilteredProducts.find(
+          (product) =>
+            product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
+        ),
+      );
+    }
+    if (
+      paginatedProducts.products.some(
+        (product) => product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
+      )
+    ) {
+      console.log(
+        "paginatedProducts contains the product:",
+        paginatedProducts.products.find(
+          (product) =>
+            product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
+        ),
+      );
+    }
+  }, [productData, clientFilteredProducts, paginatedProducts]);
+
+  // --- Fungsi Bantuan ---
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -177,7 +226,7 @@ export default function AdminProducts() {
   };
 
   const handleDelete = (productId: string) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
+    if (window.confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
       deleteProduct(productId);
     }
   };
@@ -191,7 +240,7 @@ export default function AdminProducts() {
     }
   };
 
-  // --- Render Logic ---
+  // --- Logika Render ---
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -203,7 +252,7 @@ export default function AdminProducts() {
   if (isError) {
     return (
       <div className="text-center text-red-500">
-        Failed to load products. Please try again later.
+        Gagal memuat produk. Silakan coba lagi nanti.
       </div>
     );
   }
@@ -226,7 +275,7 @@ export default function AdminProducts() {
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* Filter */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -239,6 +288,7 @@ export default function AdminProducts() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                id="search-product"
                 placeholder="Cari produk..."
                 value={searchTerm}
                 onChange={handleSearchChange}
@@ -273,12 +323,12 @@ export default function AdminProducts() {
         </CardContent>
       </Card>
 
-      {/* Products Table */}
+      {/* Tabel Produk */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Daftar Produk ({paginatedProducts.products.length})
+            Daftar Produk ({clientFilteredProducts.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -319,10 +369,11 @@ export default function AdminProducts() {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {product.variants?.length > 0
+                      {(product.variants ?? []).length > 0
                         ? formatPrice(
                             Math.min(
-                              ...product.variants.map((v) => v.priceRupiah),
+                              ...(product.variants?.map((v) => v.priceRupiah) ||
+                                []),
                             ),
                           )
                         : "N/A"}
@@ -362,7 +413,7 @@ export default function AdminProducts() {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
+      {/* Paginasi */}
       {paginatedProducts.totalPages > 1 && (
         <div className="flex justify-center items-center gap-4">
           <Button
@@ -389,7 +440,7 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* Filter Modal */}
+      {/* Modal Filter */}
       <FilterModal
         isOpen={isFilterModalOpen}
         onOpenChange={setIsFilterModalOpen}
@@ -401,7 +452,7 @@ export default function AdminProducts() {
         onReset={handleResetFilters}
       />
 
-      {/* Add/Edit Product Dialog */}
+      {/* Dialog Tambah/Edit Produk */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -409,18 +460,17 @@ export default function AdminProducts() {
               {editingProduct ? "Edit Produk" : "Tambah Produk Baru"}
             </DialogTitle>
           </DialogHeader>
-          {/* <ProductForm
+          <ProductForm
             initialData={editingProduct}
             productTypes={productTypes}
-            packagings={packagings}
             onSubmit={handleFormSubmit}
             onClose={() => setIsModalOpen(false)}
             isSubmitting={isCreating || isUpdating}
-          /> */}
+          />
         </DialogContent>
       </Dialog>
 
-      {/* Product Info Dialog */}
+      {/* Dialog Info Produk */}
       <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
@@ -489,10 +539,10 @@ export default function AdminProducts() {
               </div>
               <div>
                 <Typography variant="h6" weight="semibold" className="mb-4">
-                  Varian Produk ({viewingProduct.variants.length})
+                  Varian Produk ({viewingProduct.variants?.length})
                 </Typography>
                 <div className="space-y-4">
-                  {viewingProduct.variants.map((variant) => (
+                  {viewingProduct.variants?.map((variant) => (
                     <Card key={variant.id} className="bg-muted/50">
                       <CardContent className="p-4 flex gap-4 items-start">
                         <NextImage

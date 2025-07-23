@@ -53,7 +53,7 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   productType: ProductType;
-  variants: ProductVariant[];
+  variants: ProductVariant[] | [];
 }
 
 // Type for the payload when creating a new product
@@ -65,10 +65,6 @@ export interface CreateProductPayload {
   expiredDurationInYears: number;
   usageInstructions: string;
   benefits: string;
-  variants: Omit<
-    ProductVariant,
-    "id" | "productId" | "createdAt" | "updatedAt"
-  >[];
 }
 
 // Type for the payload when updating a product

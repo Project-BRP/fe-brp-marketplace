@@ -1,4 +1,4 @@
-// src/app/admin/hooks/useAdminProducts.ts
+// src/app/admin/hooks/useAdminProduct.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import toast from "react-hot-toast";
@@ -8,12 +8,13 @@ import { ApiError, ApiResponse } from "@/types/api";
 import {
   CreateProductPayload,
   Product,
+  ProductType,
   UpdateProductPayload,
 } from "@/types/product";
 
 const PRODUCTS_QUERY_KEY = "products";
 
-// Hook to create a new product
+// Hook untuk membuat produk baru
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -29,16 +30,16 @@ export const useCreateProduct = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Product created successfully!");
+      toast.success("Produk berhasil dibuat!");
       queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to create product.");
+      toast.error(error.response?.data?.message || "Gagal membuat produk.");
     },
   });
 };
 
-// Hook to update an existing product
+// Hook untuk memperbarui produk yang ada
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -51,22 +52,24 @@ export const useUpdateProduct = () => {
         `/products/${id}`,
         payload,
       );
+      console.log("Update response:", response);
       return response.data;
     },
     onSuccess: (_, variables) => {
-      toast.success("Product updated successfully!");
+      toast.success("Produk berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
       queryClient.invalidateQueries({
         queryKey: [PRODUCTS_QUERY_KEY, variables.id],
       });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to update product.");
+      console.error("Update error:", error);
+      toast.error(error.response?.data?.message || "Gagal memperbarui produk.");
     },
   });
 };
 
-// Hook to delete a product
+// Hook untuk menghapus produk
 export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
   return useMutation<ApiResponse<null>, AxiosError<ApiError>, string>({
@@ -75,11 +78,39 @@ export const useDeleteProduct = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Product deleted successfully!");
+      toast.success("Produk berhasil dihapus!");
       queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to delete product.");
+      toast.error(error.response?.data?.message || "Gagal menghapus produk.");
+    },
+  });
+};
+
+// Hook untuk membuat tipe produk baru
+export const useCreateProductType = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<ProductType>,
+    AxiosError<ApiError>,
+    { name: string }
+  >({
+    mutationFn: async (payload) => {
+      const response = await api.post<ApiResponse<ProductType>>(
+        "/product-types",
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Tipe produk berhasil dibuat!");
+      queryClient.invalidateQueries({ queryKey: ["product-types"] });
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Gagal membuat tipe produk.",
+      );
     },
   });
 };
