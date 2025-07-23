@@ -28,77 +28,84 @@ import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
 import { CartItem } from "@/types/order";
 import { Product } from "@/types/product";
+import FilterModal, { AdvancedFilters } from "../components/FilterModal";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
+const initialAdvancedFilters: AdvancedFilters = {
+  productTypeId: "Semua",
+  packagingId: "Semua",
+  minPrice: "",
+  maxPrice: "",
+  weights: [],
+};
+
 const Index = () => {
-  // --- Page View State ---
   const [currentPageView, setCurrentPageView] = useState<PageView>("catalog");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
-
-  // --- Cart State ---
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  // --- Filtering & Pagination State ---
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("Semua");
-  const [selectedPackaging, setSelectedPackaging] = useState("Semua");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  const [limit, setLimit] = useState(8);
   const [page, setPage] = useState(1);
-  const [limit] = useState(6);
-
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(
+    initialAdvancedFilters,
+  );
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
-  // --- Data Fetching ---
-  // Fetch based on server-supported filters (search, productType)
   const {
     data: productData,
     isLoading,
     isError,
   } = useGetAllProducts({
-    limit: 1000, // Fetch a large list for client-side filtering
+    limit: 1000,
     search: debouncedSearchTerm,
-    productTypeId: selectedType,
+    productTypeId: advancedFilters.productTypeId,
   });
   const { data: packagings = [], isLoading: isLoadingPackagings } =
     usePackagings();
 
-  // --- Client-Side Filtering ---
   const clientFilteredProducts = useMemo(() => {
     const initialProducts = productData?.products ?? [];
     return initialProducts.filter((product) => {
+      const { packagingId, minPrice, maxPrice, weights } = advancedFilters;
       const hasMatchingPackaging =
-        selectedPackaging === "Semua" ||
-        product.variants.some((v) => v.packagingId === selectedPackaging);
+        packagingId === "Semua" ||
+        product.variants.some((v) => v.packagingId === packagingId);
       if (!hasMatchingPackaging) return false;
-
       const min = minPrice ? Number(minPrice) : 0;
       const max = maxPrice ? Number(maxPrice) : Infinity;
       const hasMatchingPrice = product.variants.some(
         (v) => v.priceRupiah >= min && v.priceRupiah <= max,
       );
       if (!hasMatchingPrice) return false;
+      const hasMatchingWeight =
+        weights.length === 0 ||
+        product.variants.some((v) => weights.includes(v.weight));
+      if (!hasMatchingWeight) return false;
       return true;
     });
-  }, [productData, selectedPackaging, minPrice, maxPrice]);
+  }, [productData, advancedFilters]);
 
-  // --- Client-Side Pagination ---
   const paginatedProducts = useMemo(() => {
     const totalPages = Math.ceil(clientFilteredProducts.length / limit);
     const startIndex = (page - 1) * limit;
+    // BUG FIX: The end index should be calculated based on the start index.
     const endIndex = startIndex + limit;
     const productsOnPage = clientFilteredProducts.slice(startIndex, endIndex);
-    return { products: productsOnPage, totalPages, currentPage: page };
+    return { products: productsOnPage, totalPages };
   }, [clientFilteredProducts, page, limit]);
 
-  // --- Event Handlers ---
-  const handleFilterChange =
-    (setter: React.Dispatch<React.SetStateAction<string>>) =>
-    (value: string) => {
-      setPage(1);
-      setter(value);
-    };
+  const handleLimitChange = (value: string) => {
+    setPage(1);
+    setLimit(Number(value));
+  };
+
+  const handleResetFilters = () => {
+    setPage(1);
+    setAdvancedFilters(initialAdvancedFilters);
+  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= paginatedProducts.totalPages) {
@@ -149,11 +156,10 @@ const Index = () => {
   };
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // --- Render Functions ---
   const renderCatalogContent = () => {
     if (isLoading || isLoadingPackagings) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {Array.from({ length: limit }).map((_, i) => (
             <Skeleton key={i} className="h-[420px] w-full rounded-xl" />
           ))}
@@ -166,6 +172,7 @@ const Index = () => {
           Gagal memuat produk.
         </div>
       );
+    // BUG FIX: Check the paginated list for length, not the full filtered list.
     if (paginatedProducts.products.length === 0)
       return (
         <div className="text-center py-12 text-muted-foreground">
@@ -174,7 +181,8 @@ const Index = () => {
       );
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {/* BUG FIX: Map over the paginated list of products. */}
         {paginatedProducts.products.map((product) => (
           <ProductCard
             key={product.id}
@@ -191,7 +199,6 @@ const Index = () => {
     );
   };
 
-  // --- Page Render Logic ---
   if (currentPageView === "product-detail") {
     const productList = productData?.products ?? [];
     return (
@@ -266,8 +273,6 @@ const Index = () => {
         cartItemCount={cartItemCount}
         onCartClick={() => setCurrentPageView("cart")}
       />
-
-      {/* Hero Section (Unchanged) */}
       <section className="relative py-16 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -319,8 +324,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      {/* Features Section (Unchanged) */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -360,12 +363,10 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      {/* Products Catalog (Updated Section) */}
       <section className="py-12 px-4 catalog-section" id="catalog-section">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl font-bold text-foreground">
               Katalog Produk Pupuk NPK
             </h2>
             <p className="text-xl text-muted-foreground">
@@ -375,20 +376,28 @@ const Index = () => {
 
           <FilterBar
             searchTerm={searchTerm}
-            onSearchChange={handleFilterChange(setSearchTerm)}
-            selectedType={selectedType}
-            onTypeChange={handleFilterChange(setSelectedType)}
-            selectedPackaging={selectedPackaging}
-            onPackagingChange={handleFilterChange(setSelectedPackaging)}
-            minPrice={minPrice}
-            onMinPriceChange={handleFilterChange(setMinPrice)}
-            maxPrice={maxPrice}
-            onMaxPriceChange={handleFilterChange(setMaxPrice)}
+            onSearchChange={(value) => {
+              setPage(1);
+              setSearchTerm(value);
+            }}
+            limit={limit}
+            onLimitChange={handleLimitChange}
+            onOpenFilterModal={() => setIsFilterModalOpen(true)}
+          />
+
+          <FilterModal
+            isOpen={isFilterModalOpen}
+            onOpenChange={setIsFilterModalOpen}
+            filters={advancedFilters}
+            onFilterChange={(newFilters) => {
+              setPage(1);
+              setAdvancedFilters((prev) => ({ ...prev, ...newFilters }));
+            }}
+            onReset={handleResetFilters}
           />
 
           <div className="mt-8 min-h-[400px]">{renderCatalogContent()}</div>
 
-          {/* Pagination */}
           {paginatedProducts.totalPages > 1 && !isLoading && !isError && (
             <div className="flex justify-center items-center gap-4 mt-12">
               <Button
@@ -397,8 +406,7 @@ const Index = () => {
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page === 1}
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Sebelumnya
+                <ChevronLeft className="h-4 w-4 mr-1" /> Sebelumnya
               </Button>
               <span className="text-sm font-medium">
                 Halaman {page} dari {paginatedProducts.totalPages}
@@ -409,8 +417,7 @@ const Index = () => {
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page === paginatedProducts.totalPages}
               >
-                Berikutnya
-                <ChevronRight className="h-4 w-4 ml-1" />
+                Berikutnya <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           )}
