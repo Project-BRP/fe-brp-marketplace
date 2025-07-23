@@ -12,9 +12,12 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 
+import FilterModal, {
+  AdvancedFilters,
+} from "@/app/(main)/components/FilterModal";
 import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
 import {
   useCreateProduct,
@@ -52,19 +55,29 @@ import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { CreateProductPayload, Product } from "@/types/product";
 
+const initialAdvancedFilters: AdvancedFilters = {
+  productTypeId: "Semua",
+  packagingIds: [],
+  minPrice: "",
+  maxPrice: "",
+};
+
 export default function AdminProducts() {
   // --- Modal and Editing State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   // --- Filtering & Pagination State ---
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("Semua");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>(
+    initialAdvancedFilters,
+  );
 
   // --- Data Fetching ---
   const {
@@ -72,10 +85,9 @@ export default function AdminProducts() {
     isLoading,
     isError,
   } = useGetAllProducts({
-    page,
-    limit,
+    limit: 1000, // Fetch all to filter on client
     search: debouncedSearchTerm,
-    productTypeId: selectedType,
+    productTypeId: advancedFilters.productTypeId,
   });
   const { data: productTypes = [] } = useProductTypes();
   const { data: packagings = [] } = usePackagings();
@@ -85,10 +97,38 @@ export default function AdminProducts() {
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
-  // --- Derived State ---
-  const products = productData?.products ?? [];
-  const totalPages = productData?.totalPages ?? 1;
-  const currentPageNum = productData?.currentPage ?? 1;
+  // --- Client-side Filtering Logic ---
+  const clientFilteredProducts = useMemo(() => {
+    const initialProducts = productData?.products ?? [];
+    return initialProducts.filter((product) => {
+      const { packagingIds, minPrice, maxPrice } = advancedFilters;
+
+      const hasMatchingPackaging =
+        packagingIds.length === 0 ||
+        product.variants.some(
+          (v) => v.packagingId && packagingIds.includes(v.packagingId),
+        );
+      if (!hasMatchingPackaging) return false;
+
+      const min = minPrice ? Number(minPrice) : 0;
+      const max = maxPrice ? Number(maxPrice) : Infinity;
+      const hasMatchingPrice = product.variants.some(
+        (v) => v.priceRupiah >= min && v.priceRupiah <= max,
+      );
+      if (!hasMatchingPrice) return false;
+
+      return true;
+    });
+  }, [productData, advancedFilters]);
+
+  // --- Pagination Logic ---
+  const paginatedProducts = useMemo(() => {
+    const totalPages = Math.ceil(clientFilteredProducts.length / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const productsOnPage = clientFilteredProducts.slice(startIndex, endIndex);
+    return { products: productsOnPage, totalPages };
+  }, [clientFilteredProducts, page, limit]);
 
   // --- Helper Functions ---
   const formatPrice = (price: number) => {
@@ -101,19 +141,24 @@ export default function AdminProducts() {
 
   // --- Event Handlers ---
   const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= totalPages) {
+    if (newPage > 0 && newPage <= paginatedProducts.totalPages) {
       setPage(newPage);
     }
   };
 
   const handleFilterChange = (value: string) => {
     setPage(1);
-    setSelectedType(value);
+    setAdvancedFilters((prev) => ({ ...prev, productTypeId: value }));
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPage(1);
     setSearchTerm(e.target.value);
+  };
+
+  const handleResetFilters = () => {
+    setPage(1);
+    setAdvancedFilters(initialAdvancedFilters);
   };
 
   const handleEdit = (product: Product) => {
@@ -200,7 +245,10 @@ export default function AdminProducts() {
                 className="pl-10"
               />
             </div>
-            <Select value={selectedType} onValueChange={handleFilterChange}>
+            <Select
+              value={advancedFilters.productTypeId}
+              onValueChange={handleFilterChange}
+            >
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Filter Tipe" />
               </SelectTrigger>
@@ -213,6 +261,14 @@ export default function AdminProducts() {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              className="w-full md:w-auto"
+              onClick={() => setIsFilterModalOpen(true)}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filter Lanjutan
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -222,7 +278,7 @@ export default function AdminProducts() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Daftar Produk ({products.length})
+            Daftar Produk ({paginatedProducts.products.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -237,7 +293,7 @@ export default function AdminProducts() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => (
+                {paginatedProducts.products.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -307,31 +363,43 @@ export default function AdminProducts() {
       </Card>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {paginatedProducts.totalPages > 1 && (
         <div className="flex justify-center items-center gap-4">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(page - 1)}
-            disabled={currentPageNum === 1}
+            disabled={page === 1}
           >
             <ChevronLeft className="h-4 w-4" />
             Sebelumnya
           </Button>
           <span className="text-sm">
-            Halaman {currentPageNum} dari {totalPages}
+            Halaman {page} dari {paginatedProducts.totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(page + 1)}
-            disabled={currentPageNum === totalPages}
+            disabled={page === paginatedProducts.totalPages}
           >
             Berikutnya
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}
+
+      {/* Filter Modal */}
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onOpenChange={setIsFilterModalOpen}
+        filters={advancedFilters}
+        onFilterChange={(newFilters) => {
+          setPage(1);
+          setAdvancedFilters((prev) => ({ ...prev, ...newFilters }));
+        }}
+        onReset={handleResetFilters}
+      />
 
       {/* Add/Edit Product Dialog */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -396,6 +464,7 @@ export default function AdminProducts() {
                   </CardContent>
                 </Card>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
@@ -418,7 +487,6 @@ export default function AdminProducts() {
                   </CardContent>
                 </Card>
               </div>
-
               <div>
                 <Typography variant="h6" weight="semibold" className="mb-4">
                   Varian Produk ({viewingProduct.variants.length})
