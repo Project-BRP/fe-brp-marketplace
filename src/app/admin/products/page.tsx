@@ -53,7 +53,11 @@ import {
 } from "@/components/Table";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import { CreateProductPayload, Product } from "@/types/product";
+import {
+  CreateProductPayload,
+  Product,
+  UpdateProductPayload,
+} from "@/types/product";
 import ProductForm from "./_components/ProductForm";
 
 const initialAdvancedFilters: AdvancedFilters = {
@@ -136,49 +140,6 @@ export default function AdminProducts() {
     return { products: productsOnPage, totalPages };
   }, [clientFilteredProducts, page, limit]);
 
-  // --- Debugging ---
-  useMemo(() => {
-    if (
-      productData?.products.some(
-        (product) => product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
-      )
-    ) {
-      console.log(
-        "productData contains the product:",
-        productData.products.find(
-          (product) =>
-            product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
-        ),
-      );
-    }
-    if (
-      clientFilteredProducts.some(
-        (product) => product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
-      )
-    ) {
-      console.log(
-        "clientFilteredProducts contains the product:",
-        clientFilteredProducts.find(
-          (product) =>
-            product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
-        ),
-      );
-    }
-    if (
-      paginatedProducts.products.some(
-        (product) => product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
-      )
-    ) {
-      console.log(
-        "paginatedProducts contains the product:",
-        paginatedProducts.products.find(
-          (product) =>
-            product.id === "PRD-e791e59f-8ac4-4946-9b5a-2f4680bff8b2",
-        ),
-      );
-    }
-  }, [productData, clientFilteredProducts, paginatedProducts]);
-
   // --- Fungsi Bantuan ---
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -231,12 +192,16 @@ export default function AdminProducts() {
     }
   };
 
-  const handleFormSubmit = (data: CreateProductPayload) => {
-    const onSuccess = () => setIsModalOpen(false);
+  const handleFormSubmit = (
+    data: CreateProductPayload | UpdateProductPayload,
+  ) => {
     if (editingProduct) {
-      updateProduct({ id: editingProduct.id, payload: data }, { onSuccess });
+      updateProduct({
+        id: editingProduct.id,
+        payload: data as UpdateProductPayload,
+      });
     } else {
-      createProduct(data, { onSuccess });
+      createProduct(data as CreateProductPayload);
     }
   };
 

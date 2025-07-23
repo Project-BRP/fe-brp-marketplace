@@ -12,7 +12,8 @@ import {
   UpdateProductPayload,
 } from "@/types/product";
 
-const PRODUCTS_QUERY_KEY = "products";
+const PRODUCTS_QUERY_KEY = ["products"];
+const PRODUCT_TYPES_QUERY_KEY = ["product-types"];
 
 // Hook untuk membuat produk baru
 export const useCreateProduct = () => {
@@ -31,7 +32,7 @@ export const useCreateProduct = () => {
     },
     onSuccess: () => {
       toast.success("Produk berhasil dibuat!");
-      queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Gagal membuat produk.");
@@ -48,22 +49,20 @@ export const useUpdateProduct = () => {
     { id: string; payload: UpdateProductPayload }
   >({
     mutationFn: async ({ id, payload }) => {
-      const response = await api.put<ApiResponse<Product>>(
+      const response = await api.patch<ApiResponse<Product>>(
         `/products/${id}`,
         payload,
       );
-      console.log("Update response:", response);
       return response.data;
     },
     onSuccess: (_, variables) => {
       toast.success("Produk berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
       queryClient.invalidateQueries({
-        queryKey: [PRODUCTS_QUERY_KEY, variables.id],
+        queryKey: [...PRODUCTS_QUERY_KEY, variables.id],
       });
     },
     onError: (error) => {
-      console.error("Update error:", error);
       toast.error(error.response?.data?.message || "Gagal memperbarui produk.");
     },
   });
@@ -79,7 +78,7 @@ export const useDeleteProduct = () => {
     },
     onSuccess: () => {
       toast.success("Produk berhasil dihapus!");
-      queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Gagal menghapus produk.");
@@ -87,10 +86,11 @@ export const useDeleteProduct = () => {
   });
 };
 
+// --- Product Type Mutations ---
+
 // Hook untuk membuat tipe produk baru
 export const useCreateProductType = () => {
   const queryClient = useQueryClient();
-
   return useMutation<
     ApiResponse<ProductType>,
     AxiosError<ApiError>,
@@ -105,11 +105,60 @@ export const useCreateProductType = () => {
     },
     onSuccess: () => {
       toast.success("Tipe produk berhasil dibuat!");
-      queryClient.invalidateQueries({ queryKey: ["product-types"] });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_TYPES_QUERY_KEY });
     },
     onError: (error) => {
       toast.error(
         error.response?.data?.message || "Gagal membuat tipe produk.",
+      );
+    },
+  });
+};
+
+// Hook untuk memperbarui tipe produk
+export const useUpdateProductType = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<ProductType>,
+    AxiosError<ApiError>,
+    { id: string; payload: { name: string } }
+  >({
+    mutationFn: async ({ id, payload }) => {
+      const response = await api.patch<ApiResponse<ProductType>>(
+        `/product-types/${id}`,
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Tipe produk berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: PRODUCT_TYPES_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Gagal memperbarui tipe produk.",
+      );
+    },
+  });
+};
+
+// Hook untuk menghapus tipe produk
+export const useDeleteProductType = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<null>, AxiosError<ApiError>, string>({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<ApiResponse<null>>(
+        `/product-types/${id}`,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Tipe produk berhasil dihapus!");
+      queryClient.invalidateQueries({ queryKey: PRODUCT_TYPES_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Gagal menghapus tipe produk.",
       );
     },
   });
