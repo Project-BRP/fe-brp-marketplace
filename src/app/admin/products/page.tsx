@@ -396,17 +396,28 @@ export default function AdminProducts() {
                   </CardContent>
                 </Card>
               </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Petunjuk Penggunaan</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    {viewingProduct.usageInstructions}
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Petunjuk Penggunaan</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      {viewingProduct.usageInstructions}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Waktu Kadaluarsa</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg text-muted-foreground">
+                      {viewingProduct.expiredDurationInYears} tahun
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
 
               <div>
                 <Typography variant="h6" weight="semibold" className="mb-4">
@@ -426,6 +437,9 @@ export default function AdminProducts() {
                         />
                         <div className="flex-1">
                           <p className="font-semibold">
+                            {variant.id.replace(/_/g, " ")}
+                          </p>
+                          <p className="text-sm">
                             Komposisi: {variant.composition}
                           </p>
                           <p className="text-sm">Berat: {variant.weight}</p>
