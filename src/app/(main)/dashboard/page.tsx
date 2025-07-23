@@ -1,70 +1,97 @@
 "use client";
+
+import {
+  ArrowLeft,
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  Leaf,
+  Truck,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import { useDebounce } from "use-debounce";
+
+import Cart from "@/app/(main)/components/Cart";
+import Checkout from "@/app/(main)/components/Checkout";
+import FilterBar from "@/app/(main)/components/FilterBar";
+import ProductCard from "@/app/(main)/components/ProductCard";
+import ProductDetail from "@/app/(main)/components/ProductDetail";
+import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
+import { usePackagings } from "@/app/admin/hooks/useMeta";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/Card";
 import NextImage from "@/components/NextImage";
+import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
 import { CartItem } from "@/types/order";
-import { ArrowLeft, Award, Leaf, Loader2, Truck, Users } from "lucide-react";
-import { useState } from "react";
-import Cart from "../components/Cart";
-import Checkout from "../components/Checkout";
-import FilterBar, { FilterOptions } from "../components/FilterBar";
-import ProductCard from "../components/ProductCard";
-import ProductDetail from "../components/ProductDetail";
-import { useGetAllProducts } from "../hooks/useProduct";
+import { Product } from "@/types/product";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
 const Index = () => {
-  const [currentPage, setCurrentPage] = useState<PageView>("catalog");
+  // --- Page View State ---
+  const [currentPageView, setCurrentPageView] = useState<PageView>("catalog");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+
+  // --- Cart State ---
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [filters, setFilters] = useState<FilterOptions>({
-    npkFormula: [],
-    priceRange: { min: 0, max: 0 },
-    searchTerm: "",
+
+  // --- Filtering & Pagination State ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState("Semua");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(6);
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+
+  // --- Data Fetching ---
+  const {
+    data: productData,
+    isLoading,
+    isError,
+  } = useGetAllProducts({
+    page,
+    limit,
+    search: debouncedSearchTerm,
+    productTypeId: selectedType,
   });
+  const { data: packagings = [], isLoading: isLoadingPackagings } =
+    usePackagings();
 
-  const { data: allProducts = [], isLoading, isError } = useGetAllProducts();
+  // A separate query to get a full list for the detail page lookup.
+  // This could be optimized later by fetching a single product by ID on the detail page.
+  const { data: allProductsData } = useGetAllProducts({ limit: 1000 });
 
-  // FIX: Updated filtering logic to use `variants` and handle undefined cases safely.
-  const filteredProducts =
-    allProducts?.filter((product) => {
-      // Ensure product and its variants exist before filtering
-      if (!product?.variants || product.variants.length === 0) {
-        return false;
-      }
+  // --- Derived State ---
+  // Correctly extract products and pagination info from the new response structure
+  const products = productData?.products ?? [];
+  const totalPages = productData?.totalPages ?? 1;
+  const currentPageNum = productData?.currentPage ?? 1;
 
-      const matchesNPK =
-        filters.npkFormula.length === 0 ||
-        product.variants.some((v) =>
-          filters.npkFormula.includes(v.composition),
-        );
+  // --- Event Handlers ---
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+      document
+        .querySelector("#catalog-section")
+        ?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
-      const minPrice = Math.min(...product.variants.map((v) => v.priceRupiah));
-      const maxPrice = Math.max(...product.variants.map((v) => v.priceRupiah));
+  const handleFilterTypeChange = (value: string) => {
+    setPage(1); // Reset to first page on filter change
+    setSelectedType(value);
+  };
 
-      const matchesPrice =
-        (filters.priceRange.min === 0 || maxPrice >= filters.priceRange.min) &&
-        (filters.priceRange.max === 0 || minPrice <= filters.priceRange.max);
+  const handleSearchChange = (value: string) => {
+    setPage(1); // Reset to first page on search
+    setSearchTerm(value);
+  };
 
-      const matchesSearch =
-        !filters.searchTerm ||
-        product.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        product.variants.some((v) =>
-          v.composition.includes(filters.searchTerm),
-        );
-
-      return matchesNPK && matchesPrice && matchesSearch;
-    }) ?? []; // Default to an empty array if allProducts is not an array
-
-  const handleAddToCart = (productId: string, quantity: number = 1) => {
-    const product = allProducts.find((p) => p.id === productId);
-    // FIX: Use `variants` and check for its existence
+  const handleAddToCart = (product: Product, quantity: number = 1) => {
     if (!product?.variants?.length) return;
-
     const mainVariant = product.variants[0];
 
     setCartItems((prev) => {
@@ -105,38 +132,91 @@ const Index = () => {
   const handleOrderSubmit = () => {
     alert("Pesanan berhasil dibuat! Terima kasih telah berbelanja.");
     setCartItems([]);
-    setCurrentPage("catalog");
+    setCurrentPageView("catalog");
   };
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  if (currentPage === "product-detail") {
+  // --- Render Functions ---
+  const renderCatalogContent = () => {
+    if (isLoading || isLoadingPackagings) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: limit }).map((_, i) => (
+            <Skeleton key={i} className="h-[420px] w-full rounded-xl" />
+          ))}
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <div className="text-center py-12 text-red-500">
+          Gagal memuat produk. Silakan coba lagi nanti.
+        </div>
+      );
+    }
+
+    if (products.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <p className="text-lg text-muted-foreground">
+            Tidak ada produk yang sesuai dengan filter yang dipilih.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            packagings={packagings}
+            onViewDetail={(id) => {
+              setSelectedProductId(id);
+              setCurrentPageView("product-detail");
+            }}
+            onAddToCart={handleAddToCart}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // --- Page Render Logic ---
+  if (currentPageView === "product-detail") {
     return (
       <>
         <Navbar
           cartItemCount={cartItemCount}
-          onCartClick={() => setCurrentPage("cart")}
+          onCartClick={() => setCurrentPageView("cart")}
         />
         <ProductDetail
           productId={selectedProductId}
-          onBack={() => setCurrentPage("catalog")}
-          onAddToCart={handleAddToCart}
+          onBack={() => setCurrentPageView("catalog")}
+          onAddToCart={(id, qty) => {
+            const productList = allProductsData?.products ?? [];
+            const product = productList.find((p) => p.id === id);
+            if (product) handleAddToCart(product, qty);
+          }}
         />
       </>
     );
   }
 
-  if (currentPage === "cart") {
+  if (currentPageView === "cart") {
     return (
       <div className="min-h-screen bg-gradient-earth">
         <Navbar
           cartItemCount={cartItemCount}
-          onCartClick={() => setCurrentPage("cart")}
+          onCartClick={() => setCurrentPageView("cart")}
         />
         <div className="container mx-auto px-4 py-6 flex flex-col gap-6">
           <Button
             variant="ghost"
-            onClick={() => setCurrentPage("catalog")}
+            onClick={() => setCurrentPageView("catalog")}
             className="hover:bg-accent border rounded-full flex flex-row items-center justify-center gap-3 p-4 w-fit"
           >
             <ArrowLeft className="size-5" />
@@ -147,28 +227,27 @@ const Index = () => {
               Kembali ke Katalog
             </Typography>
           </Button>
-
           <Cart
             items={cartItems}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveItem}
-            onCheckout={() => setCurrentPage("checkout")}
+            onCheckout={() => setCurrentPageView("checkout")}
           />
         </div>
       </div>
     );
   }
 
-  if (currentPage === "checkout") {
+  if (currentPageView === "checkout") {
     return (
       <div className="min-h-screen bg-gradient-earth">
         <Navbar
           cartItemCount={cartItemCount}
-          onCartClick={() => setCurrentPage("cart")}
+          onCartClick={() => setCurrentPageView("cart")}
         />
         <Checkout
           cartItems={cartItems}
-          onBack={() => setCurrentPage("cart")}
+          onBack={() => setCurrentPageView("cart")}
           onOrderSubmit={handleOrderSubmit}
         />
       </div>
@@ -179,10 +258,10 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-earth">
       <Navbar
         cartItemCount={cartItemCount}
-        onCartClick={() => setCurrentPage("cart")}
+        onCartClick={() => setCurrentPageView("cart")}
       />
 
-      {/* Hero Section */}
+      {/* Hero Section (Unchanged) */}
       <section className="relative py-16 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -235,7 +314,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section (Unchanged) */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -276,7 +355,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Products Catalog */}
+      {/* Products Catalog (Updated Section) */}
       <section className="py-12 px-4 catalog-section" id="catalog-section">
         <div className="container mx-auto">
           <div className="text-center mb-12">
@@ -288,41 +367,39 @@ const Index = () => {
             </p>
           </div>
 
-          <FilterBar onFilterChange={setFilters} activeFilters={filters} />
+          <FilterBar
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+            selectedType={selectedType}
+            onTypeChange={handleFilterTypeChange}
+          />
 
-          {isLoading && (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            </div>
-          )}
+          <div className="mt-8 min-h-[400px]">{renderCatalogContent()}</div>
 
-          {isError && (
-            <div className="text-center py-12 text-red-500">
-              Gagal memuat produk. Silakan coba lagi nanti.
-            </div>
-          )}
-
-          {!isLoading && !isError && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onViewDetail={(id) => {
-                    setSelectedProductId(id);
-                    setCurrentPage("product-detail");
-                  }}
-                  onAddToCart={(id) => handleAddToCart(id)}
-                />
-              ))}
-            </div>
-          )}
-
-          {!isLoading && filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">
-                Tidak ada produk yang sesuai dengan filter yang dipilih.
-              </p>
+          {/* Pagination */}
+          {totalPages > 1 && !isLoading && !isError && (
+            <div className="flex justify-center items-center gap-4 mt-12">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={currentPageNum === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Sebelumnya
+              </Button>
+              <span className="text-sm font-medium">
+                Halaman {currentPageNum} dari {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={currentPageNum === totalPages}
+              >
+                Berikutnya
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
             </div>
           )}
         </div>

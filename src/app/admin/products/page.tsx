@@ -1,5 +1,8 @@
 "use client";
+
 import {
+  ChevronLeft,
+  ChevronRight,
   Edit,
   Filter,
   Info,
@@ -9,9 +12,16 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useDebounce } from "use-debounce";
 
 import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
+import {
+  useCreateProduct,
+  useDeleteProduct,
+  useUpdateProduct,
+} from "@/app/admin/hooks/useAdminProduct";
+import { usePackagings, useProductTypes } from "@/app/admin/hooks/useMeta";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import {
@@ -41,50 +51,44 @@ import {
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { CreateProductPayload, Product } from "@/types/product";
-import {
-  useCreateProduct,
-  useDeleteProduct,
-  useUpdateProduct,
-} from "../hooks/useAdminProduct";
-import { useProductTypes } from "../hooks/useMeta";
 
 export default function AdminProducts() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("Semua");
+  // --- Modal and Editing State ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
 
+  // --- Filtering & Pagination State ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState("Semua");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+
   // --- Data Fetching ---
-  const { data: products = [], isLoading, isError } = useGetAllProducts();
+  const {
+    data: productData,
+    isLoading,
+    isError,
+  } = useGetAllProducts({
+    page,
+    limit,
+    search: debouncedSearchTerm,
+    productTypeId: selectedType,
+  });
   const { data: productTypes = [] } = useProductTypes();
-  const packagings = [
-    { id: "Karung_50kg", name: "Karung 50kg" },
-    { id: "Karung_25kg", name: "Karung 25kg" },
-    { id: "Botol_1L", name: "Botol 1 Liter" },
-    { id: "Sachet_1kg", name: "Sachet 1kg" },
-  ];
+  const { data: packagings = [] } = usePackagings();
 
   // --- Mutations ---
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
-  // --- Memoized Filtering Logic ---
-  const filteredProducts = useMemo(() => {
-    return (
-      products?.filter((product) => {
-        const matchesSearch = product.name
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-
-        const matchesType =
-          selectedType === "Semua" || product.productType?.id === selectedType;
-        return matchesSearch && matchesType;
-      }) ?? []
-    );
-  }, [products, searchTerm, selectedType]);
+  // --- Derived State ---
+  const products = productData?.products ?? [];
+  const totalPages = productData?.totalPages ?? 1;
+  const currentPageNum = productData?.currentPage ?? 1;
 
   // --- Helper Functions ---
   const formatPrice = (price: number) => {
@@ -96,6 +100,22 @@ export default function AdminProducts() {
   };
 
   // --- Event Handlers ---
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+
+  const handleFilterChange = (value: string) => {
+    setPage(1);
+    setSelectedType(value);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPage(1);
+    setSearchTerm(e.target.value);
+  };
+
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setIsModalOpen(true);
@@ -118,13 +138,11 @@ export default function AdminProducts() {
   };
 
   const handleFormSubmit = (data: CreateProductPayload) => {
+    const onSuccess = () => setIsModalOpen(false);
     if (editingProduct) {
-      updateProduct(
-        { id: editingProduct.id, payload: data },
-        { onSuccess: () => setIsModalOpen(false) },
-      );
+      updateProduct({ id: editingProduct.id, payload: data }, { onSuccess });
     } else {
-      createProduct(data, { onSuccess: () => setIsModalOpen(false) });
+      createProduct(data, { onSuccess });
     }
   };
 
@@ -178,11 +196,11 @@ export default function AdminProducts() {
               <Input
                 placeholder="Cari produk..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 className="pl-10"
               />
             </div>
-            <Select value={selectedType} onValueChange={setSelectedType}>
+            <Select value={selectedType} onValueChange={handleFilterChange}>
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Filter Tipe" />
               </SelectTrigger>
@@ -204,93 +222,116 @@ export default function AdminProducts() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Daftar Produk ({filteredProducts.length})
+            Daftar Produk ({products.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Produk</TableHead>
-                <TableHead>Tipe</TableHead>
-                <TableHead>Harga (varian termurah)</TableHead>
-                <TableHead>Kadaluarsa</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <NextImage
-                        src={
-                          product.variants?.[0]?.imageUrl ??
-                          "/dashboard/Hero.jpg"
-                        }
-                        alt={product.name}
-                        width={48}
-                        height={48}
-                        className="rounded-lg bg-muted"
-                        imgClassName="object-cover w-full h-full rounded-lg"
-                      />
-                      <div>
-                        <p className="font-medium">{product.name}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {product.productType?.name ?? "N/A"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {product.variants?.length > 0
-                      ? formatPrice(
-                          Math.min(
-                            ...product.variants.map((v) => v.priceRupiah),
-                          ),
-                        )
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {product.expiredDurationInYears
-                      ? `${product.expiredDurationInYears} tahun`
-                      : "Tidak ada"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleInfo(product)}
-                      >
-                        <Info className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(product)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(product.id)}
-                        disabled={isDeleting}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Produk</TableHead>
+                  <TableHead>Tipe</TableHead>
+                  <TableHead>Harga (varian termurah)</TableHead>
+                  <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <NextImage
+                          src={
+                            product.variants?.[0]?.imageUrl ??
+                            "/dashboard/Hero.jpg"
+                          }
+                          alt={product.name}
+                          width={48}
+                          height={48}
+                          className="rounded-lg bg-muted"
+                          imgClassName="object-cover w-full h-full rounded-lg"
+                        />
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {product.productType?.name ?? "N/A"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {product.variants?.length > 0
+                        ? formatPrice(
+                            Math.min(
+                              ...product.variants.map((v) => v.priceRupiah),
+                            ),
+                          )
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleInfo(product)}
+                        >
+                          <Info className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(product)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(product.id)}
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={currentPageNum === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Sebelumnya
+          </Button>
+          <span className="text-sm">
+            Halaman {currentPageNum} dari {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={currentPageNum === totalPages}
+          >
+            Berikutnya
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Add/Edit Product Dialog */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -301,13 +342,13 @@ export default function AdminProducts() {
             </DialogTitle>
           </DialogHeader>
           {/* <ProductForm
-						initialData={editingProduct}
-						productTypes={productTypes}
-						packagings={packagings}
-						onSubmit={handleFormSubmit}
-						onClose={() => setIsModalOpen(false)}
-						isSubmitting={isCreating || isUpdating}
-					/> */}
+            initialData={editingProduct}
+            productTypes={productTypes}
+            packagings={packagings}
+            onSubmit={handleFormSubmit}
+            onClose={() => setIsModalOpen(false)}
+            isSubmitting={isCreating || isUpdating}
+          /> */}
         </DialogContent>
       </Dialog>
 
@@ -384,8 +425,7 @@ export default function AdminProducts() {
                           imgClassName="object-cover w-full h-full"
                         />
                         <div className="flex-1">
-                          <p className="font-semibold">{variant.id}</p>
-                          <p className="text-sm">
+                          <p className="font-semibold">
                             Komposisi: {variant.composition}
                           </p>
                           <p className="text-sm">Berat: {variant.weight}</p>

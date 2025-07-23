@@ -1,101 +1,102 @@
 import { Badge } from "@/components/Badge";
-import { Card, CardContent, CardFooter } from "@/components/Card";
+import { Card, CardContent } from "@/components/Card";
 import NextImage from "@/components/NextImage";
+import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import { Product } from "@/types/product";
-import { Eye, ShoppingCart } from "lucide-react";
+import { Packaging, Product } from "@/types/product";
+import { ShoppingCart } from "lucide-react";
 
-interface ProductCardProps {
+type ProductCardProps = {
   product: Product;
+  packagings: Packaging[];
   onViewDetail: (id: string) => void;
-  onAddToCart: (id: string) => void;
-}
+  onAddToCart: (product: Product) => void;
+};
 
-const ProductCard = ({
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(price);
+};
+
+export default function ProductCard({
   product,
+  packagings,
   onViewDetail,
   onAddToCart,
-}: ProductCardProps) => {
-  // FIX: Use `variants` and optional chaining `?.` for safety
-  const displayVariant = product.variants?.[0];
+}: ProductCardProps) {
+  const renderPrice = () => {
+    if (!product.variants || product.variants.length === 0) {
+      return (
+        <Typography variant="p" className="text-muted-foreground">
+          Harga tidak tersedia
+        </Typography>
+      );
+    }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price);
+    if (product.variants.length > 1) {
+      const prices = product.variants.map((v) => v.priceRupiah);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      return (
+        <div className="font-bold text-primary">
+          {formatPrice(minPrice)} - {formatPrice(maxPrice)}
+        </div>
+      );
+    }
+
+    const variant = product.variants[0];
+    const packaging = packagings.find((p) => p.id === variant.packagingId);
+    return (
+      <div className="font-bold text-primary">
+        {formatPrice(variant.priceRupiah)}{" "}
+        {packaging && (
+          <span className="text-sm font-normal text-muted-foreground">
+            / {packaging.name}
+          </span>
+        )}
+      </div>
+    );
   };
 
   return (
-    <Card className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 bg-card border-border flex flex-col justify-between">
-      <CardContent className="p-0 h-full flex flex-col justify-start">
-        {/* Product Image */}
-        <div className="relative overflow-hidden rounded-t-lg">
-          <NextImage
-            src={displayVariant?.imageUrl ?? "/dashboard/Hero.jpg"}
-            alt={product.name}
-            className="w-full h-48 group-hover:scale-105 transition-transform duration-300"
-            imgClassName="object-cover w-full h-full"
-            width={300}
-            height={200}
-          />
-          {displayVariant && (
-            <Badge
-              variant="secondary"
-              className="absolute top-3 left-3 bg-primary text-primary-foreground shadow-button"
-            >
-              {product.productType?.name ?? `${displayVariant.id}`}
-            </Badge>
-          )}
-        </div>
-
-        {/* Product Info */}
-        <div className="p-4 flex-grow">
-          <h3 className="font-semibold text-lg text-foreground mb-2 line-clamp-1">
+    <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
+      <div className="cursor-pointer" onClick={() => onViewDetail(product.id)}>
+        <NextImage
+          src={product.variants?.[0]?.imageUrl ?? "/dashboard/Hero.jpg"}
+          alt={product.name}
+          width={400}
+          height={300}
+          className="w-full"
+          imgClassName="object-cover w-full h-full aspect-[4/3]"
+        />
+        <CardContent className="p-4 flex-grow flex flex-col">
+          <Badge variant="secondary" className="w-fit mb-2">
+            {product.productType?.name ?? "N/A"}
+          </Badge>
+          <Typography
+            as="h3"
+            variant="h6"
+            weight="semibold"
+            className="flex-grow mb-2"
+          >
             {product.name}
-          </h3>
-          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-            {product.description}
-          </p>
-        </div>
-      </CardContent>
-      {displayVariant && (
-        <>
-          <div className="flex items-center justify-between mb-4 px-5">
-            <div>
-              <span className="text-2xl font-bold text-primary">
-                {formatPrice(displayVariant.priceRupiah)}
-              </span>
-              <span className="text-muted-foreground text-sm ml-1">
-                / {displayVariant.weight}
-              </span>
-            </div>
-          </div>
-          <CardFooter className="p-4 pt-0 flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 hover:bg-accent"
-              onClick={() => onViewDetail(product.id)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Detail
-            </Button>
-            <Button
-              variant="green"
-              size="sm"
-              className="flex-1 hover:bg-primary-dark shadow-button"
-              onClick={() => onAddToCart(product.id)}
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Tambah
-            </Button>
-          </CardFooter>
-        </>
-      )}
+          </Typography>
+          <div className="text-lg">{renderPrice()}</div>
+        </CardContent>
+      </div>
+      <div className="p-4 pt-0 mt-auto">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => onAddToCart(product)}
+        >
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          Tambah ke Keranjang
+        </Button>
+      </div>
     </Card>
   );
-};
-
-export default ProductCard;
+}

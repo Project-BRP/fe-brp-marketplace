@@ -1,33 +1,42 @@
-// src/app/(main)/hooks/useProduct.ts
+import { api } from "@/lib/api";
+import { ApiResponse, paginatedProductResponse } from "@/types/api";
+import { Product } from "@/types/product";
 import { useQuery } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 
-import api from "@/lib/api";
-import { ApiError, ApiResponse } from "@/types/api";
-import { Product, ProductResponse } from "@/types/product";
+type GetAllProductsParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  productTypeId?: string;
+};
 
-const PRODUCTS_QUERY_KEY = "products";
-
-// Hook to fetch all products for the customer dashboard
-export const useGetAllProducts = () => {
-  return useQuery<Product[], AxiosError<ApiError>>({
-    queryKey: [PRODUCTS_QUERY_KEY],
+export const useGetAllProducts = (params: GetAllProductsParams) => {
+  return useQuery<paginatedProductResponse>({
+    queryKey: ["products", params],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<ProductResponse>>("/products");
-      // Correctly access the nested 'products' array from the response
-      return response.data.data.products;
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.set("page", String(params.page));
+      if (params.limit) queryParams.set("limit", String(params.limit));
+      if (params.search) queryParams.set("search", params.search);
+      if (params.productTypeId && params.productTypeId !== "Semua") {
+        queryParams.set("productTypeId", params.productTypeId);
+      }
+
+      const res = await api.get<ApiResponse<paginatedProductResponse>>(
+        `/products?${queryParams.toString()}`,
+      );
+      return res.data.data;
     },
   });
 };
 
-// Hook to fetch a single product by its ID for the product detail page
 export const useGetProductById = (id: string) => {
-  return useQuery<Product, AxiosError<ApiError>>({
-    queryKey: [PRODUCTS_QUERY_KEY, id],
+  return useQuery<Product>({
+    queryKey: ["product", id],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Product>>(`/products/${id}`);
-      return response.data.data;
+      const res = await api.get(`/products/${id}`);
+      return res.data.data;
     },
-    enabled: !!id, // Only run the query if an ID is provided
+    enabled: !!id,
   });
 };

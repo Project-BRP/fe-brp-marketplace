@@ -1,3 +1,4 @@
+import { Product } from "./product";
 export type PaginateData<Data> = {
   data_per_page: Data;
   meta: {
@@ -30,4 +31,16 @@ export type UninterceptedApiError = {
   code: number;
   status: boolean;
   message: string | Record<string, string[]>;
+};
+
+export interface paginatedProductResponse {
+  totalPages: number;
+  currentPage: number;
+  products: Product[];
+}
+
+export type ApiReturn<T> = {
+  data: T;
+  message: string;
+  success: boolean;
 };
