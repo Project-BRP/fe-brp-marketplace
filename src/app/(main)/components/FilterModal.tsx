@@ -24,10 +24,9 @@ import LabelText from "@/components/form/LabelText";
 // Define the shape of the filters object
 export interface AdvancedFilters {
   productTypeId: string;
-  packagingId: string;
+  packagingIds: string[];
   minPrice: string;
   maxPrice: string;
-  weights: string[];
 }
 
 type FilterModalProps = {
@@ -37,9 +36,6 @@ type FilterModalProps = {
   onFilterChange: (newFilters: Partial<AdvancedFilters>) => void;
   onReset: () => void;
 };
-
-// Hardcoded common weights for the filter
-const commonWeights = ["1 kg", "25 kg", "50 kg", "1 Liter", "500 g", "500 ml"];
 
 export default function FilterModal({
   isOpen,
@@ -51,11 +47,11 @@ export default function FilterModal({
   const { data: productTypes, isLoading: isLoadingTypes } = useProductTypes();
   const { data: packagings, isLoading: isLoadingPackagings } = usePackagings();
 
-  const handleWeightChange = (weight: string) => {
-    const newWeights = filters.weights.includes(weight)
-      ? filters.weights.filter((w) => w !== weight)
-      : [...filters.weights, weight];
-    onFilterChange({ weights: newWeights });
+  const handlePackagingChange = (packagingId: string) => {
+    const newPackagingIds = filters.packagingIds.includes(packagingId)
+      ? filters.packagingIds.filter((id) => id !== packagingId)
+      : [...filters.packagingIds, packagingId];
+    onFilterChange({ packagingIds: newPackagingIds });
   };
 
   return (
@@ -92,31 +88,33 @@ export default function FilterModal({
             )}
           </div>
 
-          {/* Packaging Filter */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <LabelText labelTextClasname="text-right">Kemasan</LabelText>
-            {isLoadingPackagings ? (
-              <Skeleton className="h-10 col-span-3" />
-            ) : (
-              <Select
-                value={filters.packagingId}
-                onValueChange={(value) =>
-                  onFilterChange({ packagingId: value })
-                }
-              >
-                <SelectTrigger id="packaging" className="col-span-3">
-                  <SelectValue placeholder="Pilih kemasan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Semua">Semua Kemasan</SelectItem>
-                  {packagings?.map((pkg) => (
-                    <SelectItem key={pkg.id} value={pkg.id}>
-                      {pkg.name}
-                    </SelectItem>
+          {/* Packaging Filter (Checkbox) */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <LabelText labelTextClasname="text-right pt-2">Kemasan</LabelText>
+            <div className="col-span-3 grid grid-cols-2 gap-2">
+              {isLoadingPackagings
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center space-x-2">
+                      <Skeleton className="h-4 w-4" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  ))
+                : packagings?.map((pkg) => (
+                    <div key={pkg.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`pkg-${pkg.id}`}
+                        checked={filters.packagingIds.includes(pkg.id)}
+                        onCheckedChange={() => handlePackagingChange(pkg.id)}
+                      />
+                      <label
+                        htmlFor={`pkg-${pkg.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {pkg.name}
+                      </label>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
-            )}
+            </div>
           </div>
 
           {/* Price Range Filter */}
@@ -136,25 +134,6 @@ export default function FilterModal({
                 value={filters.maxPrice}
                 onChange={(e) => onFilterChange({ maxPrice: e.target.value })}
               />
-            </div>
-          </div>
-
-          {/* Weight Filter */}
-          <div className="grid grid-cols-4 items-start gap-4">
-            <LabelText labelTextClasname="text-right pt-2">Berat</LabelText>
-            <div className="col-span-3 grid grid-cols-2 gap-2">
-              {commonWeights.map((weight) => (
-                <div key={weight} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`weight-${weight}`}
-                    checked={filters.weights.includes(weight)}
-                    onCheckedChange={() => handleWeightChange(weight)}
-                  />
-                  <LabelText labelTextClasname="text-sm font-medium leading-none">
-                    {weight}
-                  </LabelText>
-                </div>
-              ))}
             </div>
           </div>
         </div>

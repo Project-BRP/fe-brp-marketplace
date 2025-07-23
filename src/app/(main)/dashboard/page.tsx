@@ -15,6 +15,9 @@ import { useDebounce } from "use-debounce";
 import Cart from "@/app/(main)/components/Cart";
 import Checkout from "@/app/(main)/components/Checkout";
 import FilterBar from "@/app/(main)/components/FilterBar";
+import FilterModal, {
+  AdvancedFilters,
+} from "@/app/(main)/components/FilterModal";
 import ProductCard from "@/app/(main)/components/ProductCard";
 import ProductDetail from "@/app/(main)/components/ProductDetail";
 import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
@@ -28,16 +31,14 @@ import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
 import { CartItem } from "@/types/order";
 import { Product } from "@/types/product";
-import FilterModal, { AdvancedFilters } from "../components/FilterModal";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
 const initialAdvancedFilters: AdvancedFilters = {
   productTypeId: "Semua",
-  packagingId: "Semua",
+  packagingIds: [],
   minPrice: "",
   maxPrice: "",
-  weights: [],
 };
 
 const Index = () => {
@@ -69,10 +70,12 @@ const Index = () => {
   const clientFilteredProducts = useMemo(() => {
     const initialProducts = productData?.products ?? [];
     return initialProducts.filter((product) => {
-      const { packagingId, minPrice, maxPrice, weights } = advancedFilters;
+      const { packagingIds, minPrice, maxPrice } = advancedFilters;
       const hasMatchingPackaging =
-        packagingId === "Semua" ||
-        product.variants.some((v) => v.packagingId === packagingId);
+        packagingIds.length === 0 ||
+        product.variants.some(
+          (v) => v.packagingId && packagingIds.includes(v.packagingId),
+        );
       if (!hasMatchingPackaging) return false;
       const min = minPrice ? Number(minPrice) : 0;
       const max = maxPrice ? Number(maxPrice) : Infinity;
@@ -80,10 +83,7 @@ const Index = () => {
         (v) => v.priceRupiah >= min && v.priceRupiah <= max,
       );
       if (!hasMatchingPrice) return false;
-      const hasMatchingWeight =
-        weights.length === 0 ||
-        product.variants.some((v) => weights.includes(v.weight));
-      if (!hasMatchingWeight) return false;
+
       return true;
     });
   }, [productData, advancedFilters]);
@@ -91,7 +91,6 @@ const Index = () => {
   const paginatedProducts = useMemo(() => {
     const totalPages = Math.ceil(clientFilteredProducts.length / limit);
     const startIndex = (page - 1) * limit;
-    // BUG FIX: The end index should be calculated based on the start index.
     const endIndex = startIndex + limit;
     const productsOnPage = clientFilteredProducts.slice(startIndex, endIndex);
     return { products: productsOnPage, totalPages };
@@ -172,7 +171,6 @@ const Index = () => {
           Gagal memuat produk.
         </div>
       );
-    // BUG FIX: Check the paginated list for length, not the full filtered list.
     if (paginatedProducts.products.length === 0)
       return (
         <div className="text-center py-12 text-muted-foreground">
@@ -182,7 +180,6 @@ const Index = () => {
 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {/* BUG FIX: Map over the paginated list of products. */}
         {paginatedProducts.products.map((product) => (
           <ProductCard
             key={product.id}
