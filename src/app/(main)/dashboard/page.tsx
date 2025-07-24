@@ -1,3 +1,4 @@
+// src/app/(main)/dashboard/page.tsx
 "use client";
 
 import {
@@ -30,7 +31,6 @@ import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
 import { CartItem } from "@/types/order";
-import { Product } from "@/types/product";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
@@ -115,44 +115,37 @@ const Index = () => {
     }
   };
 
-  const handleAddToCart = (product: Product, quantity: number = 1) => {
-    if (!product?.variants?.length) return;
-    const mainVariant = product.variants[0];
+  const handleAddToCart = (itemToAdd: CartItem) => {
     setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.id === mainVariant.id);
+      const existingItem = prev.find(
+        (item) => item.variantId === itemToAdd.variantId,
+      );
       if (existingItem) {
         return prev.map((item) =>
-          item.id === mainVariant.id
-            ? { ...item, quantity: item.quantity + quantity }
+          item.variantId === itemToAdd.variantId
+            ? { ...item, quantity: item.quantity + itemToAdd.quantity }
             : item,
         );
       }
-      return [
-        ...prev,
-        {
-          id: mainVariant.id,
-          name: product.name,
-          npkFormula: product.composition,
-          price: mainVariant.priceRupiah,
-          unit: mainVariant.weight_in_kg,
-          quantity,
-          image: mainVariant.imageUrl,
-        },
-      ];
+      return [...prev, itemToAdd];
     });
   };
 
-  const handleUpdateQuantity = (id: string, quantity: number) =>
+  const handleUpdateQuantity = (variantId: string, quantity: number) =>
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
+      prev.map((item) =>
+        item.variantId === variantId ? { ...item, quantity } : item,
+      ),
     );
-  const handleRemoveItem = (id: string) =>
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  const handleRemoveItem = (variantId: string) =>
+    setCartItems((prev) => prev.filter((item) => item.variantId !== variantId));
+
   const handleOrderSubmit = () => {
     alert("Pesanan berhasil dibuat!");
     setCartItems([]);
     setCurrentPageView("catalog");
   };
+
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const renderCatalogContent = () => {
@@ -189,7 +182,6 @@ const Index = () => {
               setSelectedProductId(id);
               setCurrentPageView("product-detail");
             }}
-            onAddToCart={handleAddToCart}
           />
         ))}
       </div>
@@ -197,7 +189,6 @@ const Index = () => {
   };
 
   if (currentPageView === "product-detail") {
-    const productList = productData?.products ?? [];
     return (
       <>
         <Navbar
@@ -207,10 +198,8 @@ const Index = () => {
         <ProductDetail
           productId={selectedProductId}
           onBack={() => setCurrentPageView("catalog")}
-          onAddToCart={(id, qty) => {
-            const product = productList.find((p) => p.id === id);
-            if (product) handleAddToCart(product, qty);
-          }}
+          onAddToCart={handleAddToCart}
+          packagings={packagings}
         />
       </>
     );

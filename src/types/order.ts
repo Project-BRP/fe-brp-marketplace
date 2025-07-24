@@ -24,11 +24,13 @@ export interface OrderData {
 }
 
 export interface CartItem {
-  id: string;
-  name: string;
-  npkFormula: string;
+  variantId: string;
+  productId: string;
+  productName: string;
+  composition: string;
   price: number;
-  unit: string;
+  weight_in_kg: string;
+  packagingName: string;
   quantity: number;
-  image?: string;
+  imageUrl?: string | null;
 }

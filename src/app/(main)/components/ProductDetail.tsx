@@ -1,65 +1,47 @@
+// src/app/(main)/components/ProductDetail.tsx
+import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { Input } from "@/components/InputLovable";
 import NextImage from "@/components/NextImage";
 import { Separator } from "@/components/Separator";
+import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import {
-  ArrowLeft,
-  Award,
-  Leaf,
-  Minus,
-  Package,
-  Plus,
-  ShoppingCart,
-} from "lucide-react";
-import { useState } from "react";
+import { CartItem } from "@/types/order";
+import { Packaging, ProductVariant } from "@/types/product";
+import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface ProductDetailProps {
   productId: string;
   onBack: () => void;
-  onAddToCart: (id: string, quantity: number) => void;
+  onAddToCart: (item: CartItem) => void;
+  packagings: Packaging[];
 }
 
 const ProductDetail = ({
   productId,
   onBack,
   onAddToCart,
+  packagings,
 }: ProductDetailProps) => {
-  const [quantity, setQuantity] = useState(1);
+  const { data: productData, isLoading } = useGetAllProducts({});
+  const [quantities, setQuantities] = useState<{ [variantId: string]: number }>(
+    {},
+  );
+  const [selectedVariantImage, setSelectedVariantImage] = useState<
+    string | null
+  >(null);
 
-  // Mock product data - in real app, fetch based on productId
-  const product = {
-    id: productId,
-    name: "Pupuk NPK 15-15-15 Premium",
-    npkFormula: "15-15-15",
-    price: 125000,
-    unit: "karung 50kg",
-    // image: npkProductImage,
-    description:
-      "Pupuk NPK 15-15-15 adalah pupuk majemuk lengkap yang mengandung unsur nitrogen (N), fosfor (P), dan kalium (K) dalam perbandingan seimbang. Sangat cocok untuk tanaman padi, jagung, dan sayuran.",
-    benefits: [
-      "Mengandung nitrogen 15% untuk pertumbuhan daun dan batang",
-      "Fosfor 15% untuk perkembangan akar dan bunga",
-      "Kalium 15% untuk ketahanan tanaman terhadap penyakit",
-      "Formula seimbang untuk hasil panen maksimal",
-    ],
-    usage:
-      "Aplikasikan 200-300 kg per hektar pada saat tanam dan 100-150 kg per hektar pada masa pertumbuhan vegetatif.",
-    composition: {
-      nitrogen: "15%",
-      phosphor: "15%",
-      potassium: "15%",
-      other: "Unsur mikro dan bahan pengisi",
-    },
-    specifications: {
-      weight: "50 kg",
-      packaging: "Karung plastik",
-      storage: "Tempat kering dan sejuk",
-      expiry: "2 tahun dari tanggal produksi",
-    },
-  };
+  const product = productData?.products.find((p) => p.id === productId);
+
+  useEffect(() => {
+    if (product?.variants && product.variants.length > 0) {
+      setSelectedVariantImage(product.variants[0].imageUrl);
+    }
+  }, [product]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -69,338 +51,280 @@ const ProductDetail = ({
     }).format(price);
   };
 
-  const handleAddToCart = () => {
-    onAddToCart(product.id, quantity);
+  const handleQuantityChange = (variantId: string, quantity: number) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [variantId]: Math.max(1, quantity),
+    }));
   };
 
-  const totalPrice = product.price * quantity;
+  const handleAddToCart = (variant: ProductVariant) => {
+    const quantity = quantities[variant.id] || 1;
+    const packaging = packagings.find((p) => p.id === variant.packagingId);
+
+    if (product) {
+      const itemToAdd: CartItem = {
+        variantId: variant.id,
+        productId: product.id,
+        productName: product.name,
+        composition: product.composition,
+        price: variant.priceRupiah,
+        weight_in_kg: variant.weight_in_kg,
+        packagingName: packaging?.name || "N/A",
+        quantity: quantity,
+        imageUrl: variant.imageUrl,
+      };
+      onAddToCart(itemToAdd);
+      toast.success(
+        `${product.name} (${packaging?.name}) ditambahkan ke keranjang!`,
+      );
+    }
+  };
+
+  if (isLoading) {
+    return <ProductDetailSkeleton />;
+  }
+
+  if (!product) {
+    return (
+      <div className="container mx-auto px-4 py-6 text-center">
+        Produk tidak ditemukan.
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Back Button */}
       <Button variant="ghost" onClick={onBack} className="mb-6 hover:bg-accent">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Kembali ke Katalog
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Product Image */}
-        <div className="space-y-4">
-          <Card className="border-border shadow-card">
-            <CardContent className="p-0">
-              <NextImage
-                src="/dashboard/Hero.jpg"
-                alt={product.name}
-                className="w-full h-full object-cover"
-                imgClassName="object-cover w-full h-full"
-                width={600}
-                height={400}
-              />
-            </CardContent>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+        {/* Left Column: Image Gallery */}
+        <div className="lg:col-span-2 space-y-4">
+          <Card className="border-border shadow-card overflow-hidden">
+            <NextImage
+              src={selectedVariantImage ?? "/dashboard/Hero.jpg"}
+              alt={product.name}
+              width={600}
+              height={600}
+              className="w-full aspect-square"
+              imgClassName="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+            />
           </Card>
-
-          {/* Quick Info Cards */}
-          <div className="grid grid-cols-3 gap-2">
-            <Card className="border-border">
-              <CardContent className="p-3 text-center">
-                <Leaf className="size-4 sm:size-6 text-primary mx-auto mb-1" />
-                <Typography
-                  variant="p"
-                  className="text-xs md:text-xs text-muted-foreground"
-                >
-                  Organik
-                </Typography>
-              </CardContent>
-            </Card>
-            <Card className="border-border">
-              <CardContent className="p-3 text-center">
-                <Package className="size-4 sm:size-6 text-primary mx-auto mb-1" />
-                <Typography
-                  variant="p"
-                  className="text-xs md:text-xs text-muted-foreground"
-                >
-                  50kg
-                </Typography>
-              </CardContent>
-            </Card>
-            <Card className="border-border">
-              <CardContent className="p-3 text-center">
-                <Award className="size-4 sm:size-6 text-primary mx-auto mb-1" />
-                <Typography
-                  variant="p"
-                  className="text-xs md:text-xs text-muted-foreground"
-                >
-                  Premium
-                </Typography>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-5 gap-2">
+            {product.variants?.map((variant) => (
+              <button
+                key={variant.id}
+                onClick={() => setSelectedVariantImage(variant.imageUrl)}
+                className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                  selectedVariantImage === variant.imageUrl
+                    ? "border-primary ring-2 ring-primary/50"
+                    : "border-transparent hover:border-primary/50"
+                }`}
+              >
+                <NextImage
+                  src={variant.imageUrl ?? "/dashboard/Hero.jpg"}
+                  alt={`Varian ${variant.weight_in_kg}`}
+                  width={100}
+                  height={100}
+                  className="w-full h-full"
+                  imgClassName="object-cover w-full h-full"
+                />
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-6">
+        {/* Right Column: Product Info & Variants */}
+        <div className="lg:col-span-3 space-y-6">
           <div>
-            <Badge variant="secondary" className="mb-3 bg-primary ">
-              <Typography
-                variant="p"
-                className="text-sm md:text-sm text-primary-foreground"
-              >
-                Pupuk {product.npkFormula}
-              </Typography>
+            <Badge
+              variant="secondary"
+              className="mb-3 bg-primary text-primary-foreground"
+            >
+              {product.productType?.name ?? "N/A"}
             </Badge>
-
             <Typography
               variant="h1"
-              className="text-xl md:text-3xl font-bold text-foreground mb-2"
+              className="text-3xl md:text-4xl font-bold text-foreground mb-3"
             >
               {product.name}
             </Typography>
             <Typography
               variant="p"
-              className="text-muted-foreground text-sm md:text-lg leading-relaxed"
+              className="text-muted-foreground md:text-lg leading-relaxed"
             >
               {product.description}
             </Typography>
           </div>
 
-          {/* Price and Purchase */}
-          <Card className="border-border shadow-card">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex flex-row items-center justify-center">
-                  <Typography variant="h3" className="font-bold text-primary">
-                    {formatPrice(product.price)}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    className="text-muted-foreground ml-2"
-                  >
-                    / {product.unit}
-                  </Typography>
-                </div>
+          <Separator />
 
-                <Separator />
+          <div>
+            <Typography variant="h5" weight="semibold" className="mb-4">
+              Pilih Varian Kemasan
+            </Typography>
+            <div className="space-y-4">
+              {product.variants?.map((variant) => {
+                const packaging = packagings.find(
+                  (p) => p.id === variant.packagingId,
+                );
+                const quantity = quantities[variant.id] || 1;
 
-                {/* Quantity Selector */}
-                <div className="flex flex-row items-center justify-center gap-4">
-                  <Typography
-                    variant="h4"
-                    className="font-semibold text-foreground"
-                  >
-                    Jumlah
-                  </Typography>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-
-                    <Input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) =>
-                        setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                      }
-                      className="w-20 text-center text-sm sm:text-base lg:text-lg"
-                      min="1"
-                      id={""}
-                    />
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setQuantity(quantity + 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Total Price */}
-                <div className="bg-accent p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <Typography
-                      variant="h6"
-                      className="font-medium text-foreground"
-                    >
-                      Total Harga:
-                    </Typography>
-                    <Typography
-                      variant="h3"
-                      className=" font-bold text-primary"
-                    >
-                      {formatPrice(totalPrice)}
-                    </Typography>
-                  </div>
-                </div>
-
-                {/* Add to Cart Button */}
-                <Button
-                  variant="green"
-                  onClick={handleAddToCart}
-                  className="w-full  hover:bg-primary-dark shadow-button text-lg py-6"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  <Typography
-                    variant="h5"
-                    className="text-primary-foreground font-semibold"
-                  >
-                    Tambah ke Keranjang
-                  </Typography>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Product Benefits */}
-          <Card className="border-border shadow-card">
-            <CardHeader>
-              <CardTitle>
-                <Typography variant="h3" className="font-bold">
-                  Manfaat & Keunggulan
-                </Typography>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {product.benefits.map((benefit, index) => (
-                  <li key={index} className="flex items-start">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2 mr-3 flex-shrink-0" />
-                    <Typography variant="p" className="text-muted-foreground">
-                      {benefit}
-                    </Typography>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+                return (
+                  <Card key={variant.id} className="bg-muted/50">
+                    <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
+                      <NextImage
+                        src={variant.imageUrl ?? "/dashboard/Hero.jpg"}
+                        alt={packaging?.name || "Varian"}
+                        width={80}
+                        height={80}
+                        className="w-20 h-20 rounded-md flex-shrink-0"
+                        imgClassName="object-cover w-full h-full"
+                      />
+                      <div className="flex-1 w-full">
+                        <Typography variant="h6" weight="semibold">
+                          {packaging?.name || "N/A"} ({variant.weight_in_kg})
+                        </Typography>
+                        <Typography
+                          variant="p"
+                          className="text-primary font-bold text-lg"
+                        >
+                          {formatPrice(variant.priceRupiah)}
+                        </Typography>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="p-2"
+                          onClick={() =>
+                            handleQuantityChange(variant.id, quantity - 1)
+                          }
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={quantity}
+                          onChange={(e) =>
+                            handleQuantityChange(
+                              variant.id,
+                              parseInt(e.target.value) || 1,
+                            )
+                          }
+                          className="w-16 text-center h-9"
+                          min="1"
+                          id={`qty-${variant.id}`}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="p-2"
+                          onClick={() =>
+                            handleQuantityChange(variant.id, quantity + 1)
+                          }
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Button
+                        variant="green"
+                        onClick={() => handleAddToCart(variant)}
+                        className="w-full sm:w-auto"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Add
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Additional Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        {/* Composition */}
-        <Card className="border-border shadow-card">
+      {/* Full-width Additional Info Section */}
+      <div className="mt-12 space-y-6">
+        <Card>
           <CardHeader>
             <CardTitle>
               <Typography variant="h3" className="font-bold">
-                Komposisi
+                Informasi Detail Produk
               </Typography>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between">
+          <CardContent className="space-y-8">
+            <div>
+              <Typography variant="h6" weight="semibold" className="mb-2">
+                Komposisi
+              </Typography>
               <Typography variant="p" className="text-muted-foreground">
-                Nitrogen (N):
-              </Typography>
-              <Typography variant="p" className="font-medium text-foreground">
-                {product.composition.nitrogen}
-              </Typography>
-            </div>
-            <div className="flex justify-between">
-              <Typography variant="p" className="text-muted-foreground">
-                Fosfor (P):
-              </Typography>
-              <Typography variant="p" className="font-medium text-foreground">
-                {product.composition.phosphor}
-              </Typography>
-            </div>
-            <div className="flex justify-between">
-              <Typography variant="p" className="text-muted-foreground">
-                Kalium (K):
-              </Typography>
-              <Typography variant="p" className="font-medium text-foreground">
-                {product.composition.potassium}
+                {product.composition}
               </Typography>
             </div>
             <Separator />
-            <Typography variant="p" className="text-sm text-muted-foreground">
-              {product.composition.other}
-            </Typography>
-          </CardContent>
-        </Card>
-
-        {/* Specifications */}
-        <Card className="border-border shadow-card">
-          <CardHeader>
-            <CardTitle>
-              <Typography variant="h3" className="font-bold">
-                Spesifikasi
+            <div>
+              <Typography variant="h6" weight="semibold" className="mb-2">
+                Manfaat & Keunggulan
               </Typography>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between">
               <Typography variant="p" className="text-muted-foreground">
-                Berat:
-              </Typography>
-              <Typography
-                variant="p"
-                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
-              >
-                {product.specifications.weight}
+                {product.benefits}
               </Typography>
             </div>
-            <div className="flex justify-between">
-              <Typography variant="p" className="text-muted-foreground">
-                Kemasan:
+            <Separator />
+            <div>
+              <Typography variant="h6" weight="semibold" className="mb-2">
+                Cara Penggunaan
               </Typography>
-              <Typography
-                variant="p"
-                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
-              >
-                {product.specifications.packaging}
+              <Typography variant="p" className="text-muted-foreground">
+                {product.usageInstructions}
               </Typography>
             </div>
-            <div className="flex justify-between">
+            <Separator />
+            <div>
+              <Typography variant="h6" weight="semibold" className="mb-2">
+                Petunjuk Penyimpanan
+              </Typography>
               <Typography variant="p" className="text-muted-foreground">
-                Penyimpanan:
-              </Typography>
-              <Typography
-                variant="p"
-                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
-              >
-                {product.specifications.storage}
-              </Typography>
-            </div>
-            <div className="flex justify-between">
-              <Typography variant="p" className="text-muted-foreground">
-                Masa Simpan:
-              </Typography>
-              <Typography
-                variant="p"
-                className="font-medium text-foreground text-[10px] min-[350px]:text-xs"
-              >
-                {product.specifications.expiry}
+                {product.storageInstructions}
               </Typography>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Usage Instructions */}
-      <Card className="border-border shadow-card mt-6">
-        <CardHeader>
-          <CardTitle>
-            <Typography variant="h3" className="font-bold">
-              Cara Penggunaan
-            </Typography>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Typography
-            variant="p"
-            className="text-muted-foreground leading-relaxed"
-          >
-            {product.usage}
-          </Typography>
-        </CardContent>
-      </Card>
     </div>
   );
 };
+
+const ProductDetailSkeleton = () => (
+  <div className="container mx-auto px-4 py-6">
+    <Skeleton className="h-10 w-48 mb-6" />
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+      <div className="lg:col-span-2 space-y-4">
+        <Skeleton className="w-full aspect-square rounded-lg" />
+        <div className="grid grid-cols-5 gap-2">
+          <Skeleton className="aspect-square rounded-lg" />
+          <Skeleton className="aspect-square rounded-lg" />
+          <Skeleton className="aspect-square rounded-lg" />
+        </div>
+      </div>
+      <div className="lg:col-span-3 space-y-6">
+        <Skeleton className="h-6 w-1/4 mb-3" />
+        <Skeleton className="h-10 w-3/4 mb-3" />
+        <Skeleton className="h-20 w-full" />
+        <Separator />
+        <Skeleton className="h-8 w-1/3 mb-4" />
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default ProductDetail;

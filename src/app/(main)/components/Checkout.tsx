@@ -365,15 +365,16 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
               <div className="space-y-3">
                 {cartItems.map((item) => (
                   <div
-                    key={item.id}
+                    key={item.variantId}
                     className="flex justify-between items-start gap-4"
                   >
                     <div className="flex-1">
                       <p className="font-medium text-foreground text-sm">
-                        {item.name}
+                        {item.productName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        NPK {item.npkFormula}
+                        {formatPrice(item.price)} / {item.packagingName} (
+                        {item.weight_in_kg})
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Qty: {item.quantity}

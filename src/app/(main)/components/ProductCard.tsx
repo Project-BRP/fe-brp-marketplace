@@ -1,16 +1,16 @@
+// src/app/(main)/components/ProductCard.tsx
 import { Badge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/Card";
 import NextImage from "@/components/NextImage";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { Packaging, Product } from "@/types/product";
-import { ShoppingCart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 type ProductCardProps = {
   product: Product;
   packagings: Packaging[];
   onViewDetail: (id: string) => void;
-  onAddToCart: (product: Product) => void;
 };
 
 const formatPrice = (price: number) => {
@@ -25,7 +25,6 @@ export default function ProductCard({
   product,
   packagings,
   onViewDetail,
-  onAddToCart,
 }: ProductCardProps) {
   const renderPrice = () => {
     if (!product.variants || product.variants.length === 0) {
@@ -63,7 +62,7 @@ export default function ProductCard({
 
   return (
     <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
-      <div className="cursor-pointer" onClick={() => onViewDetail(product.id)}>
+      <div>
         <NextImage
           src={product.variants?.[0]?.imageUrl ?? "/dashboard/Hero.jpg"}
           alt={product.name}
@@ -91,10 +90,10 @@ export default function ProductCard({
         <Button
           variant="outline"
           className="w-full"
-          onClick={() => onAddToCart(product)}
+          onClick={() => onViewDetail(product.id)}
         >
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Tambah ke Keranjang
+          Info Produk
+          <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       </div>
     </Card>

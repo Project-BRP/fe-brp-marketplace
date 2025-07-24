@@ -1,6 +1,7 @@
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { Input } from "@/components/InputLovable";
+import NextImage from "@/components/NextImage";
 import { Separator } from "@/components/Separator";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
@@ -9,8 +10,8 @@ import { ArrowRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 
 interface CartProps {
   items: CartItem[];
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onRemoveItem: (id: string) => void;
+  onUpdateQuantity: (variantId: string, quantity: number) => void;
+  onRemoveItem: (variantId: string) => void;
   onCheckout: () => void;
 }
 
@@ -34,11 +35,11 @@ const Cart = ({
   );
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleQuantityChange = (id: string, newQuantity: number) => {
+  const handleQuantityChange = (variantId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      onRemoveItem(id);
+      onRemoveItem(variantId);
     } else {
-      onUpdateQuantity(id, newQuantity);
+      onUpdateQuantity(variantId, newQuantity);
     }
   };
 
@@ -89,25 +90,29 @@ const Cart = ({
         <div className="space-y-4 max-h-96 overflow-y-auto w-full">
           {items.map((item) => (
             <div
-              key={item.id}
+              key={item.variantId}
               className="flex items-start gap-4 p-4 bg-accent rounded-lg w-full"
             >
-              <div className="min-w-16 min-h-16 bg-muted rounded-lg flex items-center justify-center truncate">
-                <span className="text-xs text-muted-foreground font-medium">
-                  NPK
-                </span>
-              </div>
+              <NextImage
+                src={item.imageUrl ?? "/dashboard/Hero.jpg"}
+                alt={item.productName}
+                width={64}
+                height={64}
+                className="min-w-16 h-16 bg-muted rounded-lg"
+                imgClassName="object-cover w-full h-full rounded-lg"
+              />
 
               <div className="w-full flex flex-col gap-4 sm:flex-row justify-start sm:justify-center items-start sm:items-center">
                 <div className="flex-1 w-full flex flex-col gap-2 sm:gap-0">
                   <h4 className="font-medium text-foreground overflow-clip text-sm sm:text-xl">
-                    {item.name}
+                    {item.productName}
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    NPK {item.npkFormula}
+                    {item.composition}
                   </p>
                   <p className="text-sm font-medium text-primary">
-                    {formatPrice(item.price)} / {item.unit}
+                    {formatPrice(item.price)} / {item.packagingName} (
+                    {item.weight_in_kg})
                   </p>
                 </div>
 
@@ -119,7 +124,7 @@ const Cart = ({
                       size="sm"
                       className="size-5 h-8 sm:size-8 p-0"
                       onClick={() =>
-                        handleQuantityChange(item.id, item.quantity - 1)
+                        handleQuantityChange(item.variantId, item.quantity - 1)
                       }
                     >
                       <Minus className="size-2 p-0 sm:size-3" />
@@ -130,13 +135,13 @@ const Cart = ({
                       value={item.quantity}
                       onChange={(e) =>
                         handleQuantityChange(
-                          item.id,
+                          item.variantId,
                           parseInt(e.target.value) || 1,
                         )
                       }
                       className="w-10 sm:w-16 text-center h-8"
                       min="1"
-                      id={""}
+                      id={`qty-${item.variantId}`}
                     />
 
                     <Button
@@ -144,7 +149,7 @@ const Cart = ({
                       size="sm"
                       className="size-5 h-8 sm:size-8 p-0"
                       onClick={() =>
-                        handleQuantityChange(item.id, item.quantity + 1)
+                        handleQuantityChange(item.variantId, item.quantity + 1)
                       }
                     >
                       <Plus className="size-2 p-0 sm:size-3" />
@@ -156,7 +161,7 @@ const Cart = ({
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => onRemoveItem(item.id)}
+                    onClick={() => onRemoveItem(item.variantId)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
