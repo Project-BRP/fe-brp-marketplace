@@ -6,13 +6,11 @@ import toast from "react-hot-toast";
 import api from "@/lib/api";
 import { ApiError, ApiResponse } from "@/types/api";
 import {
-  CreateProductPayload,
   Packaging,
   PackagingPayload,
   Product,
   ProductType,
   ProductVariant,
-  UpdateProductPayload,
 } from "@/types/product";
 
 const PRODUCTS_QUERY_KEY = ["products"];
@@ -22,15 +20,12 @@ const PACKAGINGS_QUERY_KEY = ["packagings"];
 // Hook untuk membuat produk baru
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
-  return useMutation<
-    ApiResponse<Product>,
-    AxiosError<ApiError>,
-    CreateProductPayload
-  >({
+  return useMutation<ApiResponse<Product>, AxiosError<ApiError>, FormData>({
     mutationFn: async (payload) => {
       const response = await api.post<ApiResponse<Product>>(
         "/products",
         payload,
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
       return response.data;
     },
@@ -50,12 +45,13 @@ export const useUpdateProduct = () => {
   return useMutation<
     ApiResponse<Product>,
     AxiosError<ApiError>,
-    { id: string; payload: UpdateProductPayload }
+    { id: string; payload: FormData }
   >({
     mutationFn: async ({ id, payload }) => {
       const response = await api.patch<ApiResponse<Product>>(
         `/products/${id}`,
         payload,
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
       return response.data;
     },

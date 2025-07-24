@@ -105,7 +105,11 @@ const ProductDetail = ({
         <div className="lg:col-span-2 space-y-4">
           <Card className="border-border shadow-card overflow-hidden">
             <NextImage
-              src={selectedVariantImage ?? "/dashboard/Hero.jpg"}
+              src={
+                product?.imageUrl
+                  ? process.env.NEXT_PUBLIC_IMAGE_URL + product.imageUrl
+                  : "/dashboard/Hero.jpg"
+              }
               alt={product.name}
               width={600}
               height={600}
@@ -125,7 +129,11 @@ const ProductDetail = ({
                 }`}
               >
                 <NextImage
-                  src={variant.imageUrl ?? "/dashboard/Hero.jpg"}
+                  src={
+                    variant.imageUrl
+                      ? process.env.NEXT_PUBLIC_IMAGE_URL + variant.imageUrl
+                      : "/dashboard/Hero.jpg"
+                  }
                   alt={`Varian ${variant.weight_in_kg} kg`}
                   width={100}
                   height={100}
@@ -177,7 +185,12 @@ const ProductDetail = ({
                   <Card key={variant.id} className="bg-muted/50">
                     <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
                       <NextImage
-                        src={variant.imageUrl ?? "/dashboard/Hero.jpg"}
+                        src={
+                          variant.imageUrl
+                            ? process.env.NEXT_PUBLIC_IMAGE_URL +
+                              variant.imageUrl
+                            : "/dashboard/Hero.jpg"
+                        }
                         alt={packaging?.name || "Varian"}
                         width={80}
                         height={80}

@@ -64,7 +64,11 @@ export default function ProductCard({
     <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300">
       <div>
         <NextImage
-          src={product.variants?.[0]?.imageUrl ?? "/dashboard/Hero.jpg"}
+          src={
+            product.imageUrl
+              ? process.env.NEXT_PUBLIC_IMAGE_URL + product.imageUrl
+              : "/dashboard/Hero.jpg"
+          }
           alt={product.name}
           width={400}
           height={300}

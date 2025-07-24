@@ -8,6 +8,11 @@ const nextConfig = {
         port: "3001", // Sesuaikan port jika backend Anda berjalan di port lain
         pathname: "/uploads/**", // Sesuaikan path jika perlu
       },
+      {
+        protocol: "https",
+        hostname: "example.com", // Added hostname for example.com
+        pathname: "/images/**", // Adjusted path for example.com images
+      },
     ],
   },
   redirects: async () => {
@@ -21,4 +26,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = nextConfig; // Perbaikan: Gunakan module.exports

@@ -43,6 +43,7 @@ export interface ProductType {
 export interface Product {
   id: string;
   name: string;
+  imageUrl: string;
   description: string;
   productTypeId?: string;
   storageInstructions: string;
@@ -58,6 +59,7 @@ export interface Product {
 
 // Type for the payload when creating a new product
 export interface CreateProductPayload {
+  image: FormData;
   name: string;
   composition: string;
   description: string;
@@ -69,7 +71,11 @@ export interface CreateProductPayload {
 }
 
 // Type for the payload when updating a product
-export type UpdateProductPayload = Partial<CreateProductPayload>;
+export type UpdateProductPayload = Partial<
+  Omit<CreateProductPayload, "image">
+> & {
+  image?: FormData;
+};
 
 // --- START: New Types for Variants and Packaging ---
 

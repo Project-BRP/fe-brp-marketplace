@@ -53,11 +53,7 @@ import {
 } from "@/components/Table";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import {
-  CreateProductPayload,
-  Product,
-  UpdateProductPayload,
-} from "@/types/product";
+import { Product } from "@/types/product";
 import ProductForm from "./_components/ProductForm";
 import ProductVariantManager from "./_components/ProductVariantManager";
 
@@ -195,16 +191,14 @@ export default function AdminProducts() {
     }
   };
 
-  const handleFormSubmit = (
-    data: CreateProductPayload | UpdateProductPayload,
-  ) => {
+  const handleFormSubmit = (data: FormData) => {
     if (editingProduct) {
       updateProduct(
-        { id: editingProduct.id, payload: data as UpdateProductPayload },
+        { id: editingProduct.id, payload: data },
         { onSuccess: () => setIsModalOpen(false) },
       );
     } else {
-      createProduct(data as CreateProductPayload, {
+      createProduct(data, {
         onSuccess: () => setIsModalOpen(false),
       });
     }
@@ -315,9 +309,9 @@ export default function AdminProducts() {
                       <div className="flex items-center gap-3">
                         <NextImage
                           src={
-                            product.variants?.[0]?.imageUrl
+                            product.imageUrl
                               ? process.env.NEXT_PUBLIC_IMAGE_URL +
-                                product.variants[0].imageUrl
+                                product.imageUrl
                               : "/dashboard/Hero.jpg"
                           }
                           alt={product.name}
@@ -442,25 +436,38 @@ export default function AdminProducts() {
             <DialogTitle>Detail Produk</DialogTitle>
           </DialogHeader>
           {viewingProduct && (
-            <div className="mt-4 space-y-6 max-h-[80vh] overflow-y-auto pr-2">
-              <Card>
-                <CardContent className="p-6">
-                  <Typography variant="h5" weight="bold" className="mb-2">
-                    {viewingProduct.name}
-                  </Typography>
+            <div className="mt-4 w-full space-y-6 max-h-[80vh] overflow-y-auto">
+              <Card className="w-full">
+                <CardContent className="flex flex-row items-center justify-center gap-4 p-6">
+                  <NextImage
+                    src={
+                      process.env.NEXT_PUBLIC_IMAGE_URL +
+                      viewingProduct.imageUrl
+                    }
+                    alt={viewingProduct.id}
+                    width={960}
+                    height={540}
+                    className="rounded-lg w-1/2 h-1/2 aspect-video flex-shrink-0"
+                    imgClassName="object-cover w-full h-full"
+                  />
+                  <div className="w-full flex flex-col items-start justify-start">
+                    <Typography variant="h5" weight="bold" className="mb-2">
+                      {viewingProduct.name}
+                    </Typography>
 
-                  <Badge variant="secondary" className="mb-4">
-                    {viewingProduct.productType?.name ?? "N/A"}
-                  </Badge>
-                  <Typography
-                    variant="p"
-                    className="font-semibold text-primary mb-2"
-                  >
-                    Komposisi: {viewingProduct.composition}
-                  </Typography>
-                  <Typography variant="p" className="text-muted-foreground">
-                    {viewingProduct.description}
-                  </Typography>
+                    <Badge variant="secondary" className="mb-4">
+                      {viewingProduct.productType?.name ?? "N/A"}
+                    </Badge>
+                    <Typography
+                      variant="p"
+                      className="font-semibold text-primary mb-2"
+                    >
+                      Komposisi: {viewingProduct.composition}
+                    </Typography>
+                    <Typography variant="p" className="text-muted-foreground">
+                      Deskripsi : {viewingProduct.description}
+                    </Typography>
+                  </div>
                 </CardContent>
               </Card>
 

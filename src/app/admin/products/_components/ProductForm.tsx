@@ -1,10 +1,6 @@
 "use client";
-
-import { Check, Edit2, Loader2, Settings, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { FormProvider, UseFormReturn, useForm } from "react-hook-form";
-
 import { DialogFooter } from "@/components/Dialog";
+import NextImage from "@/components/NextImage";
 import {
   Select,
   SelectContent,
@@ -17,26 +13,35 @@ import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
 import LabelText from "@/components/form/LabelText";
-import {
-  CreateProductPayload,
-  Product,
-  ProductType,
-  UpdateProductPayload,
-} from "@/types/product";
+import ImageCropper from "@/layouts/_container/ImageCropper";
+import { CreateProductPayload, Product, ProductType } from "@/types/product";
+import { Camera, Check, Edit2, Loader2, Settings, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { FormProvider, UseFormReturn, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import ProductTypeManager from "./ProductTypeManager";
 
 type FormMode = "create" | "edit";
-type EditableField = keyof UpdateProductPayload;
+type ProductFormValues = {
+  name: string;
+  description: string;
+  composition: string;
+  productTypeId?: string;
+  storageInstructions: string;
+  expiredDurationInYears: number;
+  usageInstructions: string;
+  benefits: string;
+};
+type EditableField = keyof ProductFormValues | "image";
 
 interface ProductFormProps {
   initialData: Product | null;
   productTypes: ProductType[];
-  onSubmit: (data: CreateProductPayload | UpdateProductPayload) => void;
+  onSubmit: (formData: FormData) => void;
   onClose: () => void;
   isSubmitting: boolean;
 }
 
-// Komponen dipindahkan ke luar untuk mencegah re-render yang tidak perlu
 const EditableFieldDisplay = ({
   fieldName,
   label,
@@ -153,7 +158,6 @@ export default function ProductForm({
   const methods = useForm<CreateProductPayload>({
     mode: "onTouched",
   });
-
   const {
     handleSubmit,
     register,
@@ -163,38 +167,53 @@ export default function ProductForm({
     clearErrors,
     formState: { errors },
   } = methods;
-
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [isTypeManagerOpen, setIsTypeManagerOpen] = useState(false);
-
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    initialData?.imageUrl || null,
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (initialData) {
-      // FIX: Memastikan productTypeId di-set dengan benar dari data awal
-      const formValues = {
+      const { imageUrl, ...formValues } = {
         ...initialData,
         productTypeId: initialData.productTypeId || initialData.productType?.id,
       };
       reset(formValues);
+      if (initialData.imageUrl) {
+        setPreviewUrl(process.env.NEXT_PUBLIC_IMAGE_URL + initialData.imageUrl);
+      }
     } else {
-      reset({
-        name: "",
-        description: "",
-        composition: "",
-        productTypeId: undefined,
-        storageInstructions: "",
-        expiredDurationInYears: 0,
-        usageInstructions: "",
-        benefits: "",
-      });
+      reset();
     }
   }, [initialData, reset]);
-
+  const handleFileSelect = () => fileInputRef.current?.click();
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => setImageToCrop(reader.result as string);
+      reader.readAsDataURL(file);
+      event.target.value = "";
+    }
+  };
+  const handleCrop = (croppedImage: Blob) => {
+    const file = new File([croppedImage], "variant-image.jpeg", {
+      type: "image/jpeg",
+    });
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setImageToCrop(null);
+    if (mode === "edit") {
+      setEditingField("image");
+    }
+  };
   const handleEditField = (fieldName: EditableField) => {
     setEditingField(fieldName);
   };
-
   const handleCancelEdit = () => {
-    // FIX: Reset ke nilai awal yang benar saat membatalkan
     const formValues = {
       ...initialData,
       productTypeId: initialData?.productTypeId || initialData?.productType?.id,
@@ -202,41 +221,52 @@ export default function ProductForm({
     reset(formValues);
     setEditingField(null);
   };
-
   const handleSaveField = async () => {
     if (!editingField) return;
-
-    const value = watch(editingField);
-    let finalValue: string | number | undefined = value;
-
-    if (editingField === "expiredDurationInYears") {
-      finalValue = Number(value);
+    const formData = new FormData();
+    if (editingField === "image") {
+      if (selectedFile) {
+        formData.append("image", selectedFile);
+      } else {
+        toast.error("Tidak ada gambar baru yang dipilih.");
+        return;
+      }
+    } else {
+      const value = watch(editingField);
+      if (value === undefined || value === null || value === "") {
+        toast.error("Nilai tidak boleh kosong.");
+        return;
+      }
+      if (editingField === "expiredDurationInYears" && isNaN(Number(value))) {
+        toast.error("Masa kadaluarsa harus berupa angka.");
+        return;
+      } else if (editingField === "expiredDurationInYears") {
+        formData.append(editingField, String(Number(value)));
+      } else if (editingField === "productTypeId" && !value) {
+        toast.error("Tipe produk wajib dipilih.");
+        return;
+      } else {
+        formData.append(editingField, String(value));
+      }
     }
-
-    const payload: UpdateProductPayload = { [editingField]: finalValue };
-
-    if (editingField === "productTypeId" && !value) {
-      methods.setError("productTypeId", {
-        type: "manual",
-        message: "Tipe produk wajib dipilih.",
-      });
-      return;
-    }
-
-    await onSubmit(payload);
+    await onSubmit(formData);
     setEditingField(null);
   };
-
-  const onFinalSubmit = (data: CreateProductPayload) => {
-    const payload = {
-      ...data,
-      expiredDurationInYears: Number(data.expiredDurationInYears),
-      variants: [],
-    };
+  const onFinalSubmit = (data: ProductFormValues) => {
+    if (!selectedFile) {
+      toast.error("Gambar varian wajib diunggah.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("image", selectedFile);
+    Object.entries(data).forEach(([key, value]) => {
+      if (key !== "image") {
+        formData.append(key, String(value));
+      }
+    });
     onClose();
-    onSubmit(payload);
+    onSubmit(formData);
   };
-
   const renderField = (
     fieldName: EditableField,
     label: string,
@@ -247,7 +277,6 @@ export default function ProductForm({
       fieldName === "productTypeId"
         ? productTypes.find((pt) => pt.id === value)
         : null;
-
     if (editingField === fieldName) {
       return (
         <EditableFieldDisplay
@@ -263,13 +292,11 @@ export default function ProductForm({
         />
       );
     }
-
     return (
       <div className="space-y-1 group">
         <LabelText>{label}</LabelText>
         <div className="flex items-start justify-between">
           <Typography variant="p" className="text-foreground pr-4">
-            {/* FIX: Menampilkan nama tipe produk, bukan ID */}
             {fieldName === "productTypeId"
               ? productType?.name || "Belum diatur"
               : value}
@@ -288,19 +315,68 @@ export default function ProductForm({
       </div>
     );
   };
-
   if (mode === "create") {
-    // --- CREATE MODE ---
     return (
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onFinalSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-1">
+        {imageToCrop && (
+          <ImageCropper
+            imageSrc={imageToCrop}
+            onCrop={handleCrop}
+            onClose={() => setImageToCrop(null)}
+            aspect={16 / 9}
+            circularCrop={false}
+          />
+        )}
+
+        <form onSubmit={handleSubmit(onFinalSubmit)} className="space-y-6">
+          {/* Kontainer Utama dengan Grid 2 Kolom */}
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+            {/* KOLOM KIRI: Upload Gambar */}
             <div className="space-y-4">
+              <div className="space-y-2">
+                <LabelText required>Gambar Varian (16:9)</LabelText>
+                <div
+                  className="group relative flex h-fit w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed bg-muted aspect-video"
+                  onClick={handleFileSelect}
+                  onKeyDown={(e) => e.key === "Enter" && handleFileSelect()}
+                  role="button"
+                  tabIndex={0}
+                >
+                  {previewUrl ? (
+                    <NextImage
+                      src={previewUrl}
+                      alt="Variant preview"
+                      width={1920}
+                      height={1080}
+                      className="h-full w-full rounded-lg"
+                      imgClassName="object-cover"
+                    />
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      <Camera className="mx-auto h-12 w-12" />
+                      <p>Klik untuk memilih gambar</p>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Camera className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/png, image/jpeg"
+                />
+              </div>
               <Input
                 id="name"
                 label="Nama Produk"
                 validation={{ required: "Nama produk tidak boleh kosong" }}
               />
+            </div>
+            {/* KOLOM KANAN: Semua Form Input */}
+            <div className="space-y-4">
               <div className="space-y-2">
                 <LabelText required>Tipe Produk</LabelText>
                 <div className="flex items-center gap-2">
@@ -325,7 +401,7 @@ export default function ProductForm({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="p-2 h-10"
+                    className="h-10 p-2"
                     onClick={() => setIsTypeManagerOpen(true)}
                   >
                     <Settings className="h-4 w-4" />
@@ -357,49 +433,52 @@ export default function ProductForm({
                 }}
               />
             </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <LabelText required>Komposisi</LabelText>
-                <Textarea
-                  id="composition"
-                  rows={3}
-                  {...register("composition", {
-                    required: "Komposisi tidak boleh kosong",
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <LabelText required>Manfaat & Keunggulan</LabelText>
-                <Textarea
-                  id="benefits"
-                  rows={3}
-                  {...register("benefits", {
-                    required: "Manfaat tidak boleh kosong",
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <LabelText required>Petunjuk Penggunaan</LabelText>
-                <Textarea
-                  id="usageInstructions"
-                  rows={3}
-                  {...register("usageInstructions", {
-                    required: "Petunjuk penggunaan tidak boleh kosong",
-                  })}
-                />
-              </div>
-              <div className="space-y-2">
-                <LabelText required>Petunjuk Penyimpanan</LabelText>
-                <Textarea
-                  id="storageInstructions"
-                  rows={3}
-                  {...register("storageInstructions", {
-                    required: "Petunjuk penyimpanan tidak boleh kosong",
-                  })}
-                />
-              </div>
+          </div>
+
+          {/* Bagian Input Lanjutan di Bawah Grid Utama */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <LabelText required>Komposisi</LabelText>
+              <Textarea
+                id="composition"
+                rows={3}
+                {...register("composition", {
+                  required: "Komposisi tidak boleh kosong",
+                })}
+              />
+            </div>
+            <div className="space-y-2">
+              <LabelText required>Manfaat & Keunggulan</LabelText>
+              <Textarea
+                id="benefits"
+                rows={3}
+                {...register("benefits", {
+                  required: "Manfaat tidak boleh kosong",
+                })}
+              />
+            </div>
+            <div className="space-y-2">
+              <LabelText required>Petunjuk Penggunaan</LabelText>
+              <Textarea
+                id="usageInstructions"
+                rows={3}
+                {...register("usageInstructions", {
+                  required: "Petunjuk penggunaan tidak boleh kosong",
+                })}
+              />
+            </div>
+            <div className="space-y-2">
+              <LabelText required>Petunjuk Penyimpanan</LabelText>
+              <Textarea
+                id="storageInstructions"
+                rows={3}
+                {...register("storageInstructions", {
+                  required: "Petunjuk penyimpanan tidak boleh kosong",
+                })}
+              />
             </div>
           </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Batal
@@ -412,6 +491,7 @@ export default function ProductForm({
             </Button>
           </DialogFooter>
         </form>
+
         <ProductTypeManager
           isOpen={isTypeManagerOpen}
           onClose={() => setIsTypeManagerOpen(false)}
@@ -420,27 +500,97 @@ export default function ProductForm({
       </FormProvider>
     );
   }
-
   // --- EDIT MODE ---
   return (
     <FormProvider {...methods}>
+      {imageToCrop && (
+        <ImageCropper
+          imageSrc={imageToCrop}
+          onCrop={handleCrop}
+          onClose={() => setImageToCrop(null)}
+          aspect={16 / 9}
+          circularCrop={false}
+        />
+      )}
+
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 max-h-[60vh] overflow-y-auto p-1">
-          {renderField("name", "Nama Produk")}
-          {renderField("productTypeId", "Tipe Produk")}
-          {renderField("composition", "Komposisi")}
-          {renderField("description", "Deskripsi", true)}
-          {renderField("expiredDurationInYears", "Masa Kadaluarsa")}
-          {renderField("benefits", "Manfaat & Keunggulan", true)}
-          {renderField("usageInstructions", "Petunjuk Penggunaan", true)}
-          {renderField("storageInstructions", "Petunjuk Penyimpanan", true)}
+        <div className="grid max-h-[60vh] grid-cols-1 gap-x-6 gap-y-4 overflow-y-auto p-1 md:grid-cols-2">
+          {/* Kolom Kiri: Gambar */}
+          <div className="group space-y-4">
+            <div className="space-y-2">
+              <LabelText>Gambar Varian (16:9)</LabelText>
+              <div className="relative w-full rounded-lg bg-muted aspect-video">
+                <NextImage
+                  src={previewUrl || "/dashboard/Hero.jpg"}
+                  alt="Variant preview"
+                  width={1920}
+                  height={1080}
+                  className="h-full w-full rounded-lg"
+                  imgClassName="h-full w-full object-cover"
+                />
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg bg-black/30 opacity-0 transition-opacity group-hover:opacity-100"
+                  onClick={handleFileSelect}
+                  onKeyDown={(e) => e.key === "Enter" && handleFileSelect()}
+                >
+                  <Edit2 className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/png, image/jpeg"
+              />
+              {editingField === "image" && (
+                <div className="mt-2 flex items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSaveField}
+                    disabled={isSubmitting || !selectedFile}
+                    className="h-auto p-1"
+                  >
+                    <Check className="h-4 w-4 text-green-500" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    className="h-auto p-1"
+                  >
+                    <X className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            {renderField("name", "Nama Produk")}
+            {renderField("productTypeId", "Tipe Produk")}
+          </div>
+
+          {/* Kolom Kanan: Detail Produk */}
+          <div className="space-y-4">
+            {renderField("composition", "Komposisi")}
+            {renderField("description", "Deskripsi", true)}
+            {renderField("expiredDurationInYears", "Masa Kadaluarsa")}
+            {renderField("benefits", "Manfaat & Keunggulan", true)}
+            {renderField("usageInstructions", "Petunjuk Penggunaan", true)}
+            {renderField("storageInstructions", "Petunjuk Penyimpanan", true)}
+          </div>
         </div>
+
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>
             Tutup
           </Button>
         </DialogFooter>
       </div>
+
       <ProductTypeManager
         isOpen={isTypeManagerOpen}
         onClose={() => setIsTypeManagerOpen(false)}
