@@ -18,8 +18,7 @@ export interface PackagingResponse extends Omit<ProductResponse, "products"> {
 export interface ProductVariant {
   id: string;
   productId: string;
-  weight: string;
-  composition: string;
+  weight_in_kg: string;
   packagingId: string | null;
   imageUrl: string;
   priceRupiah: number;
@@ -53,12 +52,14 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
   productType: ProductType;
+  composition: string;
   variants: ProductVariant[] | [];
 }
 
 // Type for the payload when creating a new product
 export interface CreateProductPayload {
   name: string;
+  composition: string;
   description: string;
   productTypeId?: string;
   storageInstructions: string;

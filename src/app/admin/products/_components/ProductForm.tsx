@@ -60,7 +60,6 @@ const EditableFieldDisplay = ({
 }) => {
   const { register, watch, setValue, clearErrors } = methods;
   const value = watch(fieldName);
-
   return (
     <div className="space-y-2">
       <LabelText required>{label}</LabelText>
@@ -180,6 +179,7 @@ export default function ProductForm({
       reset({
         name: "",
         description: "",
+        composition: "",
         productTypeId: undefined,
         storageInstructions: "",
         expiredDurationInYears: 0,
@@ -233,6 +233,7 @@ export default function ProductForm({
       expiredDurationInYears: Number(data.expiredDurationInYears),
       variants: [],
     };
+    onClose();
     onSubmit(payload);
   };
 
@@ -358,6 +359,16 @@ export default function ProductForm({
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
+                <LabelText required>Komposisi</LabelText>
+                <Textarea
+                  id="composition"
+                  rows={3}
+                  {...register("composition", {
+                    required: "Komposisi tidak boleh kosong",
+                  })}
+                />
+              </div>
+              <div className="space-y-2">
                 <LabelText required>Manfaat & Keunggulan</LabelText>
                 <Textarea
                   id="benefits"
@@ -417,6 +428,7 @@ export default function ProductForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 max-h-[60vh] overflow-y-auto p-1">
           {renderField("name", "Nama Produk")}
           {renderField("productTypeId", "Tipe Produk")}
+          {renderField("composition", "Komposisi")}
           {renderField("description", "Deskripsi", true)}
           {renderField("expiredDurationInYears", "Masa Kadaluarsa")}
           {renderField("benefits", "Manfaat & Keunggulan", true)}

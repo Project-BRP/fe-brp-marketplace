@@ -448,12 +448,19 @@ export default function AdminProducts() {
                   <Typography variant="h5" weight="bold" className="mb-2">
                     {viewingProduct.name}
                   </Typography>
+
                   <Badge variant="secondary" className="mb-4">
                     {viewingProduct.productType?.name ?? "N/A"}
                   </Badge>
-                  <p className="text-muted-foreground text-sm">
+                  <Typography
+                    variant="p"
+                    className="font-semibold text-primary mb-2"
+                  >
+                    Komposisi: {viewingProduct.composition}
+                  </Typography>
+                  <Typography variant="p" className="text-muted-foreground">
                     {viewingProduct.description}
-                  </p>
+                  </Typography>
                 </CardContent>
               </Card>
 
@@ -512,20 +519,16 @@ export default function AdminProducts() {
                       <CardContent className="p-4 flex gap-4 items-start">
                         <NextImage
                           src={variant.imageUrl ?? "/dashboard/Hero.jpg"}
-                          alt={variant.composition}
+                          alt={variant.id}
                           width={100}
                           height={100}
                           className="rounded-lg"
                           imgClassName="object-cover w-full h-full"
                         />
                         <div className="flex-1">
-                          <p className="font-semibold">
-                            {variant.id.replace(/_/g, " ")}
+                          <p className="text-sm font-semibold">
+                            Berat: {variant.weight_in_kg}
                           </p>
-                          <p className="text-sm">
-                            Komposisi: {variant.composition}
-                          </p>
-                          <p className="text-sm">Berat: {variant.weight}</p>
                           <p className="text-sm">
                             Kemasan:{" "}
                             {packagings.find(

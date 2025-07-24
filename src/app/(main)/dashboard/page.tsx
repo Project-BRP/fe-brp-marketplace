@@ -132,9 +132,9 @@ const Index = () => {
         {
           id: mainVariant.id,
           name: product.name,
-          npkFormula: mainVariant.composition,
+          npkFormula: product.composition,
           price: mainVariant.priceRupiah,
-          unit: mainVariant.weight,
+          unit: mainVariant.weight_in_kg,
           quantity,
           image: mainVariant.imageUrl,
         },
