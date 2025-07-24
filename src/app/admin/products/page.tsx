@@ -12,7 +12,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDebounce } from "use-debounce";
 
 import FilterModal, {
@@ -59,6 +59,7 @@ import {
   UpdateProductPayload,
 } from "@/types/product";
 import ProductForm from "./_components/ProductForm";
+import ProductVariantManager from "./_components/ProductVariantManager";
 
 const initialAdvancedFilters: AdvancedFilters = {
   productTypeId: "Semua",
@@ -68,14 +69,12 @@ const initialAdvancedFilters: AdvancedFilters = {
 };
 
 export default function AdminProducts() {
-  // --- State Modal dan Editing ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // --- State Filter & Paginasi ---
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -84,54 +83,60 @@ export default function AdminProducts() {
     initialAdvancedFilters,
   );
 
-  // --- Pengambilan Data ---
   const {
     data: productData,
     isLoading,
     isError,
+    refetch: refetchProducts,
   } = useGetAllProducts({
-    limit: 1000, // Ambil semua untuk filter di sisi client
+    limit: 1000,
     search: debouncedSearchTerm,
     productTypeId: advancedFilters.productTypeId,
   });
   const { data: productTypes = [] } = useProductTypes();
-  const { data: packagings = [] } = usePackagings();
+  const { data: packagings = [], isLoading: isLoadingPackagings } =
+    usePackagings();
 
-  // --- Mutasi Data ---
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
   const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
 
-  // --- Logika Filter di Sisi Client ---
+  // Update viewingProduct when productData changes
+  useEffect(() => {
+    if (viewingProduct && productData?.products) {
+      const updatedProduct = productData.products.find(
+        (p) => p.id === viewingProduct.id,
+      );
+      if (updatedProduct) {
+        setViewingProduct(updatedProduct);
+      }
+    }
+  }, [productData, viewingProduct]);
+
   const clientFilteredProducts = useMemo(() => {
     const initialProducts = productData?.products ?? [];
-    return initialProducts.filter((product) => {
+    return initialProducts.filter(Boolean).filter((product) => {
       const { packagingIds, minPrice, maxPrice } = advancedFilters;
-
-      // Allow products without variants
       if (!product.variants || product.variants.length === 0) {
+        if (packagingIds.length > 0 || minPrice || maxPrice) return false;
         return true;
       }
-
       const hasMatchingPackaging =
         packagingIds.length === 0 ||
         product.variants.some(
           (v) => v.packagingId && packagingIds.includes(v.packagingId),
         );
       if (!hasMatchingPackaging) return false;
-
       const min = minPrice ? Number(minPrice) : 0;
       const max = maxPrice ? Number(maxPrice) : Infinity;
       const hasMatchingPrice = product.variants.some(
         (v) => v.priceRupiah >= min && v.priceRupiah <= max,
       );
       if (!hasMatchingPrice) return false;
-
       return true;
     });
   }, [productData, advancedFilters]);
 
-  // --- Logika Paginasi ---
   const paginatedProducts = useMemo(() => {
     const totalPages = Math.ceil(clientFilteredProducts.length / limit);
     const startIndex = (page - 1) * limit;
@@ -140,7 +145,6 @@ export default function AdminProducts() {
     return { products: productsOnPage, totalPages };
   }, [clientFilteredProducts, page, limit]);
 
-  // --- Fungsi Bantuan ---
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -149,7 +153,6 @@ export default function AdminProducts() {
     }).format(price);
   };
 
-  // --- Event Handlers ---
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= paginatedProducts.totalPages) {
       setPage(newPage);
@@ -196,17 +199,18 @@ export default function AdminProducts() {
     data: CreateProductPayload | UpdateProductPayload,
   ) => {
     if (editingProduct) {
-      updateProduct({
-        id: editingProduct.id,
-        payload: data as UpdateProductPayload,
-      });
+      updateProduct(
+        { id: editingProduct.id, payload: data as UpdateProductPayload },
+        { onSuccess: () => setIsModalOpen(false) },
+      );
     } else {
-      createProduct(data as CreateProductPayload);
+      createProduct(data as CreateProductPayload, {
+        onSuccess: () => setIsModalOpen(false),
+      });
     }
   };
 
-  // --- Logika Render ---
-  if (isLoading) {
+  if (isLoading || isLoadingPackagings) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -224,7 +228,6 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
@@ -240,7 +243,6 @@ export default function AdminProducts() {
         </Button>
       </div>
 
-      {/* Filter */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -288,7 +290,6 @@ export default function AdminProducts() {
         </CardContent>
       </Card>
 
-      {/* Tabel Produk */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -314,8 +315,10 @@ export default function AdminProducts() {
                       <div className="flex items-center gap-3">
                         <NextImage
                           src={
-                            product.variants?.[0]?.imageUrl ??
-                            "/dashboard/Hero.jpg"
+                            product.variants?.[0]?.imageUrl
+                              ? process.env.NEXT_PUBLIC_IMAGE_URL +
+                                product.variants[0].imageUrl
+                              : "/dashboard/Hero.jpg"
                           }
                           alt={product.name}
                           width={48}
@@ -337,8 +340,9 @@ export default function AdminProducts() {
                       {(product.variants ?? []).length > 0
                         ? formatPrice(
                             Math.min(
-                              ...(product.variants?.map((v) => v.priceRupiah) ||
-                                []),
+                              ...(product.variants?.map(
+                                (v) => v.priceRupiah,
+                              ) || [0]),
                             ),
                           )
                         : "N/A"}
@@ -378,7 +382,6 @@ export default function AdminProducts() {
         </CardContent>
       </Card>
 
-      {/* Paginasi */}
       {paginatedProducts.totalPages > 1 && (
         <div className="flex justify-center items-center gap-4">
           <Button
@@ -405,7 +408,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* Modal Filter */}
       <FilterModal
         isOpen={isFilterModalOpen}
         onOpenChange={setIsFilterModalOpen}
@@ -417,7 +419,6 @@ export default function AdminProducts() {
         onReset={handleResetFilters}
       />
 
-      {/* Dialog Tambah/Edit Produk */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -435,7 +436,6 @@ export default function AdminProducts() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Info Produk */}
       <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
@@ -509,42 +509,12 @@ export default function AdminProducts() {
                   </CardContent>
                 </Card>
               </div>
-              <div>
-                <Typography variant="h6" weight="semibold" className="mb-4">
-                  Varian Produk ({viewingProduct.variants?.length})
-                </Typography>
-                <div className="space-y-4">
-                  {viewingProduct.variants?.map((variant) => (
-                    <Card key={variant.id} className="bg-muted/50">
-                      <CardContent className="p-4 flex gap-4 items-start">
-                        <NextImage
-                          src={variant.imageUrl ?? "/dashboard/Hero.jpg"}
-                          alt={variant.id}
-                          width={100}
-                          height={100}
-                          className="rounded-lg"
-                          imgClassName="object-cover w-full h-full"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold">
-                            Berat: {variant.weight_in_kg} kg
-                          </p>
-                          <p className="text-sm">
-                            Kemasan:{" "}
-                            {packagings.find(
-                              (p) => p.id === variant.packagingId,
-                            )?.name ?? "N/A"}
-                          </p>
-                          <Separator className="my-2" />
-                          <p className="text-lg font-bold text-primary">
-                            {formatPrice(variant.priceRupiah)}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+              <Separator />
+              <ProductVariantManager
+                product={viewingProduct}
+                packagings={packagings}
+                onUpdate={() => refetchProducts()}
+              />
             </div>
           )}
         </DialogContent>

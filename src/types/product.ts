@@ -70,3 +70,26 @@ export interface CreateProductPayload {
 
 // Type for the payload when updating a product
 export type UpdateProductPayload = Partial<CreateProductPayload>;
+
+// --- START: New Types for Variants and Packaging ---
+
+// Payload for creating a new product variant
+export interface CreateVariantPayload {
+  weight_in_kg: number;
+  priceRupiah: number;
+  packagingId: string;
+  image: FormData;
+}
+
+// Payload for updating a product variant (all fields are optional)
+export type UpdateVariantPayload = Partial<
+  Omit<CreateVariantPayload, "image">
+> & {
+  image?: FormData;
+};
+
+// Payload for creating or updating packaging
+export interface PackagingPayload {
+  name: string;
+}
+// --- END: New Types for Variants and Packaging ---

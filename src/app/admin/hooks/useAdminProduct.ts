@@ -7,13 +7,17 @@ import api from "@/lib/api";
 import { ApiError, ApiResponse } from "@/types/api";
 import {
   CreateProductPayload,
+  Packaging,
+  PackagingPayload,
   Product,
   ProductType,
+  ProductVariant,
   UpdateProductPayload,
 } from "@/types/product";
 
 const PRODUCTS_QUERY_KEY = ["products"];
 const PRODUCT_TYPES_QUERY_KEY = ["product-types"];
+const PACKAGINGS_QUERY_KEY = ["packagings"];
 
 // Hook untuk membuat produk baru
 export const useCreateProduct = () => {
@@ -160,6 +164,153 @@ export const useDeleteProductType = () => {
       toast.error(
         error.response?.data?.message || "Gagal menghapus tipe produk.",
       );
+    },
+  });
+};
+
+// --- Product Variant Mutations ---
+
+// Hook to create a new product variant
+export const useCreateProductVariant = (productId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<ProductVariant>,
+    AxiosError<ApiError>,
+    FormData
+  >({
+    mutationFn: async (payload) => {
+      const response = await api.post<ApiResponse<ProductVariant>>(
+        `/product-variants/product/${productId}`,
+        payload,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Varian produk berhasil ditambahkan!");
+      // Invalidate the general product list and the specific product being viewed
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Gagal menambahkan varian.");
+    },
+  });
+};
+
+// Hook to update a product variant
+export const useUpdateProductVariant = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<ProductVariant>,
+    AxiosError<ApiError>,
+    { variantId: string; payload: FormData }
+  >({
+    mutationFn: async ({ variantId, payload }) => {
+      const response = await api.patch<ApiResponse<ProductVariant>>(
+        `/product-variants/${variantId}`,
+        payload,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Varian produk berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Gagal memperbarui varian.");
+    },
+  });
+};
+
+// Hook to delete a product variant
+export const useDeleteProductVariant = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<null>, AxiosError<ApiError>, string>({
+    mutationFn: async (variantId: string) => {
+      const response = await api.delete<ApiResponse<null>>(
+        `/product-variants/${variantId}`,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Varian produk berhasil dihapus!");
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Gagal menghapus varian.");
+    },
+  });
+};
+
+// --- Packaging Mutations ---
+
+// Hook to create a new packaging type
+export const useCreatePackaging = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<Packaging>,
+    AxiosError<ApiError>,
+    PackagingPayload
+  >({
+    mutationFn: async (payload) => {
+      const response = await api.post<ApiResponse<Packaging>>(
+        "/packagings",
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Kemasan berhasil dibuat!");
+      queryClient.invalidateQueries({ queryKey: PACKAGINGS_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Gagal membuat kemasan.");
+    },
+  });
+};
+
+// Hook to update a packaging type
+export const useUpdatePackaging = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<Packaging>,
+    AxiosError<ApiError>,
+    { id: string; payload: PackagingPayload }
+  >({
+    mutationFn: async ({ id, payload }) => {
+      const response = await api.patch<ApiResponse<Packaging>>(
+        `/packagings/${id}`,
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Kemasan berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: PACKAGINGS_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Gagal memperbarui kemasan.",
+      );
+    },
+  });
+};
+
+// Hook to delete a packaging type
+export const useDeletePackaging = () => {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<null>, AxiosError<ApiError>, string>({
+    mutationFn: async (id: string) => {
+      const response = await api.delete<ApiResponse<null>>(`/packagings/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Kemasan berhasil dihapus!");
+      queryClient.invalidateQueries({ queryKey: PACKAGINGS_QUERY_KEY });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Gagal menghapus kemasan.");
     },
   });
 };

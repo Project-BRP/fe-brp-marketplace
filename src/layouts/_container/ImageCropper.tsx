@@ -13,9 +13,10 @@ interface ImageCropperProps {
   imageSrc: string;
   onCrop: (croppedImage: Blob) => void;
   onClose: () => void;
+  aspect?: number;
+  circularCrop?: boolean;
 }
 
-// Function to generate a centered crop
 function centerAspectCrop(
   mediaWidth: number,
   mediaHeight: number,
@@ -36,7 +37,13 @@ function centerAspectCrop(
   );
 }
 
-const ImageCropper = ({ imageSrc, onCrop, onClose }: ImageCropperProps) => {
+const ImageCropper = ({
+  imageSrc,
+  onCrop,
+  onClose,
+  aspect = 1,
+  circularCrop = false,
+}: ImageCropperProps) => {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop>();
   const imgRef = useRef<HTMLImageElement>(null);
@@ -44,7 +51,7 @@ const ImageCropper = ({ imageSrc, onCrop, onClose }: ImageCropperProps) => {
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
-    setCrop(centerAspectCrop(width, height, 1));
+    setCrop(centerAspectCrop(width, height, aspect));
   };
 
   const handleCrop = async () => {
@@ -58,8 +65,11 @@ const ImageCropper = ({ imageSrc, onCrop, onClose }: ImageCropperProps) => {
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = 400;
-    canvas.height = 400;
+    const targetWidth = aspect === 1 ? 400 : 1920;
+    const targetHeight = aspect === 1 ? 400 : 1080;
+
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) {
@@ -71,7 +81,17 @@ const ImageCropper = ({ imageSrc, onCrop, onClose }: ImageCropperProps) => {
     const cropWidth = completedCrop.width * scaleX;
     const cropHeight = completedCrop.height * scaleY;
 
-    ctx.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, 400, 400);
+    ctx.drawImage(
+      image,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      targetWidth,
+      targetHeight,
+    );
 
     canvas.toBlob(
       (blob) => {
@@ -86,17 +106,15 @@ const ImageCropper = ({ imageSrc, onCrop, onClose }: ImageCropperProps) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-75">
-      <div className="bg-background p-6 rounded-lg shadow-lg max-w-lg w-full">
+      <div className="bg-background p-6 rounded-lg shadow-lg max-w-4xl w-full">
         <h2 className="text-xl font-bold mb-4 text-foreground">Crop Image</h2>
         <div className="flex justify-center">
           <ReactCrop
             crop={crop}
             onChange={(_, percentCrop) => setCrop(percentCrop)}
             onComplete={(c) => setCompletedCrop(c)}
-            aspect={1}
-            minWidth={400}
-            minHeight={400}
-            circularCrop
+            aspect={aspect}
+            circularCrop={circularCrop}
           >
             <img
               ref={imgRef}
@@ -107,7 +125,6 @@ const ImageCropper = ({ imageSrc, onCrop, onClose }: ImageCropperProps) => {
             />
           </ReactCrop>
         </div>
-        {/* Hidden canvas for generating the blob */}
         <canvas ref={previewCanvasRef} className="hidden" />
         <div className="flex justify-end mt-4 space-x-2">
           <Button variant="outline" onClick={onClose}>
