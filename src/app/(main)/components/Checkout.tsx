@@ -374,7 +374,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatPrice(item.price)} / {item.packagingName} (
-                        {item.weight_in_kg})
+                        {item.weight_in_kg} kg)
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Qty: {item.quantity}

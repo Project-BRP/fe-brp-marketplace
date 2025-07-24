@@ -29,7 +29,7 @@ export interface CartItem {
   productName: string;
   composition: string;
   price: number;
-  weight_in_kg: string;
+  weight_in_kg: number;
   packagingName: string;
   quantity: number;
   imageUrl?: string | null;

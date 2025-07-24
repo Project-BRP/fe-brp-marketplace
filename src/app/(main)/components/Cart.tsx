@@ -112,7 +112,7 @@ const Cart = ({
                   </p>
                   <p className="text-sm font-medium text-primary">
                     {formatPrice(item.price)} / {item.packagingName} (
-                    {item.weight_in_kg})
+                    {item.weight_in_kg} kg)
                   </p>
                 </div>
 

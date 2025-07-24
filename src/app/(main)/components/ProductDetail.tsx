@@ -126,7 +126,7 @@ const ProductDetail = ({
               >
                 <NextImage
                   src={variant.imageUrl ?? "/dashboard/Hero.jpg"}
-                  alt={`Varian ${variant.weight_in_kg}`}
+                  alt={`Varian ${variant.weight_in_kg} kg`}
                   width={100}
                   height={100}
                   className="w-full h-full"
@@ -186,7 +186,7 @@ const ProductDetail = ({
                       />
                       <div className="flex-1 w-full">
                         <Typography variant="h6" weight="semibold">
-                          {packaging?.name || "N/A"} ({variant.weight_in_kg})
+                          {packaging?.name || "N/A"} ({variant.weight_in_kg} kg)
                         </Typography>
                         <Typography
                           variant="p"

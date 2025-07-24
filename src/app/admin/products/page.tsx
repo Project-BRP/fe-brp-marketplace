@@ -527,7 +527,7 @@ export default function AdminProducts() {
                         />
                         <div className="flex-1">
                           <p className="text-sm font-semibold">
-                            Berat: {variant.weight_in_kg}
+                            Berat: {variant.weight_in_kg} kg
                           </p>
                           <p className="text-sm">
                             Kemasan:{" "}

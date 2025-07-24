@@ -18,7 +18,7 @@ export interface PackagingResponse extends Omit<ProductResponse, "products"> {
 export interface ProductVariant {
   id: string;
   productId: string;
-  weight_in_kg: string;
+  weight_in_kg: number;
   packagingId: string | null;
   imageUrl: string;
   priceRupiah: number;
