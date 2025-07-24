@@ -104,31 +104,43 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
               </Button>
 
               {userData?.name ? (
-                <Button
-                  onClick={() => setIsModalOpen(true)}
-                  variant="green"
-                  size="base"
-                  className="h-10 p-2 flex items-center gap-2"
-                >
-                  <span className="hidden min-[450px]:inline whitespace-nowrap font-semibold">
-                    Halo, {userData.name.split(" ")[0]}
-                  </span>
-                  {userData.photoProfile ? (
-                    <NextImage
-                      src={
-                        process.env.NEXT_PUBLIC_IMAGE_URL +
-                        userData.photoProfile
-                      }
-                      alt="profile"
-                      width={28}
-                      height={28}
-                      className="rounded-full"
-                      imgClassName="object-cover w-full h-full rounded-full"
-                    />
-                  ) : (
-                    <User className="size-5 text-white" />
+                <>
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    variant="green"
+                    size="base"
+                    className="h-10 p-2 flex items-center gap-2"
+                  >
+                    <span className="hidden min-[450px]:inline whitespace-nowrap font-semibold">
+                      Halo, {userData.name.split(" ")[0]}
+                    </span>
+                    {userData.photoProfile ? (
+                      <NextImage
+                        src={
+                          process.env.NEXT_PUBLIC_IMAGE_URL +
+                          userData.photoProfile
+                        }
+                        alt="profile"
+                        width={28}
+                        height={28}
+                        className="rounded-full"
+                        imgClassName="object-cover w-full h-full rounded-full"
+                      />
+                    ) : (
+                      <User className="size-5 text-white" />
+                    )}
+                  </Button>
+                  {userData.role === "ADMIN" && (
+                    <Button
+                      variant="yellow"
+                      size="base"
+                      onClick={() => router.push("/admin")}
+                      className="h-10 px-4 hidden md:flex"
+                    >
+                      Admin Panel
+                    </Button>
                   )}
-                </Button>
+                </>
               ) : (
                 <div className="flex items-center gap-2 sm:gap-3">
                   <Button
