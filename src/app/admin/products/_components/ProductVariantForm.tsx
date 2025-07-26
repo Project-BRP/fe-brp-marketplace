@@ -46,7 +46,7 @@ export default function ProductVariantForm({
 }: ProductVariantFormProps) {
   const mode = initialData ? "edit" : "create";
   const methods = useForm<VariantFormValues>({ mode: "onTouched" });
-  const { handleSubmit, register, reset, control, watch, setValue } = methods;
+  const { handleSubmit, register, reset, control, watch } = methods;
   const { errors } = methods.formState;
   methods;
 

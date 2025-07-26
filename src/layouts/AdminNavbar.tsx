@@ -7,8 +7,10 @@ import getUser from "@/app/(auth)/hooks/getUser";
 import NextImage from "@/components/NextImage";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import api from "@/lib/api";
 import useUserStore from "@/store/userStore";
 import { IUpdateUserData } from "@/types/auth";
+import { useQuery } from "@tanstack/react-query";
 import { ProfileModal } from "./_container/profileModal";
 import { useLogout } from "./hooks/useLogout";
 import { useUpdateUser } from "./hooks/useUpdateUser";
@@ -20,6 +22,14 @@ export default function AdminNavbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { updateUserProfile, isUpdating } = useUpdateUser();
   const { handleLogout, isLoggingOut } = useLogout();
+  const { data: companyProfile } = useQuery({
+    queryKey: ["company-profile"],
+    queryFn: async () => {
+      const res = await api.get("/config/logo");
+      return res.data.data;
+    },
+  });
+
   useEffect(() => {
     const syncUser = async () => {
       const dataToSync = getUserData?.data ?? (await refetch())?.data?.data;
@@ -45,9 +55,29 @@ export default function AdminNavbar() {
   return (
     <>
       <header className="bg-background border-b border-border sticky top-0 z-40">
-        {/* The container is now inside the header to constrain content but not the background */}
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-end h-16">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              {companyProfile?.imageUrl ? (
+                <NextImage
+                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${companyProfile.imageUrl}`}
+                  alt="Company Logo"
+                  width={36}
+                  height={36}
+                  className="rounded-full"
+                  imgClassName="object-cover w-full h-full rounded-full"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">
+                    B
+                  </span>
+                </div>
+              )}
+              <Typography variant="h6" weight="bold">
+                Admin Panel
+              </Typography>
+            </div>
             {userData?.name ? (
               <Button
                 onClick={() => setIsModalOpen(true)}

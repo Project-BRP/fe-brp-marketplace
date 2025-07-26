@@ -224,7 +224,7 @@ export default function AdminReports() {
                     `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                   }
                 >
-                  {topProductsData.map((entry, index) => (
+                  {topProductsData.map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}

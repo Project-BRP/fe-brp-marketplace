@@ -14,6 +14,10 @@ interface ImageCropperProps {
   onCrop: (croppedImage: Blob) => void;
   onClose: () => void;
   aspect?: number;
+  width?: number;
+  height?: number;
+  isLogo?: boolean;
+  flexibleCrop?: boolean; // Variabel baru untuk fleksibilitas
   circularCrop?: boolean;
 }
 
@@ -42,6 +46,10 @@ const ImageCropper = ({
   onCrop,
   onClose,
   aspect = 1,
+  width = 400,
+  height = 400,
+  isLogo = false,
+  flexibleCrop = false, // Nilai default false
   circularCrop = false,
 }: ImageCropperProps) => {
   const [crop, setCrop] = useState<Crop>();
@@ -51,9 +59,13 @@ const ImageCropper = ({
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget;
-    setCrop(centerAspectCrop(width, height, aspect));
+    // Jika crop fleksibel, jangan paksakan aspek rasio saat pertama kali dimuat
+    if (!flexibleCrop) {
+      setCrop(centerAspectCrop(width, height, aspect));
+    }
   };
 
+  // Fungsi handleCrop tetap sama seperti sebelumnya
   const handleCrop = async () => {
     const image = imgRef.current;
     const canvas = previewCanvasRef.current;
@@ -65,33 +77,74 @@ const ImageCropper = ({
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    const targetWidth = aspect === 1 ? 400 : 1920;
-    const targetHeight = aspect === 1 ? 400 : 1080;
+    if (isLogo) {
+      canvas.width = 500;
+      canvas.height = 500;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("No 2d context");
+      }
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
+      const cropX = completedCrop.x * scaleX;
+      const cropY = completedCrop.y * scaleY;
+      const cropWidth = completedCrop.width * scaleX;
+      const cropHeight = completedCrop.height * scaleY;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      throw new Error("No 2d context");
+      const cropAspectRatio = cropWidth / cropHeight;
+      let drawWidth = 500;
+      let drawHeight = 500;
+
+      if (cropAspectRatio > 1) {
+        drawHeight = 500 / cropAspectRatio;
+      } else {
+        drawWidth = 500 * cropAspectRatio;
+      }
+
+      const dx = (500 - drawWidth) / 2;
+      const dy = (500 - drawHeight) / 2;
+
+      ctx.drawImage(
+        image,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        dx,
+        dy,
+        drawWidth,
+        drawHeight,
+      );
+    } else {
+      const targetWidth = aspect === 1 ? width : 1920;
+      const targetHeight = aspect === 1 ? height : 1080;
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("No 2d context");
+      }
+
+      const cropX = completedCrop.x * scaleX;
+      const cropY = completedCrop.y * scaleY;
+      const cropWidth = completedCrop.width * scaleX;
+      const cropHeight = completedCrop.height * scaleY;
+
+      ctx.drawImage(
+        image,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        targetWidth,
+        targetHeight,
+      );
     }
-
-    const cropX = completedCrop.x * scaleX;
-    const cropY = completedCrop.y * scaleY;
-    const cropWidth = completedCrop.width * scaleX;
-    const cropHeight = completedCrop.height * scaleY;
-
-    ctx.drawImage(
-      image,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      targetWidth,
-      targetHeight,
-    );
 
     canvas.toBlob(
       (blob) => {
@@ -113,7 +166,7 @@ const ImageCropper = ({
             crop={crop}
             onChange={(_, percentCrop) => setCrop(percentCrop)}
             onComplete={(c) => setCompletedCrop(c)}
-            aspect={aspect}
+            aspect={flexibleCrop ? undefined : aspect}
             circularCrop={circularCrop}
           >
             <img
