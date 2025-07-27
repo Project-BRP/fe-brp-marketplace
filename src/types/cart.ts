@@ -3,7 +3,6 @@ import { ProductVariant } from "./product";
 
 export interface CartItem {
   id: string;
-  cartId: string;
   productVariantId: string;
   quantity: number;
   createdAt: string;

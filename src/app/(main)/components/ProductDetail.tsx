@@ -1,5 +1,7 @@
-import { useAddToCart } from "@/app/(main)/hooks/useCart";
 // src/app/(main)/components/ProductDetail.tsx
+"use client";
+
+import { useAddToCart } from "@/app/(main)/hooks/useCart";
 import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
@@ -9,21 +11,19 @@ import { Separator } from "@/components/Separator";
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import { AddToCartPayload } from "@/types/cart";
 import { Packaging, ProductVariant } from "@/types/product";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
+
 interface ProductDetailProps {
   productId: string;
   onBack: () => void;
-  onAddToCart: (item: AddToCartPayload) => void;
   packagings: Packaging[];
 }
 
 const ProductDetail = ({
   productId,
   onBack,
-  onAddToCart,
   packagings,
 }: ProductDetailProps) => {
   const { data: productData, isLoading } = useGetAllProducts({});
@@ -33,6 +33,9 @@ const ProductDetail = ({
   const [selectedVariantImage, setSelectedVariantImage] = useState<
     string | null
   >(null);
+  // State untuk melacak varian mana yang sedang loading
+  const [loadingVariantId, setLoadingVariantId] = useState<string | null>(null);
+
   const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
 
   const product = productData?.products.find((p) => p.id === productId);
@@ -60,7 +63,15 @@ const ProductDetail = ({
 
   const handleAddToCart = (variant: ProductVariant) => {
     const quantity = quantities[variant.id] || 1;
-    addToCart({ variantId: variant.id, quantity: quantity });
+    setLoadingVariantId(variant.id);
+    addToCart(
+      { variantId: variant.id, quantity: quantity },
+      {
+        onSettled: () => {
+          setLoadingVariantId(null);
+        },
+      },
+    );
   };
 
   if (isLoading) {
@@ -162,6 +173,8 @@ const ProductDetail = ({
                   (p) => p.id === variant.packagingId,
                 );
                 const quantity = quantities[variant.id] || 1;
+                const isLoadingThisVariant =
+                  isAddingToCart && loadingVariantId === variant.id;
 
                 return (
                   <Card key={variant.id} className="bg-muted/50">
@@ -191,9 +204,9 @@ const ProductDetail = ({
                         </Typography>
                         <Typography
                           variant="p"
-                          className="text-muted-foreground font-bold text-lg"
+                          className="text-muted-foreground text-sm"
                         >
-                          Tersedia {variant.stock}
+                          Stok: {variant.stock}
                         </Typography>
                       </div>
                       <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -232,13 +245,16 @@ const ProductDetail = ({
                         </Button>
                       </div>
                       <Button
+                        id={`add-to-cart-${variant.id}`}
                         variant="green"
                         onClick={() => handleAddToCart(variant)}
                         className="w-full sm:w-auto"
-                        disabled={isAddingToCart}
+                        disabled={isLoadingThisVariant}
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        {isAddingToCart ? "Menambahkan..." : "Add"}
+                        {isLoadingThisVariant
+                          ? "Menambahkan..."
+                          : "Tambahkan ke Keranjang"}
                       </Button>
                     </CardContent>
                   </Card>

@@ -1,4 +1,5 @@
 import {
+  useClearCart,
   useRemoveCartItem,
   useUpdateCartItem,
 } from "@/app/(main)/hooks/useCart";
@@ -31,7 +32,7 @@ const Cart = ({ items, onCheckout }: CartProps) => {
     0,
   );
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-
+  const { mutate: clearCart } = useClearCart();
   const handleQuantityChange = (
     cartItemId: string,
     newQuantity: number,
@@ -45,6 +46,10 @@ const Cart = ({ items, onCheckout }: CartProps) => {
         payload: { quantity: newQuantity - itemQuantity },
       });
     }
+  };
+
+  const handleClearCart = async () => {
+    await clearCart();
   };
 
   if (items.length === 0) {
@@ -86,6 +91,10 @@ const Cart = ({ items, onCheckout }: CartProps) => {
               </Typography>
             </Badge>
           </div>
+          <Button variant="red" onClick={handleClearCart}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Kosongkan Keranjang
+          </Button>
         </CardTitle>
       </CardHeader>
 
@@ -182,7 +191,7 @@ const Cart = ({ items, onCheckout }: CartProps) => {
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => removeItem(item.productVariantId)}
+                    onClick={() => removeItem(item.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

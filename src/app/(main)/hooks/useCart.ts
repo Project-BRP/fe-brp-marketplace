@@ -29,7 +29,7 @@ export const useClearCart = () => {
   const queryClient = useQueryClient();
   return useMutation<ApiResponse<null>, AxiosError<ApiError>>({
     mutationFn: async () => {
-      const res = await api.delete<ApiResponse<null>>("/carts/clear");
+      const res = await api.patch<ApiResponse<null>>("/carts/clear");
       return res.data;
     },
     onSuccess: () => {

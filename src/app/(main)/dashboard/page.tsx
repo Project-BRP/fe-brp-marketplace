@@ -21,7 +21,7 @@ import FilterModal, {
 } from "@/app/(main)/components/FilterModal";
 import ProductCard from "@/app/(main)/components/ProductCard";
 import ProductDetail from "@/app/(main)/components/ProductDetail";
-import { useAddToCart, useGetCart } from "@/app/(main)/hooks/useCart";
+import { useGetCart } from "@/app/(main)/hooks/useCart";
 import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
 import { usePackagings } from "@/app/admin/hooks/useMeta";
 import { Badge } from "@/components/Badge";
@@ -61,8 +61,6 @@ const Index = () => {
     (sum: number, item: { quantity: number }) => sum + item.quantity,
     0,
   );
-
-  const { mutate: addToCart } = useAddToCart();
 
   const {
     data: productData,
@@ -124,10 +122,6 @@ const Index = () => {
     }
   };
 
-  const handleAddToCart = (item: { variantId: string; quantity: number }) => {
-    addToCart(item);
-  };
-
   const handleOrderSubmit = (orderData: OrderData) => {
     // TODO: Implement order submission logic here
     console.log("Order Submitted:", orderData);
@@ -187,7 +181,6 @@ const Index = () => {
         <ProductDetail
           productId={selectedProductId}
           onBack={() => setCurrentPageView("catalog")}
-          onAddToCart={handleAddToCart}
           packagings={packagings}
         />
       </>
