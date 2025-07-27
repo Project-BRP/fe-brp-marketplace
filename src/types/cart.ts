@@ -9,7 +9,7 @@ export interface CartItem {
   updatedAt: string;
   productVariant: Omit<ProductVariant, "productId"> & {
     product: ProductInCart;
-    isDeleted: boolean;
+    is_deleted: boolean;
   };
 }
 
@@ -33,5 +33,5 @@ export interface UpdateCartItemPayload {
 interface ProductInCart {
   id: string;
   name: string;
-  isDeleted: boolean;
+  is_deleted: boolean;
 }

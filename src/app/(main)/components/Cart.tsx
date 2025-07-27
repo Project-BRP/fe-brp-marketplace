@@ -13,6 +13,7 @@ import NextImage from "@/components/NextImage";
 import { Separator } from "@/components/Separator";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import clsxm from "@/lib/clsxm";
 import { CartItem } from "@/types/cart";
 import { ArrowRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import React from "react"; // Import React untuk useMemo
@@ -83,7 +84,7 @@ const Cart = ({ items, onCheckout }: CartProps) => {
       </Card>
     );
   }
-
+  console.log(sortedItems);
   return (
     <Card className="border-border shadow-card">
       <CardHeader>
@@ -149,10 +150,10 @@ const Cart = ({ items, onCheckout }: CartProps) => {
                       : "Pcs"}{" "}
                     ({item.productVariant.weight_in_kg} kg)
                   </p>
-                  {(item.productVariant.isDeleted ||
-                    item.productVariant.product.isDeleted) && (
+                  {(item.productVariant.is_deleted ||
+                    item.productVariant.product.is_deleted) && (
                     <Typography variant="p" className="text-red-500 text-xs">
-                      {item.productVariant.isDeleted
+                      {item.productVariant.is_deleted
                         ? "Varian produk ini tidak lagi tersedia."
                         : "Produk ini tidak lagi tersedia."}
                     </Typography>
@@ -246,12 +247,21 @@ const Cart = ({ items, onCheckout }: CartProps) => {
         {/* Checkout Button */}
         <Button
           variant="green"
-          className="w-full hover:bg-primary-dark shadow-button text-sm sm:text-lg py-6"
+          className={clsxm(
+            "w-full hover:bg-primary-dark shadow-button text-sm sm:text-lg py-6",
+            {
+              "opacity-50 cursor-not-allowed": items.some(
+                (item) =>
+                  item.productVariant.is_deleted ||
+                  item.productVariant.product.is_deleted,
+              ),
+            },
+          )}
           onClick={onCheckout}
           disabled={items.some(
             (item) =>
-              item.productVariant.isDeleted ||
-              item.productVariant.product.isDeleted,
+              item.productVariant.is_deleted ||
+              item.productVariant.product.is_deleted,
           )}
         >
           Lanjut ke Pembayaran
@@ -259,8 +269,8 @@ const Cart = ({ items, onCheckout }: CartProps) => {
         </Button>
         {items.some(
           (item) =>
-            item.productVariant.isDeleted ||
-            item.productVariant.product.isDeleted,
+            item.productVariant.is_deleted ||
+            item.productVariant.product.is_deleted,
         ) && (
           <Typography variant="p" className="text-red-500 text-center text-sm">
             Beberapa produk tidak tersedia, silahkan hapus untuk melanjutkan.
