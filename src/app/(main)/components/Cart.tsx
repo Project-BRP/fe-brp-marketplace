@@ -1,3 +1,6 @@
+// src/app/(main)/components/Cart.tsx
+"use client";
+
 import {
   useClearCart,
   useRemoveCartItem,
@@ -12,6 +15,8 @@ import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { CartItem } from "@/types/cart";
 import { ArrowRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import React from "react"; // Import React untuk useMemo
+
 interface CartProps {
   items: CartItem[];
   onCheckout: () => void;
@@ -27,12 +32,14 @@ const Cart = ({ items, onCheckout }: CartProps) => {
   };
   const { mutate: updateQuantity } = useUpdateCartItem();
   const { mutate: removeItem } = useRemoveCartItem();
+  const { mutate: clearCart } = useClearCart();
+
   const totalPrice = items.reduce(
     (sum, item) => sum + item.productVariant.priceRupiah * item.quantity,
     0,
   );
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const { mutate: clearCart } = useClearCart();
+
   const handleQuantityChange = (
     cartItemId: string,
     newQuantity: number,
@@ -51,6 +58,15 @@ const Cart = ({ items, onCheckout }: CartProps) => {
   const handleClearCart = async () => {
     await clearCart();
   };
+
+  // PERBAIKAN: Urutkan item berdasarkan createdAt untuk menjaga urutan tetap stabil
+  const sortedItems = React.useMemo(() => {
+    // Buat salinan array sebelum diurutkan untuk menghindari mutasi prop
+    return [...items].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+  }, [items]);
 
   if (items.length === 0) {
     return (
@@ -101,13 +117,19 @@ const Cart = ({ items, onCheckout }: CartProps) => {
       <CardContent className="space-y-4">
         {/* Cart Items */}
         <div className="space-y-4 max-h-96 overflow-y-auto w-full">
-          {items.map((item) => (
+          {/* Gunakan sortedItems untuk me-render */}
+          {sortedItems.map((item) => (
             <div
-              key={item.productVariant.id}
+              key={item.id} // PERBAIKAN: Gunakan item.id yang unik untuk setiap CartItem
               className="flex items-start gap-4 p-4 bg-accent rounded-lg w-full"
             >
               <NextImage
-                src={item.productVariant.imageUrl ?? "/dashboard/Hero.jpg"}
+                src={
+                  item.productVariant.imageUrl
+                    ? process.env.NEXT_PUBLIC_IMAGE_URL +
+                      item.productVariant.imageUrl
+                    : "/dashboard/Hero.jpg"
+                }
                 alt={item.productVariant.product.name}
                 width={64}
                 height={64}
@@ -121,20 +143,20 @@ const Cart = ({ items, onCheckout }: CartProps) => {
                     {item.productVariant.product.name}
                   </h4>
                   <p className="text-sm font-medium text-primary">
-                    {formatPrice(item.productVariant.priceRupiah)} /
+                    {formatPrice(item.productVariant.priceRupiah)} /{" "}
                     {item.productVariant.packaging
                       ? item.productVariant.packaging.name
-                      : "Pcs"}
+                      : "Pcs"}{" "}
                     ({item.productVariant.weight_in_kg} kg)
                   </p>
-                  {item.productVariant.isDeleted ||
-                    (item.productVariant.product.isDeleted && (
-                      <Typography variant="p" className="text-red-500">
-                        {item.productVariant.isDeleted
-                          ? "Produk Variant tidak ada, silahkan cari variant lain"
-                          : "Produk tidak ada, silahkan cari produk lain"}
-                      </Typography>
-                    ))}
+                  {(item.productVariant.isDeleted ||
+                    item.productVariant.product.isDeleted) && (
+                    <Typography variant="p" className="text-red-500 text-xs">
+                      {item.productVariant.isDeleted
+                        ? "Varian produk ini tidak lagi tersedia."
+                        : "Produk ini tidak lagi tersedia."}
+                    </Typography>
+                  )}
                 </div>
 
                 <div className="flex flex-row gap-2 sm:gap-4">
@@ -211,7 +233,6 @@ const Cart = ({ items, onCheckout }: CartProps) => {
               {totalItems} item
             </span>
           </div>
-
           <div className="flex sm:flex-row flex-col justify-center gap-2 sm:justify-between items-center text-lg">
             <span className="font-semibold text-foreground">Total Harga:</span>
             <span className="font-bold text-primary text-2xl">
@@ -241,9 +262,8 @@ const Cart = ({ items, onCheckout }: CartProps) => {
             item.productVariant.isDeleted ||
             item.productVariant.product.isDeleted,
         ) && (
-          <Typography variant="p" className="text-red-500 text-center">
-            Beberapa produk tidak tersedia, silahkan hapus atau ganti produk
-            tersebut untuk melanjutkan pembayaran.
+          <Typography variant="p" className="text-red-500 text-center text-sm">
+            Beberapa produk tidak tersedia, silahkan hapus untuk melanjutkan.
           </Typography>
         )}
       </CardContent>
