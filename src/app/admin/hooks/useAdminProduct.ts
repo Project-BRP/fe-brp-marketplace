@@ -194,6 +194,32 @@ export const useCreateProductVariant = (productId: string) => {
 };
 
 // Hook to update a product variant
+export const useUpdateStockVariant = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<ProductVariant>,
+    AxiosError<ApiError>,
+    { variantId: string; payload: { stock: number } }
+  >({
+    mutationFn: async ({ variantId, payload }) => {
+      const response = await api.patch<ApiResponse<ProductVariant>>(
+        `/product-variants/${variantId}/stock`,
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Varian produk berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+    onError: (error) => {
+      console.error("Error updating stock:", error);
+      toast.error(error.response?.data?.message || "Gagal memperbarui varian.");
+    },
+  });
+};
+
+// Hook to update a product variant
 export const useUpdateProductVariant = () => {
   const queryClient = useQueryClient();
   return useMutation<

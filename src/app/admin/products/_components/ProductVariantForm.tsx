@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
+import { useUpdateStockVariant } from "@/app/admin/hooks/useAdminProduct";
 import { usePackagings } from "@/app/admin/hooks/useMeta";
 import { DialogFooter } from "@/components/Dialog";
 import NextImage from "@/components/NextImage";
@@ -28,8 +29,10 @@ type VariantFormValues = {
   weight_in_kg: number;
   priceRupiah: number;
   packagingId: string;
+  stock: number;
+  stockAdjustment: number; // Field untuk menampung nilai perubahan stok
 };
-type EditableField = keyof VariantFormValues | "image";
+type EditableField = keyof Omit<VariantFormValues, "stockAdjustment"> | "image";
 
 interface ProductVariantFormProps {
   initialData: ProductVariant | null;
@@ -46,12 +49,19 @@ export default function ProductVariantForm({
 }: ProductVariantFormProps) {
   const mode = initialData ? "edit" : "create";
   const methods = useForm<VariantFormValues>({ mode: "onTouched" });
-  const { handleSubmit, register, reset, control, watch } = methods;
-  const { errors } = methods.formState;
-  methods;
+  const {
+    handleSubmit,
+    register,
+    reset,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = methods;
 
   const { data: packagings = [], isLoading: isLoadingPackagings } =
     usePackagings();
+  const { mutate: handleUpdateStock } = useUpdateStockVariant();
   const [isPackagingManagerOpen, setIsPackagingManagerOpen] = useState(false);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
 
@@ -59,6 +69,9 @@ export default function ProductVariantForm({
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     initialData?.imageUrl || null,
+  );
+  const [adjustmentType, setAdjustmentType] = useState<"increase" | "decrease">(
+    "increase",
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,12 +81,14 @@ export default function ProductVariantForm({
         weight_in_kg: initialData.weight_in_kg,
         priceRupiah: initialData.priceRupiah,
         packagingId: initialData.packagingId || undefined,
+        stock: initialData.stock,
+        stockAdjustment: 0, // Selalu reset penyesuaian ke 0
       });
       if (initialData.imageUrl) {
         setPreviewUrl(process.env.NEXT_PUBLIC_IMAGE_URL + initialData.imageUrl);
       }
     } else {
-      reset();
+      reset({ stock: 0, stockAdjustment: 0 }); // Default stock 0 untuk mode create
     }
   }, [initialData, reset]);
 
@@ -112,8 +127,24 @@ export default function ProductVariantForm({
         toast.error("Tidak ada gambar baru yang dipilih.");
         return;
       }
+    } else if (editingField === "stock") {
+      const adjustmentValue = watch("stockAdjustment");
+      if (!adjustmentValue || adjustmentValue === 0) {
+        toast("Tidak ada perubahan stok.", { icon: "ℹ️" });
+        setEditingField(null);
+        return;
+      }
+
+      const finalAdjustment =
+        adjustmentType === "increase" ? adjustmentValue : -adjustmentValue;
+
+      // Kirim request update stok terpisah
+      await handleUpdateStock({
+        variantId: initialData?.id || "",
+        payload: { stock: finalAdjustment },
+      });
     } else {
-      const value = watch(editingField);
+      const value = watch(editingField as keyof VariantFormValues);
       if (value === undefined || value === null || value === "") {
         toast.error("Nilai tidak boleh kosong.");
         return;
@@ -121,9 +152,11 @@ export default function ProductVariantForm({
       formData.append(editingField, String(value));
     }
 
-    await onSubmit(formData);
+    if (editingField !== "stock") await onSubmit(formData);
+
     setEditingField(null);
     setSelectedFile(null);
+    if (editingField === "stock") onClose();
   };
 
   const handleCancelEdit = () => {
@@ -132,6 +165,8 @@ export default function ProductVariantForm({
         weight_in_kg: initialData.weight_in_kg,
         priceRupiah: initialData.priceRupiah,
         packagingId: initialData.packagingId || undefined,
+        stock: initialData.stock,
+        stockAdjustment: 0,
       });
     setEditingField(null);
     setPreviewUrl(
@@ -151,6 +186,7 @@ export default function ProductVariantForm({
     formData.append("weight_in_kg", String(data.weight_in_kg));
     formData.append("priceRupiah", String(data.priceRupiah));
     formData.append("packagingId", data.packagingId);
+    formData.append("stock", String(data.stock));
     formData.append("image", selectedFile);
     await onSubmit(formData);
   };
@@ -198,6 +234,80 @@ export default function ProductVariantForm({
                   <Settings className="h-4 w-4" />
                 </Button>
               </div>
+            ) : fieldName === "stock" ? (
+              <div className="p-3 border rounded-md space-y-3 w-full bg-slate-50">
+                <Typography
+                  variant="p"
+                  className="text-muted-foreground text-sm"
+                >
+                  Stok saat ini:{" "}
+                  <span className="font-semibold text-foreground">
+                    {watch("stock") ?? 0}
+                  </span>
+                </Typography>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Select
+                    value={adjustmentType}
+                    onValueChange={(value: "increase" | "decrease") =>
+                      setAdjustmentType(value)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="increase">Tambah Stok</SelectItem>
+                      <SelectItem value="decrease">Kurangi Stok</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Input
+                    id="stockAdjustment"
+                    type="number"
+                    placeholder="Jumlah"
+                    {...register("stockAdjustment", {
+                      valueAsNumber: true,
+                      validate: (value) => {
+                        const actualValue =
+                          adjustmentType === "increase" ? value : -value;
+                        if (adjustmentType === "decrease" && value < 0) {
+                          return "Jumlah pengurangan stok tidak boleh negatif";
+                        } else if (
+                          initialData &&
+                          initialData.stock + actualValue < 0
+                        ) {
+                          return "Stok akhir tidak boleh negatif";
+                        }
+                        return true;
+                      },
+                    })}
+                    defaultValue={0}
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSubmit(handleSaveField)}
+                    disabled={isSubmitting}
+                    className="p-1 h-auto"
+                  >
+                    <Check className="h-4 w-4 text-green-500" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    className="p-1 h-auto"
+                  >
+                    <X className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              </div>
             ) : (
               <Input
                 id={fieldName}
@@ -207,30 +317,34 @@ export default function ProductVariantForm({
                 })}
               />
             )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleSaveField}
-              disabled={isSubmitting}
-              className="p-1 h-auto"
-            >
-              <Check className="h-4 w-4 text-green-500" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleCancelEdit}
-              className="p-1 h-auto"
-            >
-              <X className="h-4 w-4 text-red-500" />
-            </Button>
+            {fieldName !== "stock" && (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSubmit(handleSaveField)}
+                  disabled={isSubmitting}
+                  className="p-1 h-auto"
+                >
+                  <Check className="h-4 w-4 text-green-500" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  className="p-1 h-auto"
+                >
+                  <X className="h-4 w-4 text-red-500" />
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <div className="flex items-start justify-between">
             <Typography variant="p" className="text-foreground pr-4">
-              {displayValue || "Belum diatur"}
+              {displayValue ?? "Belum diatur"}
             </Typography>
             <Button
               type="button"
@@ -320,6 +434,16 @@ export default function ProductVariantForm({
                   required: "Harga tidak boleh kosong",
                   valueAsNumber: true,
                   min: { value: 0, message: "Harga tidak boleh negatif" },
+                }}
+              />
+              <Input
+                id="stock"
+                label="Stok Awal"
+                type="number"
+                validation={{
+                  required: "Stok tidak boleh kosong",
+                  valueAsNumber: true,
+                  min: { value: 0, message: "Stok tidak boleh negatif" },
                 }}
               />
               <div className="space-y-2">
@@ -439,7 +563,7 @@ export default function ProductVariantForm({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={handleSaveField}
+                  onClick={handleSubmit(handleSaveField)}
                   disabled={isSubmitting || !selectedFile}
                   className="p-1 h-auto"
                 >
@@ -461,6 +585,7 @@ export default function ProductVariantForm({
             {renderField("weight_in_kg", "Berat (kg)")}
             {renderField("priceRupiah", "Harga (Rp)")}
             {renderField("packagingId", "Kemasan")}
+            {renderField("stock", "Stok")}
           </div>
         </div>
         <DialogFooter>

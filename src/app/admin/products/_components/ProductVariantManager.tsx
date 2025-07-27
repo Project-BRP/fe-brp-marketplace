@@ -111,9 +111,8 @@ export default function ProductVariantManager({
               imgClassName="object-cover w-full h-full"
             />
             <div className="flex-1">
-              <p className="text-sm font-semibold">
-                Berat: {variant.weight_in_kg} kg
-              </p>
+              <p className="text-sm">Stok: {variant.stock}</p>
+              <p className="text-sm">Berat: {variant.weight_in_kg} kg</p>
               <p className="text-sm">
                 Kemasan:{" "}
                 {packagings.find((p) => p.id === variant.packagingId)?.name ??
