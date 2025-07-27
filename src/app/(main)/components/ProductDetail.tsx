@@ -1,3 +1,4 @@
+import { useAddToCart } from "@/app/(main)/hooks/useCart";
 // src/app/(main)/components/ProductDetail.tsx
 import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
 import { Badge } from "@/components/Badge";
@@ -8,16 +9,14 @@ import { Separator } from "@/components/Separator";
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import { CartItem } from "@/types/order";
+import { AddToCartPayload } from "@/types/cart";
 import { Packaging, ProductVariant } from "@/types/product";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-
 interface ProductDetailProps {
   productId: string;
   onBack: () => void;
-  onAddToCart: (item: CartItem) => void;
+  onAddToCart: (item: AddToCartPayload) => void;
   packagings: Packaging[];
 }
 
@@ -34,6 +33,7 @@ const ProductDetail = ({
   const [selectedVariantImage, setSelectedVariantImage] = useState<
     string | null
   >(null);
+  const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
 
   const product = productData?.products.find((p) => p.id === productId);
 
@@ -60,25 +60,7 @@ const ProductDetail = ({
 
   const handleAddToCart = (variant: ProductVariant) => {
     const quantity = quantities[variant.id] || 1;
-    const packaging = packagings.find((p) => p.id === variant.packagingId);
-
-    if (product) {
-      const itemToAdd: CartItem = {
-        variantId: variant.id,
-        productId: product.id,
-        productName: product.name,
-        composition: product.composition,
-        price: variant.priceRupiah,
-        weight_in_kg: variant.weight_in_kg,
-        packagingName: packaging?.name || "N/A",
-        quantity: quantity,
-        imageUrl: variant.imageUrl,
-      };
-      onAddToCart(itemToAdd);
-      toast.success(
-        `${product.name} (${packaging?.name}) ditambahkan ke keranjang!`,
-      );
-    }
+    addToCart({ variantId: variant.id, quantity: quantity });
   };
 
   if (isLoading) {
@@ -207,6 +189,12 @@ const ProductDetail = ({
                         >
                           {formatPrice(variant.priceRupiah)}
                         </Typography>
+                        <Typography
+                          variant="p"
+                          className="text-muted-foreground font-bold text-lg"
+                        >
+                          Tersedia {variant.stock}
+                        </Typography>
                       </div>
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <Button
@@ -247,9 +235,10 @@ const ProductDetail = ({
                         variant="green"
                         onClick={() => handleAddToCart(variant)}
                         className="w-full sm:w-auto"
+                        disabled={isAddingToCart}
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add
+                        {isAddingToCart ? "Menambahkan..." : "Add"}
                       </Button>
                     </CardContent>
                   </Card>

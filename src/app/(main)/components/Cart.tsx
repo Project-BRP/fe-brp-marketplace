@@ -1,3 +1,7 @@
+import {
+  useRemoveCartItem,
+  useUpdateCartItem,
+} from "@/app/(main)/hooks/useCart";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { Input } from "@/components/InputLovable";
@@ -5,22 +9,14 @@ import NextImage from "@/components/NextImage";
 import { Separator } from "@/components/Separator";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import { CartItem } from "@/types/order";
+import { CartItem } from "@/types/cart";
 import { ArrowRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-
 interface CartProps {
   items: CartItem[];
-  onUpdateQuantity: (variantId: string, quantity: number) => void;
-  onRemoveItem: (variantId: string) => void;
   onCheckout: () => void;
 }
 
-const Cart = ({
-  items,
-  onUpdateQuantity,
-  onRemoveItem,
-  onCheckout,
-}: CartProps) => {
+const Cart = ({ items, onCheckout }: CartProps) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -28,18 +24,26 @@ const Cart = ({
       minimumFractionDigits: 0,
     }).format(price);
   };
-
+  const { mutate: updateQuantity } = useUpdateCartItem();
+  const { mutate: removeItem } = useRemoveCartItem();
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.productVariant.priceRupiah * item.quantity,
     0,
   );
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleQuantityChange = (variantId: string, newQuantity: number) => {
+  const handleQuantityChange = (
+    cartItemId: string,
+    newQuantity: number,
+    itemQuantity: number,
+  ) => {
     if (newQuantity <= 0) {
-      onRemoveItem(variantId);
+      removeItem(cartItemId);
     } else {
-      onUpdateQuantity(variantId, newQuantity);
+      updateQuantity({
+        cartItemId,
+        payload: { quantity: newQuantity - itemQuantity },
+      });
     }
   };
 
@@ -90,12 +94,12 @@ const Cart = ({
         <div className="space-y-4 max-h-96 overflow-y-auto w-full">
           {items.map((item) => (
             <div
-              key={item.variantId}
+              key={item.productVariant.id}
               className="flex items-start gap-4 p-4 bg-accent rounded-lg w-full"
             >
               <NextImage
-                src={item.imageUrl ?? "/dashboard/Hero.jpg"}
-                alt={item.productName}
+                src={item.productVariant.imageUrl ?? "/dashboard/Hero.jpg"}
+                alt={item.productVariant.product.name}
                 width={64}
                 height={64}
                 className="min-w-16 h-16 bg-muted rounded-lg"
@@ -105,14 +109,15 @@ const Cart = ({
               <div className="w-full flex flex-col gap-4 sm:flex-row justify-start sm:justify-center items-start sm:items-center">
                 <div className="flex-1 w-full flex flex-col gap-2 sm:gap-0">
                   <h4 className="font-medium text-foreground overflow-clip text-sm sm:text-xl">
-                    {item.productName}
+                    {item.productVariant.product.name}
                   </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {item.composition}
-                  </p>
+
                   <p className="text-sm font-medium text-primary">
-                    {formatPrice(item.price)} / {item.packagingName} (
-                    {item.weight_in_kg} kg)
+                    {formatPrice(item.productVariant.priceRupiah)} /
+                    {item.productVariant.packaging
+                      ? item.productVariant.packaging.name
+                      : "Pcs"}
+                    ({item.productVariant.weight_in_kg} kg)
                   </p>
                 </div>
 
@@ -124,7 +129,11 @@ const Cart = ({
                       size="sm"
                       className="size-5 h-8 sm:size-8 p-0"
                       onClick={() =>
-                        handleQuantityChange(item.variantId, item.quantity - 1)
+                        handleQuantityChange(
+                          item.id,
+                          item.quantity - 1,
+                          item.quantity,
+                        )
                       }
                     >
                       <Minus className="size-2 p-0 sm:size-3" />
@@ -135,13 +144,14 @@ const Cart = ({
                       value={item.quantity}
                       onChange={(e) =>
                         handleQuantityChange(
-                          item.variantId,
+                          item.id,
                           parseInt(e.target.value) || 1,
+                          item.quantity,
                         )
                       }
                       className="w-10 sm:w-16 text-center h-8"
                       min="1"
-                      id={`qty-${item.variantId}`}
+                      id={`qty-${item.productVariantId}`}
                     />
 
                     <Button
@@ -149,7 +159,11 @@ const Cart = ({
                       size="sm"
                       className="size-5 h-8 sm:size-8 p-0"
                       onClick={() =>
-                        handleQuantityChange(item.variantId, item.quantity + 1)
+                        handleQuantityChange(
+                          item.id,
+                          item.quantity + 1,
+                          item.quantity,
+                        )
                       }
                     >
                       <Plus className="size-2 p-0 sm:size-3" />
@@ -161,7 +175,7 @@ const Cart = ({
                     variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => onRemoveItem(item.variantId)}
+                    onClick={() => removeItem(item.productVariantId)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

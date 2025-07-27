@@ -21,6 +21,7 @@ import FilterModal, {
 } from "@/app/(main)/components/FilterModal";
 import ProductCard from "@/app/(main)/components/ProductCard";
 import ProductDetail from "@/app/(main)/components/ProductDetail";
+import { useAddToCart, useGetCart } from "@/app/(main)/hooks/useCart";
 import { useGetAllProducts } from "@/app/(main)/hooks/useProduct";
 import { usePackagings } from "@/app/admin/hooks/useMeta";
 import { Badge } from "@/components/Badge";
@@ -30,7 +31,7 @@ import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
-import { CartItem } from "@/types/order";
+import { OrderData } from "@/types/order";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
@@ -44,8 +45,6 @@ const initialAdvancedFilters: AdvancedFilters = {
 const Index = () => {
   const [currentPageView, setCurrentPageView] = useState<PageView>("catalog");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [limit, setLimit] = useState(8);
@@ -54,6 +53,16 @@ const Index = () => {
     initialAdvancedFilters,
   );
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+
+  // --- Cart Data Fetching ---
+  const { data: cartData, refetch: refetchCart } = useGetCart();
+  const cartItems = cartData?.items ?? [];
+  const cartItemCount = cartItems.reduce(
+    (sum: number, item: { quantity: number }) => sum + item.quantity,
+    0,
+  );
+
+  const { mutate: addToCart } = useAddToCart();
 
   const {
     data: productData,
@@ -115,38 +124,18 @@ const Index = () => {
     }
   };
 
-  const handleAddToCart = (itemToAdd: CartItem) => {
-    setCartItems((prev) => {
-      const existingItem = prev.find(
-        (item) => item.variantId === itemToAdd.variantId,
-      );
-      if (existingItem) {
-        return prev.map((item) =>
-          item.variantId === itemToAdd.variantId
-            ? { ...item, quantity: item.quantity + itemToAdd.quantity }
-            : item,
-        );
-      }
-      return [...prev, itemToAdd];
-    });
+  const handleAddToCart = (item: { variantId: string; quantity: number }) => {
+    addToCart(item);
   };
 
-  const handleUpdateQuantity = (variantId: string, quantity: number) =>
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.variantId === variantId ? { ...item, quantity } : item,
-      ),
-    );
-  const handleRemoveItem = (variantId: string) =>
-    setCartItems((prev) => prev.filter((item) => item.variantId !== variantId));
-
-  const handleOrderSubmit = () => {
-    alert("Pesanan berhasil dibuat!");
-    setCartItems([]);
+  const handleOrderSubmit = (orderData: OrderData) => {
+    // TODO: Implement order submission logic here
+    console.log("Order Submitted:", orderData);
+    alert("Pesanan berhasil dibuat! (Simulasi)");
+    // After successful order, refetch cart to clear it
+    refetchCart();
     setCurrentPageView("catalog");
   };
-
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const renderCatalogContent = () => {
     if (isLoading || isLoadingPackagings) {
@@ -228,8 +217,6 @@ const Index = () => {
           </Button>
           <Cart
             items={cartItems}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
             onCheckout={() => setCurrentPageView("checkout")}
           />
         </div>

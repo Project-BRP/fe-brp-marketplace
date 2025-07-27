@@ -1,3 +1,6 @@
+// src/types/order.ts
+import { CartItem } from "./cart"; // Impor dari file baru
+
 export interface OrderData {
   customer: {
     name: string;
@@ -21,16 +24,4 @@ export interface OrderData {
     shippingCost: number;
     total: number;
   };
-}
-
-export interface CartItem {
-  variantId: string;
-  productId: string;
-  productName: string;
-  composition: string;
-  price: number;
-  weight_in_kg: number;
-  packagingName: string;
-  quantity: number;
-  imageUrl?: string | null;
 }

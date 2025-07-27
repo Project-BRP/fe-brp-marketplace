@@ -5,7 +5,8 @@ import { Separator } from "@/components/Separator";
 import { Textarea } from "@/components/TextArea";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import { CartItem, OrderData } from "@/types/order";
+import { CartItem } from "@/types/cart";
+import { OrderData } from "@/types/order";
 import { ArrowLeft, CreditCard, MapPin, Truck, User } from "lucide-react";
 import { useState } from "react";
 
@@ -43,7 +44,7 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
   };
 
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + item.productVariant.priceRupiah * item.quantity,
     0,
   );
   const shippingCost = formData.shippingMethod === "express" ? 100000 : 50000;
@@ -365,23 +366,26 @@ const Checkout = ({ cartItems, onBack, onOrderSubmit }: CheckoutProps) => {
               <div className="space-y-3">
                 {cartItems.map((item) => (
                   <div
-                    key={item.variantId}
+                    key={item.id}
                     className="flex justify-between items-start gap-4"
                   >
                     <div className="flex-1">
                       <p className="font-medium text-foreground text-sm">
-                        {item.productName}
+                        {item.productVariant.product.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatPrice(item.price)} / {item.packagingName} (
-                        {item.weight_in_kg} kg)
+                        {formatPrice(item.productVariant.priceRupiah)} /{" "}
+                        {item.productVariant.packaging?.name} (
+                        {item.productVariant.weight_in_kg} kg)
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Qty: {item.quantity}
                       </p>
                     </div>
                     <span className="font-medium text-foreground text-sm">
-                      {formatPrice(item.price * item.quantity)}
+                      {formatPrice(
+                        item.productVariant.priceRupiah * item.quantity,
+                      )}
                     </span>
                   </div>
                 ))}

@@ -24,6 +24,7 @@ export interface ProductVariant {
   priceRupiah: number;
   createdAt: string;
   updatedAt: string;
+  stock: number;
   packaging?: Packaging | null;
 }
 

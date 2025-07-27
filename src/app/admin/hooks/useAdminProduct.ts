@@ -176,7 +176,7 @@ export const useCreateProductVariant = (productId: string) => {
   >({
     mutationFn: async (payload) => {
       const response = await api.post<ApiResponse<ProductVariant>>(
-        `/product-variants/product/${productId}`,
+        `/product-variants/products/${productId}`,
         payload,
         { headers: { "Content-Type": "multipart/form-data" } },
       );
