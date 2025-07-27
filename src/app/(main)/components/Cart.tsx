@@ -111,7 +111,6 @@ const Cart = ({ items, onCheckout }: CartProps) => {
                   <h4 className="font-medium text-foreground overflow-clip text-sm sm:text-xl">
                     {item.productVariant.product.name}
                   </h4>
-
                   <p className="text-sm font-medium text-primary">
                     {formatPrice(item.productVariant.priceRupiah)} /
                     {item.productVariant.packaging
@@ -119,6 +118,14 @@ const Cart = ({ items, onCheckout }: CartProps) => {
                       : "Pcs"}
                     ({item.productVariant.weight_in_kg} kg)
                   </p>
+                  {item.productVariant.isDeleted ||
+                    (item.productVariant.product.isDeleted && (
+                      <Typography variant="p" className="text-red-500">
+                        {item.productVariant.isDeleted
+                          ? "Produk Variant tidak ada, silahkan cari variant lain"
+                          : "Produk tidak ada, silahkan cari produk lain"}
+                      </Typography>
+                    ))}
                 </div>
 
                 <div className="flex flex-row gap-2 sm:gap-4">
@@ -211,10 +218,25 @@ const Cart = ({ items, onCheckout }: CartProps) => {
           variant="green"
           className="w-full hover:bg-primary-dark shadow-button text-sm sm:text-lg py-6"
           onClick={onCheckout}
+          disabled={items.some(
+            (item) =>
+              item.productVariant.isDeleted ||
+              item.productVariant.product.isDeleted,
+          )}
         >
           Lanjut ke Pembayaran
           <ArrowRight className="h-5 w-5 ml-2" />
         </Button>
+        {items.some(
+          (item) =>
+            item.productVariant.isDeleted ||
+            item.productVariant.product.isDeleted,
+        ) && (
+          <Typography variant="p" className="text-red-500 text-center">
+            Beberapa produk tidak tersedia, silahkan hapus atau ganti produk
+            tersebut untuk melanjutkan pembayaran.
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );
