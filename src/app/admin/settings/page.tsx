@@ -3,23 +3,68 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { Input } from "@/components/InputLovable";
 import NextImage from "@/components/NextImage";
 import { Textarea } from "@/components/TextArea";
+import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import LabelText from "@/components/form/LabelText";
 import api from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { Building, KeyRound, Save, Upload } from "lucide-react";
-import { useState } from "react";
+import { Building, Upload } from "lucide-react";
+import { Check, Edit2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BiCart } from "react-icons/bi";
 import LogoUploadModal from "./_components/LogoUploadModal";
+import { useGetPPN, useUpdatePPN } from "./hooks/usePPN";
 
 export default function AdminSettings() {
+  // State Nama Toko
+  const [editModeName, setEditModeName] = useState(false);
+
+  // State Alamat Toko
+  const [editModeAddress, setEditModeAddress] = useState(false);
+
+  // State PPN
+  const [editModePPN, setEditModePPN] = useState(false);
+  const [ppnValue, setPpnValue] = useState("");
+
   const [storeName, setStoreName] = useState("PT. Bumi Rekayasa Persada");
   const [storeAddress, setStoreAddress] = useState(
     "Jl. Pertanian No. 123, Jakarta Selatan, Indonesia",
   );
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
+
+  const { data: ppnData } = useGetPPN();
+  useEffect(() => {
+    if (ppnData) {
+      console.log("PPN Data:", ppnData);
+      setPpnValue(ppnData.percentage.toString());
+    }
+  }, [ppnData]);
+
+  const { mutateAsync: updatePPN, isPending } = useUpdatePPN();
+
+  // Save handlers
+  const handleSaveName = async () => {
+    console.info("Saving store name:", storeName);
+  };
+
+  const handleSaveAddress = async () => {
+    console.info("Saving store address:", storeAddress);
+  };
+
+  const handleSavePPN = async () => {
+    if (!ppnValue) {
+      alert("PPN tidak boleh kosong");
+      return;
+    }
+    try {
+      await updatePPN({ percentage: parseFloat(ppnValue) });
+      setEditModePPN(false);
+    } catch (error) {
+      console.error("Error saving PPN:", error);
+    }
+    console.info("Saving PPN:", ppnValue);
+  };
 
   const { data: companyProfile } = useQuery({
     queryKey: ["company-profile"],
@@ -28,25 +73,6 @@ export default function AdminSettings() {
       return res.data.data;
     },
   });
-
-  const handleStoreInfoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Add logic to update store info here
-    alert("Informasi toko berhasil diperbarui!");
-  };
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert("Password baru tidak cocok!");
-      return;
-    }
-    // Add logic to update password here
-    alert("Password berhasil diubah!");
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
 
   return (
     <>
@@ -92,31 +118,104 @@ export default function AdminSettings() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleStoreInfoSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <LabelText>Nama Toko</LabelText>
-                  <Input
-                    id="storeName"
-                    value={storeName}
-                    onChange={(e) => setStoreName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <LabelText>Alamat Toko</LabelText>
-                  <Textarea
-                    id="storeAddress"
-                    value={storeAddress}
-                    onChange={(e) => setStoreAddress(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <Button type="submit" className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Simpan Informasi
-                  </Button>
-                </div>
-              </form>
+              <div className="space-y-2">
+                <LabelText>Nama Toko</LabelText>
+                {editModeName ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="storeName"
+                      value={storeName}
+                      onChange={(e) => setStoreName(e.target.value)}
+                      className="flex-grow"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSaveName}
+                      className="hover:bg-slate-200"
+                    >
+                      <Check className="size-5 text-green-500" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditModeName(false)}
+                      className="hover:bg-slate-200"
+                    >
+                      <X className="size-5 text-red-500" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between group">
+                    <Typography variant="p" className="text-foreground">
+                      {storeName || "Belum diatur"}
+                    </Typography>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditModeName(true)}
+                      className="group-hover:bg-slate-400 p-3"
+                    >
+                      <Edit2 className="size-4 text-black" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Alamat Toko */}
+              <div className="space-y-2">
+                <LabelText>Alamat Toko</LabelText>
+                {editModeAddress ? (
+                  <div className="flex items-center gap-2">
+                    <Textarea
+                      id="storeAddress"
+                      value={storeAddress}
+                      onChange={(e) => setStoreAddress(e.target.value)}
+                      rows={3}
+                      className="flex-grow"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSaveAddress}
+                      className="hover:bg-slate-200"
+                    >
+                      <Check className="size-5 text-green-500" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditModeAddress(false)}
+                      className="hover:bg-slate-200"
+                    >
+                      <X className="size-5 text-red-500" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between group">
+                    <Typography
+                      variant="p"
+                      className="text-foreground whitespace-pre-line"
+                    >
+                      {storeAddress || "Belum diatur"}
+                    </Typography>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditModeAddress(true)}
+                      className="group-hover:bg-slate-400 p-3"
+                    >
+                      <Edit2 className="size-4 text-black" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -124,46 +223,59 @@ export default function AdminSettings() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <KeyRound className="h-5 w-5" />
-                Ubah Password Admin
+                <BiCart className="size-7" />
+                Konfigurasi Marketplace
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <LabelText>Password Lama</LabelText>
-                  <Input
-                    id="oldPassword"
-                    type="password"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <LabelText>Password Baru</LabelText>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <LabelText>Konfirmasi Password Baru</LabelText>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <Button type="submit" className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Ubah Password
-                  </Button>
-                </div>
-              </form>
+              <div className="space-y-2">
+                <LabelText>PPN</LabelText>
+
+                {editModePPN ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="ppn"
+                      type="number"
+                      value={ppnValue}
+                      onChange={(e) => setPpnValue(e.target.value)}
+                      className="flex-grow"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSavePPN}
+                      className="hover:bg-slate-200"
+                    >
+                      <Check className="size-5 text-green-500" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditModePPN(false)}
+                      className="hover:bg-slate-200"
+                    >
+                      <X className="size-5 text-red-500" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between group">
+                    <Typography variant="p" className="text-foreground">
+                      {ppnValue ? `${ppnValue}%` : "PPN belum diatur"}
+                    </Typography>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditModePPN(true)}
+                      className="group-hover:bg-slate-400 p-3"
+                    >
+                      <Edit2 className="size-4 text-black" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

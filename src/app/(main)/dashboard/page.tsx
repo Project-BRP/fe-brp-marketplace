@@ -31,7 +31,6 @@ import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
-import { OrderData } from "@/types/order";
 
 type PageView = "catalog" | "product-detail" | "cart" | "checkout";
 
@@ -122,9 +121,8 @@ const Index = () => {
     }
   };
 
-  const handleOrderSubmit = (orderData: OrderData) => {
+  const handleOrderSubmit = () => {
     // TODO: Implement order submission logic here
-    console.log("Order Submitted:", orderData);
     alert("Pesanan berhasil dibuat! (Simulasi)");
     // After successful order, refetch cart to clear it
     refetchCart();
@@ -225,7 +223,6 @@ const Index = () => {
           onCartClick={() => setCurrentPageView("cart")}
         />
         <Checkout
-          cartItems={cartItems}
           onBack={() => setCurrentPageView("cart")}
           onOrderSubmit={handleOrderSubmit}
         />
