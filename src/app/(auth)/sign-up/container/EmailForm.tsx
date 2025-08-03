@@ -4,7 +4,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
-import { REG_EMAIL, REG_PASS } from "@/constants/regex";
+import { REG_EMAIL, REG_PASS, REG_PHONE_NUMBER } from "@/constants/regex";
 
 import { IRegisterData, IRegisterForm } from "@/types/auth";
 import { useEffect } from "react";
@@ -62,6 +62,20 @@ export default function EmailForm({
             pattern: {
               value: REG_EMAIL,
               message: "Email tidak valid!",
+            },
+          }}
+        />
+        <Input
+          id="phoneNumber"
+          label="Masukkan Nomor Telepon Anda (pribadi atau kerja)"
+          helperTextClassName="xl:text-base lg:text-base md:text-sm"
+          className="w-full rounded-lg border-2 border-[#BBBCBF] p-2 lg:p-3 sm:p-2.5 placeholder:font-normal xl:text-base lg:text-base md:text-sm placeholder:xl:text-base placeholder:lg:text-base placeholder:md:text-sm"
+          placeholder="Masukkan Nomor Telepon Anda"
+          validation={{
+            required: "Nomor telepon tidak boleh kosong!",
+            pattern: {
+              value: REG_PHONE_NUMBER,
+              message: "Nomor telepon tidak valid!",
             },
           }}
         />

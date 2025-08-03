@@ -194,6 +194,7 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
           user={{
             name: userData.name,
             email: userData.email,
+            phoneNumber: userData.phoneNumber,
             photoProfile: userData.photoProfile || null,
           }}
           onUpdate={handleUpdate}

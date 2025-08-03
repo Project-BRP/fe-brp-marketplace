@@ -9,6 +9,7 @@ export type ILoginRequest = ILoginForm;
 
 export interface IRegisterForm extends ILoginForm {
   name: string;
+  phoneNumber: string;
   confirmPassword: string;
 }
 
@@ -31,6 +32,7 @@ export interface IUpdateUserResponse extends Omit<IAuthResponse, "resultCode"> {
 
 export type IUpdateUserData =
   | { name: string }
+  | { phoneNumber: string }
   | { oldPassword: string; password: string }
   | { image: FormData };
 

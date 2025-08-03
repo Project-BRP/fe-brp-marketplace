@@ -133,6 +133,7 @@ export default function AdminNavbar() {
           user={{
             name: userData.name,
             email: userData.email,
+            phoneNumber: userData.phoneNumber,
             photoProfile: userData.photoProfile || null,
           }}
           onUpdate={handleUpdate}

@@ -1,5 +1,7 @@
 export const REG_USERNAME = /^[a-zA-Z0-9_]{3,15}$/;
 
+export const REG_PHONE_NUMBER = /^\+?(\d[\d-.()\s]*){7,15}$/;
+
 export const REG_EMAIL =
   /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/i;
 

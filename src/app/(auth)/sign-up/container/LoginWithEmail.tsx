@@ -13,6 +13,7 @@ export default function LoginWithEmail(): JSX.Element {
   const [dataRegis, setDataRegis] = React.useState({
     email: "",
     name: "",
+    phoneNumber: "",
     password: "",
   });
   const router = useRouter();

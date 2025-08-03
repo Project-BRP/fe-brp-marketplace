@@ -17,13 +17,14 @@ import NextImage from "@/components/NextImage";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
-import { REG_PASS } from "@/constants/regex";
+import { REG_PASS, REG_PHONE_NUMBER } from "@/constants/regex";
 import { IUpdateUserData } from "@/types/auth";
 import ImageCropper from "./ImageCropper";
 
 // --- Form Values Type ---
 type FormValues = {
   name: string;
+  phoneNumber: string;
   oldPassword: string;
   newPassword: string;
 };
@@ -32,6 +33,7 @@ type FormValues = {
 export interface UserProfile {
   name: string | null;
   email: string | null;
+  phoneNumber: string | null;
   photoProfile: string | null;
 }
 
@@ -58,9 +60,9 @@ export const ProfileModal = ({
   const methods = useForm<FormValues>({ mode: "onTouched" });
   const { handleSubmit, reset, watch } = methods;
 
-  const [editMode, setEditMode] = useState<"none" | "name" | "password">(
-    "none",
-  );
+  const [editMode, setEditMode] = useState<
+    "none" | "name" | "phoneNumber" | "password"
+  >("none");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
@@ -73,7 +75,12 @@ export const ProfileModal = ({
   // Effect to reset form state when the modal opens
   useEffect(() => {
     if (isOpen) {
-      reset({ name: user.name || "", oldPassword: "", newPassword: "" });
+      reset({
+        name: user.name || "",
+        phoneNumber: user.phoneNumber || "",
+        oldPassword: "",
+        newPassword: "",
+      });
       setPreviewUrl(
         user.photoProfile
           ? process.env.NEXT_PUBLIC_IMAGE_URL + user.photoProfile
@@ -109,12 +116,22 @@ export const ProfileModal = ({
   };
 
   const handleCancelEdit = () => {
-    reset({ name: user.name || "", oldPassword: "", newPassword: "" });
+    reset({
+      name: user.name || "",
+      phoneNumber: user.phoneNumber || "",
+      oldPassword: "",
+      newPassword: "",
+    });
     setEditMode("none");
   };
 
   const onSaveName = async (data: FormValues) => {
     await onUpdate({ name: data.name });
+    setEditMode("none");
+  };
+
+  const onSavePhoneNumber = async (data: FormValues) => {
+    await onUpdate({ phoneNumber: data.phoneNumber });
     setEditMode("none");
   };
 
@@ -244,7 +261,70 @@ export const ProfileModal = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => setEditMode("name")}
-                      disabled={editMode === "password"}
+                      disabled={
+                        editMode === "password" || editMode === "phoneNumber"
+                      }
+                      className=" group-hover:bg-slate-400 p-3 disabled:opacity-20"
+                    >
+                      <Edit2 className="size-4 text-black" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Phone Number Field */}
+              <div className="space-y-1">
+                <Typography
+                  variant="p"
+                  weight="semibold"
+                  className="text-muted-foreground"
+                >
+                  Nomor Telepon
+                </Typography>
+                {editMode === "phoneNumber" ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="phoneNumber"
+                      validation={{
+                        required: "Nomor telepon tidak boleh kosong",
+                        pattern: {
+                          value: REG_PHONE_NUMBER,
+                          message: "Nomor telepon tidak valid!",
+                        },
+                      }}
+                      className="flex-grow"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSubmit(onSavePhoneNumber)}
+                      disabled={isUpdating}
+                      className="hover:bg-slate-200"
+                    >
+                      <Check className="size-5 text-green-500" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                      className="hover:bg-slate-200"
+                    >
+                      <X className="size-5 text-red-500" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between group">
+                    <Typography variant="p" className="text-foreground">
+                      {user.phoneNumber}
+                    </Typography>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditMode("phoneNumber")}
+                      disabled={editMode === "password" || editMode === "name"}
                       className=" group-hover:bg-slate-400 p-3 disabled:opacity-20"
                     >
                       <Edit2 className="size-4 text-black" />
@@ -323,7 +403,7 @@ export const ProfileModal = ({
                     variant="outline"
                     className="p-2 h-auto"
                     onClick={() => setEditMode("password")}
-                    disabled={editMode === "name"}
+                    disabled={editMode === "name" || editMode === "phoneNumber"}
                   >
                     <KeyRound className="mr-2 size-4" /> Ganti Password
                   </Button>
