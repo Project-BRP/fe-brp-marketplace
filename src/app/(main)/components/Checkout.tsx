@@ -1,14 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  useCreateTransaction,
-  useGetPPN,
-} from "@/app/(main)/hooks/useTransaction";
+import { useCreateTransaction } from "@/app/(main)/hooks/useTransaction";
 import { Separator } from "@/components/Separator";
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
@@ -16,10 +12,12 @@ import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
 import useUserStore from "@/store/userStore";
 
+import { useGetPPN } from "@/app/admin/settings/hooks/usePPN";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { ArrowLeft, MapPin, User } from "lucide-react";
 import { useGetCart } from "../hooks/useCart";
 
+// Skema validasi untuk form alamat pengiriman
 // Skema validasi untuk form alamat pengiriman
 const formSchema = z.object({
   shippingAddress: z.string().min(1, "Alamat pengiriman harus diisi"),
@@ -29,21 +27,20 @@ const formSchema = z.object({
     .string()
     .min(5, "Kode pos harus 5 digit")
     .max(5, "Kode pos harus 5 digit"),
+  method: z.enum(["MANUAL", "DELIVERY"]),
 });
 
 interface CheckoutProps {
   onBack: () => void;
-  onOrderSubmit: () => void;
 }
 
-export default function Checkout({ onBack, onOrderSubmit }: CheckoutProps) {
-  const router = useRouter();
+export default function Checkout({ onBack }: CheckoutProps) {
   const { userData } = useUserStore();
   const { data: cartData, isLoading: isCartLoading } = useGetCart();
   const { data: ppnData } = useGetPPN();
   const { mutate: createTransaction, isPending: isCreatingTransaction } =
     useCreateTransaction();
-
+  const { refetch: refetchCart } = useGetCart();
   const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -51,20 +48,20 @@ export default function Checkout({ onBack, onOrderSubmit }: CheckoutProps) {
       city: "",
       province: "",
       postalCode: "",
+      method: "DELIVERY",
     },
   });
 
   // Destrukturisasi register dan errors dari methods
   const {
     handleSubmit,
-    register,
     formState: { errors },
   } = methods;
 
   // Fungsi yang dipanggil saat form disubmit
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     createTransaction(values);
-    onOrderSubmit();
+    refetchCart();
   };
 
   // Menghitung total harga dari keranjang
@@ -183,6 +180,42 @@ export default function Checkout({ onBack, onOrderSubmit }: CheckoutProps) {
                       />
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <Typography variant="h6" className="font-semibold">
+                      Metode
+                    </Typography>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="green"
+                        className={
+                          methods.watch("method") === "DELIVERY"
+                            ? "bg-green-500"
+                            : "bg-green-50 text-black/50"
+                        }
+                        onClick={() => methods.setValue("method", "DELIVERY")}
+                      >
+                        Antar Barang
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="green"
+                        className={
+                          methods.watch("method") === "MANUAL"
+                            ? "bg-green-500"
+                            : "bg-green-50 text-black/50 "
+                        }
+                        onClick={() => methods.setValue("method", "MANUAL")}
+                      >
+                        Ambil Sendiri
+                      </Button>
+                    </div>
+                    {errors.method && (
+                      <p className="text-red-500 text-sm">
+                        {errors.method.message}
+                      </p>
+                    )}
+                  </div>
                 </form>
               </FormProvider>
             </CardContent>
@@ -248,17 +281,23 @@ export default function Checkout({ onBack, onOrderSubmit }: CheckoutProps) {
                   </Typography>
                 </div>
                 <div className="flex justify-between">
-                  <Typography variant="p" className="text-muted-foreground">
-                    PPN (12%)
-                  </Typography>
+                  {ppnData ? (
+                    <Typography variant="p" className="text-muted-foreground">
+                      PPN ({ppnData.percentage}%)
+                    </Typography>
+                  ) : (
+                    <Skeleton className="h-4 w-24" />
+                  )}
                   <Typography variant="p" className="text-foreground">
-                    {formatPrice(total * 0.12)}
+                    {formatPrice((total * (ppnData?.percentage || 0)) / 100)}
                   </Typography>
                 </div>
                 <div className="flex justify-between font-bold">
                   <Typography variant="h4">Total</Typography>
                   <Typography variant="h4" className="font-semibold">
-                    {formatPrice(total * 1.12)}
+                    {formatPrice(
+                      total * (1 + (ppnData?.percentage || 0) / 100),
+                    )}
                   </Typography>
                 </div>
               </div>

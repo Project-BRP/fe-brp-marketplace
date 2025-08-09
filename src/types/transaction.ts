@@ -2,13 +2,12 @@
 
 import { ApiResponse } from "./api";
 
-export type TransactionStatus =
-  | "UNPAID"
-  | "PAID"
-  | "CANCELLED"
-  | "SHIPPING"
-  | "DELIVERED"
-  | "COMPLETED";
+export type deliveryStatusList = string[];
+export type manualStatusList = string[];
+export interface StatusListResponse {
+  deliveryStatusList: deliveryStatusList;
+  manualStatusList: manualStatusList;
+}
 
 export interface TransactionItem {
   id: string;
@@ -39,7 +38,9 @@ export interface Transaction {
   userName: string;
   userEmail: string;
   userPhoneNumber: string | null;
-  status: TransactionStatus;
+  method: string;
+  deliveryStatus: deliveryStatusList;
+  manualStatus: manualStatusList;
   cleanPrice: number;
   priceWithPPN: number;
   totalPrice: number;
@@ -50,8 +51,10 @@ export interface Transaction {
   city: string;
   province: string;
   postalCode: string;
-  shippingCost: number;
+  shippingCost: number | null;
   paymentMethod: string | null;
+  cancelReason: string | null;
+  isRefundFailed: boolean;
   createdAt: string;
   updatedAt: string;
   transactionItems?: TransactionItem[];
@@ -62,6 +65,7 @@ export interface CreateTransactionData {
   city: string;
   province: string;
   postalCode: string;
+  method: string;
 }
 
 export type CreateTransactionResponse = ApiResponse<Transaction>;

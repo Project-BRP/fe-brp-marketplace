@@ -54,7 +54,7 @@ const Index = () => {
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
   // --- Cart Data Fetching ---
-  const { data: cartData, refetch: refetchCart } = useGetCart();
+  const { data: cartData } = useGetCart();
   const cartItems = cartData?.items ?? [];
   const cartItemCount = cartItems.reduce(
     (sum: number, item: { quantity: number }) => sum + item.quantity,
@@ -119,14 +119,6 @@ const Index = () => {
         .querySelector("#catalog-section")
         ?.scrollIntoView({ behavior: "smooth" });
     }
-  };
-
-  const handleOrderSubmit = () => {
-    // TODO: Implement order submission logic here
-    alert("Pesanan berhasil dibuat! (Simulasi)");
-    // After successful order, refetch cart to clear it
-    refetchCart();
-    setCurrentPageView("catalog");
   };
 
   const renderCatalogContent = () => {
@@ -222,10 +214,7 @@ const Index = () => {
           cartItemCount={cartItemCount}
           onCartClick={() => setCurrentPageView("cart")}
         />
-        <Checkout
-          onBack={() => setCurrentPageView("cart")}
-          onOrderSubmit={handleOrderSubmit}
-        />
+        <Checkout onBack={() => setCurrentPageView("cart")} />
       </div>
     );
   }

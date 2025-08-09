@@ -10,7 +10,7 @@ import {
   CreateTransactionData,
   CreateTransactionResponse,
   GetTransactionsResponse,
-  PPN,
+  StatusListResponse,
 } from "@/types/transaction";
 
 // Hook untuk membuat transaksi baru
@@ -48,12 +48,12 @@ export const useGetTransactions = () => {
   });
 };
 
-export const useGetPPN = () => {
-  return useQuery<ApiResponse<PPN>, Error>({
-    queryKey: ["ppn"],
+export const useGetStatusList = () => {
+  return useQuery<ApiResponse<StatusListResponse>, Error>({
+    queryKey: ["transactions"],
     queryFn: async () => {
-      const res = await api.get("/ppn");
-      return res.data.data;
+      const res = await api.get(`/transactions/status-list`);
+      return res.data;
     },
   });
 };
