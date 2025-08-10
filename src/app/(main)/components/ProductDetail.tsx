@@ -11,6 +11,7 @@ import { Separator } from "@/components/Separator";
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import useUserStore from "@/store/userStore";
 import { Packaging, ProductVariant } from "@/types/product";
 import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ const ProductDetail = ({
   onBack,
   packagings,
 }: ProductDetailProps) => {
+  const { userData } = useUserStore();
   const { data: productData, isLoading } = useGetAllProducts({});
   const [quantities, setQuantities] = useState<{ [variantId: string]: number }>(
     {},
@@ -248,8 +250,8 @@ const ProductDetail = ({
                         id={`add-to-cart-${variant.id}`}
                         variant="green"
                         onClick={() => handleAddToCart(variant)}
-                        className="w-full sm:w-auto"
-                        disabled={isLoadingThisVariant}
+                        className="w-full sm:w-auto disabled:bg-slate-400 disabled:text-white disabled:cursor-not-allowed disabled:border-none"
+                        disabled={isLoadingThisVariant || !userData.name}
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         {isLoadingThisVariant
@@ -261,6 +263,11 @@ const ProductDetail = ({
                 );
               })}
             </div>
+            {!userData.name && (
+              <Typography variant="p" className="text-red-500 mt-4">
+                Silakan masuk atau daftar untuk menambahkan produk ke keranjang.
+              </Typography>
+            )}
           </div>
         </div>
       </div>

@@ -31,6 +31,7 @@ const Cart = ({ items, onCheckout }: CartProps) => {
       minimumFractionDigits: 0,
     }).format(price);
   };
+
   const { mutate: updateQuantity } = useUpdateCartItem();
   const { mutate: removeItem } = useRemoveCartItem();
   const { mutate: clearCart } = useClearCart();

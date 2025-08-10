@@ -109,6 +109,7 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
                 variant="outline"
                 size="base"
                 className="relative h-10 p-2 flex items-center gap-2"
+                disabled={!userData.name}
                 onClick={onCartClick}
               >
                 <ShoppingCart className="size-5" />
