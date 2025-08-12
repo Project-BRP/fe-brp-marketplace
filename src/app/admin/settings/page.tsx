@@ -36,12 +36,11 @@ export default function AdminSettings() {
   const { data: ppnData } = useGetPPN();
   useEffect(() => {
     if (ppnData) {
-      console.log("PPN Data:", ppnData);
       setPpnValue(ppnData.percentage.toString());
     }
   }, [ppnData]);
 
-  const { mutateAsync: updatePPN, isPending } = useUpdatePPN();
+  const { mutateAsync: updatePPN } = useUpdatePPN();
 
   // Save handlers
   const handleSaveName = async () => {

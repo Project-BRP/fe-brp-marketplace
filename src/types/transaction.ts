@@ -39,8 +39,8 @@ export interface Transaction {
   userEmail: string;
   userPhoneNumber: string | null;
   method: string;
-  deliveryStatus: deliveryStatusList;
-  manualStatus: manualStatusList;
+  deliveryStatus: string | null;
+  manualStatus: string | null;
   cleanPrice: number;
   priceWithPPN: number;
   totalPrice: number;
@@ -80,4 +80,13 @@ export type GetTransactionsResponse = ApiResponse<TransactionsResponseData>;
 
 export type PPN = {
   percentage: number;
+};
+
+export type CancelTransactionResponse = ApiResponse<Transaction>;
+export type CancelTransactionPayload = {
+  cancelReason: string;
+};
+export type CancelTransactionData = {
+  transactionId: string;
+  payload: CancelTransactionPayload;
 };

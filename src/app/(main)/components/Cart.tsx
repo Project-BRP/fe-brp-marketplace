@@ -85,7 +85,6 @@ const Cart = ({ items, onCheckout }: CartProps) => {
       </Card>
     );
   }
-  console.log(sortedItems);
   return (
     <Card className="border-border shadow-card">
       <CardHeader>

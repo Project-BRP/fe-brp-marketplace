@@ -5,6 +5,7 @@ import {
   Check,
   Edit2,
   KeyRound,
+  List,
   Loader2,
   LogOut,
   User,
@@ -19,6 +20,7 @@ import Button from "@/components/buttons/Button";
 import Input from "@/components/form/Input";
 import { REG_PASS, REG_PHONE_NUMBER } from "@/constants/regex";
 import { IUpdateUserData } from "@/types/auth";
+import { useRouter } from "next/navigation";
 import ImageCropper from "./ImageCropper";
 
 // --- Form Values Type ---
@@ -57,6 +59,7 @@ export const ProfileModal = ({
   onLogout,
   isLoggingOut,
 }: ProfileModalProps) => {
+  const router = useRouter();
   const methods = useForm<FormValues>({ mode: "onTouched" });
   const { handleSubmit, reset, watch } = methods;
 
@@ -414,6 +417,20 @@ export const ProfileModal = ({
 
           {/* Modal Footer */}
           <div className="flex items-center justify-between p-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/transactions")}
+              className="w-full flex gap-4 bg-emerald-400 hover:bg-emerald-100 text-white border border-emerald-200"
+            >
+              <List className="size-5" />
+              <Typography variant="p" className="text-white">
+                {" "}
+                History Transaksi{" "}
+              </Typography>
+            </Button>
+          </div>
+          <div className="flex items-center justify-between px-4 pb-4 border-border">
             <Button
               type="button"
               variant="red"

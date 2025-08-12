@@ -55,7 +55,6 @@ export default function ProductVariantForm({
     reset,
     control,
     watch,
-    setValue,
     formState: { errors },
   } = methods;
 

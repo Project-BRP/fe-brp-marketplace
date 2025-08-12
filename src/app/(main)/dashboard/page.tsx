@@ -32,7 +32,12 @@ import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Navbar from "@/layouts/Navbar";
 
-type PageView = "catalog" | "product-detail" | "cart" | "checkout";
+type PageView =
+  | "catalog"
+  | "product-detail"
+  | "cart"
+  | "checkout"
+  | "transaction";
 
 const initialAdvancedFilters: AdvancedFilters = {
   productTypeId: "Semua",

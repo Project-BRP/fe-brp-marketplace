@@ -66,7 +66,6 @@ export const useAddToCart = () => {
       queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
     },
     onError: (error) => {
-      console.log(error);
       toast.error(error.response?.data?.message || "Gagal menambahkan produk.");
     },
   });
