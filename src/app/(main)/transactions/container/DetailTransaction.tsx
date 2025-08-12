@@ -1,5 +1,6 @@
 "use client";
 
+import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { Transaction, TransactionItem } from "@/types/transaction";
 import { ArrowLeft } from "lucide-react";
@@ -45,7 +46,7 @@ const StatusTimeline = ({ tx }: { tx: Transaction }) => {
 
   const getStatusInfo = (status: string) => {
     const s = status.toUpperCase();
-    if (s.includes("PENDING") || s.includes("UNPAID"))
+    if (s.includes("UNPAID"))
       return {
         icon: <FaClock className="text-yellow-500" />,
         text: `Menunggu Pembayaran`,
@@ -115,10 +116,10 @@ const ProductItem = ({ item }: { item: TransactionItem }) => (
   <div className="flex items-center gap-4 py-3">
     <img
       src={
-        item.ProductVariant?.imageUrl ||
+        item.variant?.imageUrl ||
         "https://placehold.co/64x64/e2e8f0/e2e8f0?text=Img"
       }
-      alt={item.ProductVariant?.product.name}
+      alt={item.variant?.product.name}
       className="w-16 h-16 object-cover rounded-lg border"
       onError={(e) => {
         e.currentTarget.src =
@@ -126,14 +127,18 @@ const ProductItem = ({ item }: { item: TransactionItem }) => (
       }}
     />
     <div className="flex-1">
-      <p className="font-semibold text-gray-800">
-        {item.ProductVariant?.product.name}
+      <p className="font-semibold text-black">{item.variant?.product.name}</p>
+      <p className="font-normal text-black">
+        {item.variant?.packaging.name} / {item.variant?.weight_in_kg} kg
       </p>
       <p className="text-sm text-gray-500">
         {item.quantity} x Rp{" "}
         {priceConverter(item.priceRupiah, item.quantity).toLocaleString(
           "id-ID",
         )}
+      </p>
+      <p className="font-normal text-red-500">
+        {item.isStockIssue ? "Ada masalah stok untuk variant ini" : ""}
       </p>
     </div>
     <p className="font-semibold text-gray-900">
@@ -210,6 +215,7 @@ const CancelModal = ({
         <p className="text-gray-600 mb-4">
           Mohon berikan alasan mengapa Anda ingin membatalkan pesanan ini.
         </p>
+
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -217,6 +223,13 @@ const CancelModal = ({
           rows={4}
           placeholder="Contoh: Saya salah memesan barang"
         />
+        <p className="font-semibold text-sm">NOTE</p>
+        <p className="text-xs text-gray-500 mt-2 text-justify">
+          Pengembalian dana secara otomatis (Automated Refund) hanya didukung
+          untuk metode pembayaran kartu kredit, Gopay, ShopeePay, QRIS, Kredivo,
+          dan Akulaku. Jika Anda menggunakan metode pembayaran lain silakan
+          menghubungi Admin untuk refund.
+        </p>
         <div className="flex justify-end gap-4 mt-6">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Tutup
@@ -286,16 +299,12 @@ export default function TransactionDetailPage() {
 
   const isPendingPayment =
     tx.snapUrl &&
-    (tx.manualStatus?.toUpperCase().includes("PENDING") ||
-      tx.manualStatus?.toUpperCase().includes("UNPAID") ||
-      tx.deliveryStatus?.toUpperCase().includes("PENDING") ||
+    (tx.manualStatus?.toUpperCase().includes("UNPAID") ||
       tx.deliveryStatus?.toUpperCase().includes("UNPAID"));
 
   const canBeCancelled =
-    tx.manualStatus?.toUpperCase().includes("PENDING") ||
-    tx.manualStatus?.toUpperCase().includes("UNPAID") ||
-    tx.deliveryStatus?.toUpperCase().includes("PENDING") ||
-    tx.deliveryStatus?.toUpperCase().includes("UNPAID");
+    tx.manualStatus?.toUpperCase().includes("PAID") ||
+    tx.deliveryStatus?.toUpperCase().includes("PAID");
 
   const handleCancelSubmit = (reason: string) => {
     cancelTransaction(
@@ -445,6 +454,28 @@ export default function TransactionDetailPage() {
           {/* --- Gateway Pembayaran --- */}
           {isPendingPayment && <PaymentGateway snapUrl={tx.snapUrl} />}
         </div>
+        {tx.transactionItems &&
+          tx.transactionItems.length > 0 &&
+          tx.transactionItems.find((item) => item.isStockIssue) &&
+          !tx.manualStatus?.toUpperCase().includes("CANCEL") &&
+          !tx.deliveryStatus?.toUpperCase().includes("CANCEL") && (
+            <div className="flex justify-center items-center mx-auto">
+              <Typography variant="p" className="text-red-500 text-center mt-4">
+                Beberapa produk dalam pesanan ini sedang mengalami masalah stok.
+                Anda bisa menunggu admin untuk mengirimkan barang setelah
+                restock, atau anda juga dapat membatalkan transaksi ini
+                sekarang.
+              </Typography>
+            </div>
+          )}
+        {tx.isRefundFailed && (
+          <div className="flex justify-center items-center mx-auto">
+            <Typography variant="p" className="text-red-500 text-center mt-4">
+              Pengembalian dana secara otomatis untuk transaksi ini tidak bisa
+              dilakukan. Silakan hubungi Admin untuk bantuan lebih lanjut.
+            </Typography>
+          </div>
+        )}
       </div>
     </>
   );

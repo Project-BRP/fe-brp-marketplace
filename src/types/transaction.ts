@@ -14,7 +14,7 @@ export interface TransactionItem {
   quantity: number;
   priceRupiah: number;
   isStockIssue: boolean;
-  ProductVariant: {
+  variant: {
     id: string;
     weight_in_kg: number;
     imageUrl: string;

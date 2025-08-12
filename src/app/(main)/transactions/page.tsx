@@ -42,7 +42,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 const TransactionCard = ({ tx }: { tx: Transaction }) => {
   // Mengambil item pertama dari transaksi untuk ditampilkan sebagai representasi
   const firstItem = tx.transactionItems?.[0];
-  const product = firstItem?.ProductVariant?.product;
+  const product = firstItem?.variant?.product;
 
   const displayStatus = tx.deliveryStatus || tx.manualStatus || "UNDEFINED";
 
@@ -145,7 +145,7 @@ const TransactionHistoryList = () => {
           <div className="flex flex-row gap-4 justify-start items-center pb-6">
             <Button
               variant="outline"
-              onClick={() => router.back()}
+              onClick={() => router.push("/dashboard")}
               className="inline-flex items-center gap-2 rounded-full border border-slate-300 p-4 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
             >
               <ArrowLeft className="h-4 w-4" />
