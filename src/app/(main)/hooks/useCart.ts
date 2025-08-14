@@ -60,9 +60,6 @@ export const useAddToCart = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success(
-        data.message || "Produk berhasil ditambahkan ke keranjang!",
-      );
       queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
     },
     onError: (error) => {

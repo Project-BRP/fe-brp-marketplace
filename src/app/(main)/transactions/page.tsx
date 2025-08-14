@@ -10,7 +10,7 @@ import { Transaction } from "@/types/transaction";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGetTransactionsByUser } from "../hooks/useTransaction";
 import TransactionDetailPage from "./container/DetailTransaction";
 
@@ -104,13 +104,29 @@ const TransactionCard = ({ tx }: { tx: Transaction }) => {
 
 const TransactionHistoryList = () => {
   const router = useRouter();
+
   const {
     data: transactionData,
     isLoading,
     error,
+    refetch: refetchTransactions,
   } = useGetTransactionsByUser();
+
   const { setUserData } = useUserStore();
   const { getUserData, refetch } = getUser();
+
+  const [transactions, setTransactions] = useState<Transaction[]>(
+    transactionData?.data?.transactions || [],
+  );
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const fetchedTransactions = await refetchTransactions();
+      setTransactions(fetchedTransactions?.data?.data?.transactions || []);
+    };
+
+    fetchTransactions();
+  }, [refetchTransactions]);
 
   useEffect(() => {
     const syncUser = async () => {
@@ -134,9 +150,6 @@ const TransactionHistoryList = () => {
       </div>
     );
   }
-
-  const transactions = transactionData?.data.transactions || [];
-
   return (
     <>
       <Navbar />

@@ -90,3 +90,8 @@ export type CancelTransactionData = {
   transactionId: string;
   payload: CancelTransactionPayload;
 };
+
+export type UpdateTransactionStatusPayload = {
+  deliveryStatus?: string;
+  manualStatus?: string;
+};
