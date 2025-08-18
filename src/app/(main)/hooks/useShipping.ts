@@ -1,6 +1,6 @@
 import api from "@/lib/api";
 import { ApiResponse } from "@/types/api";
-import { Cities, Provinces } from "@/types/shipping";
+import { Cities, Provinces, SubDistricts } from "@/types/shipping";
 import { useQuery } from "@tanstack/react-query";
 
 const PROVINCE_QUERY_KEY = ["provinces"];
@@ -51,11 +51,11 @@ export const useGetSubDistricts = (
   cityId: string,
   districtId: string,
 ) => {
-  return useQuery<Cities[], Error>({
+  return useQuery<SubDistricts[], Error>({
     queryKey: [...SUBDISTRICTS_QUERY_KEY, districtId],
     queryFn: async () => {
-      const res = await api.get<ApiResponse<Cities[]>>(
-        `/shipping/provinces/${provinceId}/cities/${cityId}/districts/${districtId}/subdistricts`,
+      const res = await api.get<ApiResponse<SubDistricts[]>>(
+        `/shipping/provinces/${provinceId}/cities/${cityId}/districts/${districtId}/sub-districts`,
       );
       return res.data.data;
     },

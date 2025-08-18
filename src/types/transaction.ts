@@ -62,8 +62,10 @@ export interface Transaction {
 
 export interface CreateTransactionData {
   shippingAddress: string;
-  city: string;
-  province: string;
+  provinceId: number;
+  cityId: number;
+  districtId: number;
+  subdistrictId: number;
   postalCode: string;
   method: string;
 }

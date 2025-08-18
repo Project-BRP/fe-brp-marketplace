@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -9,24 +10,37 @@ import { Separator } from "@/components/Separator";
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import Input from "@/components/form/Input";
 import useUserStore from "@/store/userStore";
 
 import { useGetPPN } from "@/app/admin/settings/hooks/usePPN";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { ArrowLeft, MapPin, User } from "lucide-react";
 import { useGetCart } from "../hooks/useCart";
+// Asumsikan hook-hook ini ada di dalam useShipping.ts untuk mengambil data lokasi
+import {
+  useGetCities,
+  useGetDistricts,
+  useGetProvinces,
+  useGetSubDistricts,
+} from "../hooks/useShipping";
 
-// Skema validasi untuk form alamat pengiriman
-// Skema validasi untuk form alamat pengiriman
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/Select"; // Import Select
+import { Textarea } from "@/components/TextArea";
+
+// Skema validasi diperbarui untuk form alamat manual
 const formSchema = z.object({
-  shippingAddress: z.string().min(1, "Alamat pengiriman harus diisi"),
-  city: z.string().min(1, "Kota harus diisi"),
-  province: z.string().min(1, "Provinsi harus diisi"),
-  postalCode: z
-    .string()
-    .min(5, "Kode pos harus 5 digit")
-    .max(5, "Kode pos harus 5 digit"),
+  shippingAddress: z.string().min(1, "Alamat lengkap harus diisi"),
+  provinceId: z.string().min(1, "Provinsi harus dipilih"),
+  cityId: z.string().min(1, "Kota/Kabupaten harus dipilih"),
+  districtId: z.string().min(1, "Kecamatan harus dipilih"),
+  subdistrictId: z.string().min(1, "Kelurahan/Desa harus dipilih"),
+  postalCode: z.string().min(5, "Kode pos harus 5 digit"),
   method: z.enum(["MANUAL", "DELIVERY"]),
 });
 
@@ -41,30 +55,82 @@ export default function Checkout({ onBack }: CheckoutProps) {
   const { mutate: createTransaction, isPending: isCreatingTransaction } =
     useCreateTransaction();
   const { refetch: refetchCart } = useGetCart();
+
   const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       shippingAddress: "",
-      city: "",
-      province: "",
+      provinceId: "",
+      cityId: "",
+      districtId: "",
+      subdistrictId: "",
       postalCode: "",
       method: "DELIVERY",
     },
   });
 
-  // Destrukturisasi register dan errors dari methods
-  const {
-    handleSubmit,
-    formState: { errors },
-  } = methods;
+  const { handleSubmit, watch, setValue } = methods;
 
-  // Fungsi yang dipanggil saat form disubmit
+  // Mengawasi perubahan pada dropdown
+  const watchedProvinceId = watch("provinceId");
+  const watchedCityId = watch("cityId");
+  const watchedDistrictId = watch("districtId");
+  const watchedSubdistrictId = watch("subdistrictId");
+
+  // Fetch data untuk dropdown
+  const { data: provinces, isLoading: isProvincesLoading } = useGetProvinces();
+  const { data: cities, isLoading: isCitiesLoading } =
+    useGetCities(watchedProvinceId);
+  const { data: districts, isLoading: isDistrictsLoading } = useGetDistricts(
+    watchedProvinceId,
+    watchedCityId,
+  );
+  const { data: subdistricts, isLoading: isSubdistrictsLoading } =
+    useGetSubDistricts(watchedProvinceId, watchedCityId, watchedDistrictId);
+
+  // Reset dropdown anak jika parent berubah
+  useEffect(() => {
+    setValue("cityId", "");
+    setValue("districtId", "");
+    setValue("subdistrictId", "");
+    setValue("postalCode", "");
+  }, [watchedProvinceId, setValue]);
+
+  useEffect(() => {
+    setValue("districtId", "");
+    setValue("subdistrictId", "");
+    setValue("postalCode", "");
+  }, [watchedCityId, setValue]);
+
+  useEffect(() => {
+    setValue("subdistrictId", "");
+    setValue("postalCode", "");
+  }, [watchedDistrictId, setValue]);
+
+  // Set postal code saat subdistrict dipilih
+  useEffect(() => {
+    if (watchedSubdistrictId) {
+      const selectedSubdistrict = subdistricts?.find(
+        (s) => s.id === Number(watchedSubdistrictId),
+      );
+      if (selectedSubdistrict) {
+        setValue("postalCode", selectedSubdistrict.zip_code);
+      }
+    }
+  }, [watchedSubdistrictId, subdistricts, setValue]);
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    createTransaction(values);
+    createTransaction({
+      ...values,
+      provinceId: Number(values.provinceId),
+      cityId: Number(values.cityId),
+      districtId: Number(values.districtId),
+      subdistrictId: Number(values.subdistrictId),
+      // postalCode tetap string
+    });
     refetchCart();
   };
 
-  // Menghitung total harga dari keranjang
   const calculateTotal = () => {
     if (!cartData?.items) return 0;
     return cartData.items.reduce(
@@ -141,45 +207,133 @@ export default function Checkout({ onBack }: CheckoutProps) {
                 </Typography>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Input
+                    <Typography variant="h6" className="font-semibold">
+                      Alamat Lengkap
+                    </Typography>
+                    <Textarea
+                      {...methods.register("shippingAddress", {
+                        required: "Alamat lengkap harus diisi",
+                      })}
                       id="shippingAddress"
-                      label="Alamat Lengkap"
-                      validation={{
-                        required: "Alamat pengiriman harus diisi",
-                      }}
-                      placeholder="Contoh: Jl. Pahlawan No. 10"
+                      placeholder="Contoh: Jl. Pahlawan No. 10, RT 01/RW 02"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Input
-                        id="city"
-                        label="Kota/Kabupaten"
-                        validation={{ required: "Kota harus diisi" }}
-                        placeholder="Contoh: Surabaya"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Input
-                        id="postalCode"
-                        label="Kode Pos"
-                        validation={{ required: "Kode pos harus diisi" }}
-                        placeholder="Contoh: 60234"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Input
-                        id="province"
-                        label="Provinsi"
-                        validation={{ required: "Provinsi harus diisi" }}
-                        placeholder="Contoh: Jawa Timur"
-                      />
-                    </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Provinsi */}
+                    <Select
+                      onValueChange={(value) => setValue("provinceId", value)}
+                      value={watchedProvinceId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isProvincesLoading ? "Memuat..." : "Pilih Provinsi"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {provinces?.map((province) => (
+                          <SelectItem
+                            key={province.id}
+                            value={String(province.id)}
+                          >
+                            {province.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Kota/Kabupaten */}
+                    <Select
+                      onValueChange={(value) => setValue("cityId", value)}
+                      value={watchedCityId}
+                      disabled={!watchedProvinceId || isCitiesLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isCitiesLoading
+                              ? "Memuat..."
+                              : "Pilih Kota/Kabupaten"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities?.map((city) => (
+                          <SelectItem key={city.id} value={String(city.id)}>
+                            {city.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Kecamatan */}
+                    <Select
+                      onValueChange={(value) => setValue("districtId", value)}
+                      value={watchedDistrictId}
+                      disabled={!watchedCityId || isDistrictsLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isDistrictsLoading ? "Memuat..." : "Pilih Kecamatan"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts?.map((district) => (
+                          <SelectItem
+                            key={district.id}
+                            value={String(district.id)}
+                          >
+                            {district.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Kelurahan/Desa */}
+                    <Select
+                      onValueChange={(value) =>
+                        setValue("subdistrictId", value)
+                      }
+                      value={watchedSubdistrictId}
+                      disabled={!watchedDistrictId || isSubdistrictsLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isSubdistrictsLoading
+                              ? "Memuat..."
+                              : "Pilih Kelurahan/Desa"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subdistricts?.map((subdistrict) => (
+                          <SelectItem
+                            key={subdistrict.id}
+                            value={String(subdistrict.id)}
+                          >
+                            {subdistrict.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {/* Kode Pos */}
+                    <Typography variant="h6" className="font-semibold">
+                      Kode Pos
+                    </Typography>
+                    <Typography variant="p" className="text-muted-foreground">
+                      {watch("postalCode") || "Silahkan pilih kelurahan/desa"}
+                    </Typography>
                   </div>
+
                   <div className="space-y-2">
                     <Typography variant="h6" className="font-semibold">
                       Metode
@@ -189,11 +343,11 @@ export default function Checkout({ onBack }: CheckoutProps) {
                         type="button"
                         variant="green"
                         className={
-                          methods.watch("method") === "DELIVERY"
+                          watch("method") === "DELIVERY"
                             ? "bg-green-500"
                             : "bg-green-50 text-black/50"
                         }
-                        onClick={() => methods.setValue("method", "DELIVERY")}
+                        onClick={() => setValue("method", "DELIVERY")}
                       >
                         Antar Barang
                       </Button>
@@ -201,20 +355,15 @@ export default function Checkout({ onBack }: CheckoutProps) {
                         type="button"
                         variant="green"
                         className={
-                          methods.watch("method") === "MANUAL"
+                          watch("method") === "MANUAL"
                             ? "bg-green-500"
                             : "bg-green-50 text-black/50 "
                         }
-                        onClick={() => methods.setValue("method", "MANUAL")}
+                        onClick={() => setValue("method", "MANUAL")}
                       >
                         Ambil Sendiri
                       </Button>
                     </div>
-                    {errors.method && (
-                      <p className="text-red-500 text-sm">
-                        {errors.method.message}
-                      </p>
-                    )}
                   </div>
                 </form>
               </FormProvider>
@@ -303,7 +452,7 @@ export default function Checkout({ onBack }: CheckoutProps) {
               </div>
               <Button
                 onClick={handleSubmit(onSubmit)}
-                className="w-full  hover:bg-primary-dark shadow-button text-lg py-6"
+                className="w-full hover:bg-primary-dark shadow-button text-lg py-6"
                 isLoading={isCreatingTransaction}
                 disabled={
                   isCreatingTransaction ||
