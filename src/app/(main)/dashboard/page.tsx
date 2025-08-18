@@ -10,7 +10,7 @@ import {
   Truck,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 
 import Cart from "@/app/(main)/components/Cart";
@@ -57,6 +57,22 @@ const Index = () => {
     initialAdvancedFilters,
   );
   const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+  const prevPageViewRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // condition: only when going from product-detail -> catalog
+    if (
+      prevPageViewRef.current === "product-detail" &&
+      currentPageView === "catalog"
+    ) {
+      document
+        .querySelector("#catalog-section")
+        ?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // update previous page view after every change
+    prevPageViewRef.current = currentPageView;
+  }, [currentPageView]);
 
   // --- Cart Data Fetching ---
   const { data: cartData } = useGetCart();
@@ -120,9 +136,6 @@ const Index = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= paginatedProducts.totalPages) {
       setPage(newPage);
-      document
-        .querySelector("#catalog-section")
-        ?.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -159,6 +172,7 @@ const Index = () => {
             onViewDetail={(id) => {
               setSelectedProductId(id);
               setCurrentPageView("product-detail");
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           />
         ))}
@@ -192,7 +206,9 @@ const Index = () => {
         <div className="container mx-auto px-4 py-6 flex flex-col gap-6">
           <Button
             variant="ghost"
-            onClick={() => setCurrentPageView("catalog")}
+            onClick={() => {
+              setCurrentPageView("catalog");
+            }}
             className="hover:bg-accent border rounded-full flex flex-row items-center justify-center gap-3 p-4 w-fit"
           >
             <ArrowLeft className="size-5" />
