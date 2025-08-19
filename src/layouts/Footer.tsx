@@ -35,7 +35,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {/* Section 1: Company Info & Logo */}
-          <div className="md:col-span-5 lg:col-span-4 space-y-4">
+          <div className="md:col-span-5 lg:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
               {logoUrl && (
                 <div className="flex-shrink-0">
@@ -63,10 +63,10 @@ export default function Footer() {
           </div>
 
           {/* Spacer for layout */}
-          <div className="hidden md:block md:col-span-2 lg:col-span-4" />
+          <div className="hidden md:block md:col-span-2 lg:col-span-2" />
 
           {/* Section 2: Contact Information */}
-          <div className="md:col-span-5 lg:col-span-4 space-y-4">
+          <div className="md:col-span-5 lg:col-span-5 space-y-4">
             <Typography
               variant="h4"
               as="h3"

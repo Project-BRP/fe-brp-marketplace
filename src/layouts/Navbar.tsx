@@ -14,6 +14,7 @@ import useUserStore from "@/store/userStore";
 import { IUpdateUserData } from "@/types/auth";
 import { useQuery } from "@tanstack/react-query";
 import { ProfileModal } from "./_container/profileModal";
+import { useGetCompanyInfo } from "./hooks/useCompanyInfo";
 import { useLogout } from "./hooks/useLogout";
 import { useUpdateUser } from "./hooks/useUpdateUser";
 
@@ -26,6 +27,7 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
   const router = useRouter();
   const { userData, setUserData } = useUserStore();
   const { getUserData, refetch } = getUser();
+  const { data: companyInfo } = useGetCompanyInfo();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { updateUserProfile, isUpdating } = useUpdateUser();
@@ -92,7 +94,7 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
                   weight="bold"
                   className="text-foreground"
                 >
-                  PT. Bumi Rekayasa Persada
+                  {companyInfo?.companyName || "Bumi Rekayasa Persada"}
                 </Typography>
                 <Typography
                   variant="p"

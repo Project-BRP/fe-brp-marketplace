@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 
@@ -26,6 +26,16 @@ export const useUpdateCompanyLogo = () => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Gagal mengunggah logo.");
+    },
+  });
+};
+
+export const useGetCompanyProfile = () => {
+  return useQuery<CompanyLogoResponse>({
+    queryKey: ["company-profile"],
+    queryFn: async () => {
+      const res = await api.get(`/config/logo`);
+      return res.data.data;
     },
   });
 };

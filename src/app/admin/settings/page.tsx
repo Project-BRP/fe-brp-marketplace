@@ -1,293 +1,124 @@
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { Input } from "@/components/InputLovable";
-import NextImage from "@/components/NextImage";
-import { Textarea } from "@/components/TextArea";
+
+import { Building } from "lucide-react";
+import { useState } from "react";
+
+import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import LabelText from "@/components/form/LabelText";
-import api from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
-import { Building, Upload } from "lucide-react";
-import { Check, Edit2, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { BiCart } from "react-icons/bi";
-import LogoUploadModal from "./_components/LogoUploadModal";
-import { useGetPPN, useUpdatePPN } from "./hooks/usePPN";
+import { useGetCompanyInfo } from "@/layouts/hooks/useCompanyInfo";
+import CompanyInfoDisplay from "./_components/CompanyInfoDisplay";
+import CompanyInfoForm from "./_components/CompanyInfoForm";
+import PpnSettings from "./_components/PpnSettings";
 
-export default function AdminSettings() {
-  // State Nama Toko
-  const [editModeName, setEditModeName] = useState(false);
+/**
+ * The main settings page for company information and PPN.
+ * It fetches company data and decides whether to show the display component,
+ * the creation form, or the editing form, alongside the PPN settings.
+ */
+export default function SettingsPage() {
+  const {
+    data: companyInfo,
+    isLoading,
+    isError,
+    refetch: refetchCompanyInfo,
+  } = useGetCompanyInfo();
+  // State to manage whether the create/edit form is visible.
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // State Alamat Toko
-  const [editModeAddress, setEditModeAddress] = useState(false);
+  // Show a loading skeleton while fetching data.
+  if (isLoading) {
+    return <SettingsPageSkeleton />;
+  }
 
-  // State PPN
-  const [editModePPN, setEditModePPN] = useState(false);
-  const [ppnValue, setPpnValue] = useState("");
-
-  const [storeName, setStoreName] = useState("PT. Bumi Rekayasa Persada");
-  const [storeAddress, setStoreAddress] = useState(
-    "Jl. Pertanian No. 123, Jakarta Selatan, Indonesia",
-  );
-
-  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
-
-  const { data: ppnData } = useGetPPN();
-  useEffect(() => {
-    if (ppnData) {
-      setPpnValue(ppnData.percentage.toString());
+  const companyInfoSection = () => {
+    // Handle case where company info doesn't exist yet.
+    if ((isError || !companyInfo) && !isFormOpen) {
+      return (
+        <div className="text-center py-10 px-6 border-2 border-dashed rounded-lg col-span-1 lg:col-span-2">
+          <Typography variant="h6" className="mb-2">
+            Informasi Perusahaan Belum Dibuat
+          </Typography>
+          <Typography color="muted" className="mb-4">
+            Silakan buat informasi perusahaan untuk ditampilkan di website Anda.
+          </Typography>
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Building className="w-4 h-4 mr-2" />
+            Buat Informasi Perusahaan
+          </Button>
+        </div>
+      );
     }
-  }, [ppnData]);
 
-  const { mutateAsync: updatePPN } = useUpdatePPN();
-
-  // Save handlers
-  const handleSaveName = async () => {
-    console.info("Saving store name:", storeName);
-  };
-
-  const handleSaveAddress = async () => {
-    console.info("Saving store address:", storeAddress);
-  };
-
-  const handleSavePPN = async () => {
-    if (!ppnValue) {
-      alert("PPN tidak boleh kosong");
-      return;
+    // Show the creation/edit form if isFormOpen is true.
+    if (isFormOpen) {
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <CompanyInfoForm
+            companyData={companyInfo}
+            onCancel={() => setIsFormOpen(false)}
+          />
+        </div>
+      );
     }
-    try {
-      await updatePPN({ percentage: parseFloat(ppnValue) });
-      setEditModePPN(false);
-    } catch (error) {
-      console.error("Error saving PPN:", error);
-    }
-    console.info("Saving PPN:", ppnValue);
-  };
 
-  const { data: companyProfile } = useQuery({
-    queryKey: ["company-profile"],
-    queryFn: async () => {
-      const res = await api.get("/config/logo");
-      return res.data.data;
-    },
-  });
+    // Show the display component if data exists and not in form mode.
+    if (companyInfo) {
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <CompanyInfoDisplay
+            companyData={companyInfo}
+            onEditAddress={() => setIsFormOpen(true)}
+          />
+        </div>
+      );
+    }
+
+    // Fallback to show the create form directly if no data.
+    return (
+      <div className="col-span-1 lg:col-span-2">
+        <CompanyInfoForm />
+      </div>
+    );
+  };
 
   return (
-    <>
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Pengaturan</h1>
-          <p className="text-muted-foreground">
-            Kelola pengaturan umum toko dan akun admin Anda
-          </p>
-        </div>
+    <div className="p-6 space-y-6">
+      <Typography variant="h4">Pengaturan Perusahaan</Typography>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Render Company Info or Form */}
+        {companyInfoSection()}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Store Information Card */}
-          <Card>
-            <CardHeader className="w-full">
-              <CardTitle className="flex flex-col items-center justify-between w-full">
-                {companyProfile?.imageUrl && (
-                  <NextImage
-                    src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${companyProfile.imageUrl}`}
-                    alt="Company Logo"
-                    width={200}
-                    height={200}
-                    className="rounded-full"
-                    imgClassName="object-cover w-full h-full rounded-full"
-                  />
-                )}
-                <div className="flex flex-row items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    <Building className="h-5 w-5" />
-                    Informasi Toko
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsLogoModalOpen(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {companyProfile?.imageUrl ? "Ganti Logo" : "Unggah Logo"}
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <LabelText>Nama Toko</LabelText>
-                {editModeName ? (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="storeName"
-                      value={storeName}
-                      onChange={(e) => setStoreName(e.target.value)}
-                      className="flex-grow"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSaveName}
-                      className="hover:bg-slate-200"
-                    >
-                      <Check className="size-5 text-green-500" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditModeName(false)}
-                      className="hover:bg-slate-200"
-                    >
-                      <X className="size-5 text-red-500" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between group">
-                    <Typography variant="p" className="text-foreground">
-                      {storeName || "Belum diatur"}
-                    </Typography>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditModeName(true)}
-                      className="group-hover:bg-slate-400 p-3"
-                    >
-                      <Edit2 className="size-4 text-black" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Alamat Toko */}
-              <div className="space-y-2">
-                <LabelText>Alamat Toko</LabelText>
-                {editModeAddress ? (
-                  <div className="flex items-center gap-2">
-                    <Textarea
-                      id="storeAddress"
-                      value={storeAddress}
-                      onChange={(e) => setStoreAddress(e.target.value)}
-                      rows={3}
-                      className="flex-grow"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSaveAddress}
-                      className="hover:bg-slate-200"
-                    >
-                      <Check className="size-5 text-green-500" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditModeAddress(false)}
-                      className="hover:bg-slate-200"
-                    >
-                      <X className="size-5 text-red-500" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between group">
-                    <Typography
-                      variant="p"
-                      className="text-foreground whitespace-pre-line"
-                    >
-                      {storeAddress || "Belum diatur"}
-                    </Typography>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditModeAddress(true)}
-                      className="group-hover:bg-slate-400 p-3"
-                    >
-                      <Edit2 className="size-4 text-black" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Change Password Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BiCart className="size-7" />
-                Konfigurasi Marketplace
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <LabelText>PPN</LabelText>
-
-                {editModePPN ? (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="ppn"
-                      type="number"
-                      value={ppnValue}
-                      onChange={(e) => setPpnValue(e.target.value)}
-                      className="flex-grow"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSavePPN}
-                      className="hover:bg-slate-200"
-                    >
-                      <Check className="size-5 text-green-500" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditModePPN(false)}
-                      className="hover:bg-slate-200"
-                    >
-                      <X className="size-5 text-red-500" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between group">
-                    <Typography variant="p" className="text-foreground">
-                      {ppnValue ? `${ppnValue}%` : "PPN belum diatur"}
-                    </Typography>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditModePPN(true)}
-                      className="group-hover:bg-slate-400 p-3"
-                    >
-                      <Edit2 className="size-4 text-black" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Render PPN Settings only if not in company form mode */}
+        {!isFormOpen && (
+          <div className="lg:col-span-1">
+            <PpnSettings />
+          </div>
+        )}
       </div>
-      <LogoUploadModal
-        isOpen={isLogoModalOpen}
-        onClose={() => setIsLogoModalOpen(false)}
-        currentLogo={
-          companyProfile?.imageUrl
-            ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${companyProfile.imageUrl}`
-            : null
-        }
-      />
-    </>
+    </div>
   );
 }
+
+/**
+ * Skeleton loader for the settings page.
+ * Mimics the layout of the final page for a better user experience.
+ */
+const SettingsPageSkeleton = () => {
+  return (
+    <div className="p-6">
+      <Skeleton className="h-8 w-1/3 mb-6" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4 p-6 border rounded-lg col-span-1 lg:col-span-2">
+          <Skeleton className="h-6 w-1/4" />
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-5 w-2/3" />
+        </div>
+        <div className="space-y-4 p-6 border rounded-lg">
+          <Skeleton className="h-6 w-1/4" />
+          <Skeleton className="h-5 w-1/2" />
+        </div>
+      </div>
+    </div>
+  );
+};

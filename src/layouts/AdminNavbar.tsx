@@ -11,6 +11,7 @@ import api from "@/lib/api";
 import useUserStore from "@/store/userStore";
 import { IUpdateUserData } from "@/types/auth";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { ProfileModal } from "./_container/profileModal";
 import { useLogout } from "./hooks/useLogout";
 import { useUpdateUser } from "./hooks/useUpdateUser";
@@ -18,7 +19,7 @@ import { useUpdateUser } from "./hooks/useUpdateUser";
 export default function AdminNavbar() {
   const { userData, setUserData } = useUserStore();
   const { getUserData, refetch } = getUser();
-
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { updateUserProfile, isUpdating } = useUpdateUser();
   const { handleLogout, isLoggingOut } = useLogout();
@@ -78,50 +79,65 @@ export default function AdminNavbar() {
                 Admin Panel
               </Typography>
             </div>
-            {userData?.name ? (
+            <div className="flex flex-row gap-4">
               <Button
-                onClick={() => setIsModalOpen(true)}
-                variant="ghost"
-                className="h-10 p-2 flex items-center gap-3"
+                variant="green"
+                size="base"
+                onClick={() => router.push("/dashboard")}
+                className="h-10 px-4 hidden md:flex"
               >
-                <div className="text-right hidden sm:block">
-                  <Typography variant="p" weight="semibold" className="text-sm">
-                    {userData.name ? userData.name : "Admin User"}
-                  </Typography>
-                  <Typography
-                    variant="p"
-                    className="text-xs text-muted-foreground"
-                  >
-                    {userData.email ? userData.email : "admin@example.com"}
-                  </Typography>
-                </div>
-                {userData.photoProfile ? (
-                  <NextImage
-                    src={
-                      process.env.NEXT_PUBLIC_IMAGE_URL + userData.photoProfile
-                    }
-                    alt="profile"
-                    width={36}
-                    height={36}
-                    className="rounded-full"
-                    imgClassName="object-cover w-full h-full rounded-full"
-                  />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-                    <User className="size-5 text-muted-foreground" />
-                  </div>
-                )}
+                Dashboard
               </Button>
-            ) : (
-              // Skeleton loader for when user data is not yet available
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <div className="h-4 w-24 bg-muted rounded animate-pulse mb-1"></div>
-                  <div className="h-3 w-32 bg-muted rounded animate-pulse"></div>
+              {userData?.name ? (
+                <Button
+                  onClick={() => setIsModalOpen(true)}
+                  variant="ghost"
+                  className="h-10 p-2 flex items-center gap-3"
+                >
+                  <div className="text-right hidden sm:block">
+                    <Typography
+                      variant="p"
+                      weight="semibold"
+                      className="text-sm"
+                    >
+                      {userData.name ? userData.name : "Admin User"}
+                    </Typography>
+                    <Typography
+                      variant="p"
+                      className="text-xs text-muted-foreground"
+                    >
+                      {userData.email ? userData.email : "admin@example.com"}
+                    </Typography>
+                  </div>
+                  {userData.photoProfile ? (
+                    <NextImage
+                      src={
+                        process.env.NEXT_PUBLIC_IMAGE_URL +
+                        userData.photoProfile
+                      }
+                      alt="profile"
+                      width={36}
+                      height={36}
+                      className="rounded-full"
+                      imgClassName="object-cover w-full h-full rounded-full"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+                      <User className="size-5 text-muted-foreground" />
+                    </div>
+                  )}
+                </Button>
+              ) : (
+                // Skeleton loader for when user data is not yet available
+                <div className="flex items-center gap-3">
+                  <div className="text-right hidden sm:block">
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse mb-1"></div>
+                    <div className="h-3 w-32 bg-muted rounded animate-pulse"></div>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
                 </div>
-                <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>
