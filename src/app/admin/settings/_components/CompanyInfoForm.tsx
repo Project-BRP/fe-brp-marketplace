@@ -182,7 +182,7 @@ export default function CompanyInfoForm({
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-6">
           {/* Company Profile Card */}
-          {isCreating && (
+          {!isEditMode && (
             <Card className="border-border shadow-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
