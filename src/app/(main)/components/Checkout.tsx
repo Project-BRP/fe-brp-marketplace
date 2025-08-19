@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -14,10 +14,12 @@ import useUserStore from "@/store/userStore";
 
 import { useGetPPN } from "@/app/admin/settings/hooks/usePPN";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { ArrowLeft, MapPin, User } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/RadioGroup";
+import { ArrowLeft, MapPin, Truck, User } from "lucide-react";
 import { useGetCart } from "../hooks/useCart";
 // Asumsikan hook-hook ini ada di dalam useShipping.ts untuk mengambil data lokasi
 import {
+  useCheckCost,
   useGetCities,
   useGetDistricts,
   useGetProvinces,
@@ -32,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/Select"; // Import Select
 import { Textarea } from "@/components/TextArea";
+import clsxm from "@/lib/clsxm";
+import { ShippingOption } from "@/types/shipping";
 
 // Skema validasi diperbarui untuk form alamat manual
 const formSchema = z.object({
@@ -55,6 +59,12 @@ export default function Checkout({ onBack }: CheckoutProps) {
   const { mutate: createTransaction, isPending: isCreatingTransaction } =
     useCreateTransaction();
   const { refetch: refetchCart } = useGetCart();
+  const { mutate: checkCost } = useCheckCost();
+
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [selectedShipping, setSelectedShipping] =
+    useState<ShippingOption | null>(null);
+  const [totalWeight, setTotalWeight] = useState(0);
 
   const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -88,6 +98,11 @@ export default function Checkout({ onBack }: CheckoutProps) {
   const { data: subdistricts, isLoading: isSubdistrictsLoading } =
     useGetSubDistricts(watchedProvinceId, watchedCityId, watchedDistrictId);
 
+  console.log("Provinces:", provinces);
+  console.log("Cities:", cities);
+  console.log("Districts:", districts);
+  console.log("Subdistricts:", subdistricts);
+
   // Reset dropdown anak jika parent berubah
   useEffect(() => {
     setValue("cityId", "");
@@ -119,6 +134,51 @@ export default function Checkout({ onBack }: CheckoutProps) {
     }
   }, [watchedSubdistrictId, subdistricts, setValue]);
 
+  useEffect(() => {
+    if (cartData?.items) {
+      const weight = cartData.items.reduce(
+        (acc, item) => acc + item.productVariant.weight_in_kg * item.quantity,
+        0,
+      );
+      setTotalWeight(weight);
+    }
+  }, [cartData]);
+
+  useEffect(() => {
+    if (watchedSubdistrictId && totalWeight > 0) {
+      console.log(totalWeight);
+      checkCost(
+        {
+          destinationProvince: Number(watchedProvinceId),
+          destinationCity: Number(watchedCityId),
+          destinationDistrict: Number(watchedDistrictId),
+          destinationSubDistrict: Number(watchedSubdistrictId),
+          weight_in_kg: totalWeight,
+        },
+        {
+          onSuccess: (data) => {
+            setShippingOptions(
+              data.data.shippingOptions.filter(
+                (option) =>
+                  option.service !== "NOT FOUND" &&
+                  option.etd !== "-" &&
+                  option.etd !== "",
+              ),
+            );
+          },
+        },
+      );
+    }
+    setShippingOptions([]);
+  }, [
+    watchedProvinceId,
+    watchedCityId,
+    watchedDistrictId,
+    watchedSubdistrictId,
+    totalWeight,
+    checkCost,
+  ]);
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     createTransaction({
       ...values,
@@ -148,6 +208,8 @@ export default function Checkout({ onBack }: CheckoutProps) {
   };
 
   const total = calculateTotal();
+  const ppn = (total * (ppnData?.percentage || 0)) / 100;
+  const grandTotal = total + ppn + (selectedShipping?.cost || 0);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -369,6 +431,65 @@ export default function Checkout({ onBack }: CheckoutProps) {
               </FormProvider>
             </CardContent>
           </Card>
+          {watch("method") === "DELIVERY" && (
+            <Card className="border-border shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Truck className="h-5 w-5 mr-2 text-primary" />
+                  <Typography
+                    variant="h6"
+                    className="min-[400px]:text-2xl text-lg font-bold"
+                  >
+                    Opsi Pengiriman
+                  </Typography>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  onValueChange={(value) =>
+                    setSelectedShipping(
+                      shippingOptions.find(
+                        (o) => `${o.name}-${o.service}` === value,
+                      ) || null,
+                    )
+                  }
+                >
+                  {shippingOptions.map((option, index) => (
+                    <div key={`${option.service}-${index}`}>
+                      <RadioGroupItem
+                        value={`${option.name}-${option.service}`}
+                        id={`${option.service}-${index}`}
+                        className="peer sr-only"
+                      />
+                      <label
+                        htmlFor={`${option.service}-${index}`}
+                        className={clsxm(
+                          "block p-4 border-2 rounded-lg cursor-pointer",
+                          "peer-checked:border-green-500 peer-checked:ring-4 peer-checked:ring-green-500",
+                        )}
+                      >
+                        <div className="flex justify-between items-center">
+                          <Typography variant="p" className="font-semibold">
+                            {option.name} - {option.service}
+                          </Typography>
+                          <Typography variant="p" className="font-bold">
+                            {formatPrice(option.cost)}
+                          </Typography>
+                        </div>
+                        <Typography
+                          variant="p"
+                          className="text-muted-foreground text-sm mt-1"
+                        >
+                          Estimasi: {option.etd}
+                        </Typography>
+                      </label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Ringkasan Pesanan */}
@@ -438,15 +559,25 @@ export default function Checkout({ onBack }: CheckoutProps) {
                     <Skeleton className="h-4 w-24" />
                   )}
                   <Typography variant="p" className="text-foreground">
-                    {formatPrice((total * (ppnData?.percentage || 0)) / 100)}
+                    {formatPrice(ppn)}
                   </Typography>
                 </div>
+                {watch("method") === "DELIVERY" && (
+                  <div className="flex justify-between">
+                    <Typography variant="p" className="text-muted-foreground">
+                      Ongkos Kirim
+                    </Typography>
+                    <Typography variant="p" className="text-foreground">
+                      {selectedShipping
+                        ? formatPrice(selectedShipping.cost)
+                        : "-"}
+                    </Typography>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold">
                   <Typography variant="h4">Total</Typography>
                   <Typography variant="h4" className="font-semibold">
-                    {formatPrice(
-                      total * (1 + (ppnData?.percentage || 0) / 100),
-                    )}
+                    {formatPrice(grandTotal)}
                   </Typography>
                 </div>
               </div>
@@ -457,7 +588,8 @@ export default function Checkout({ onBack }: CheckoutProps) {
                 disabled={
                   isCreatingTransaction ||
                   isCartLoading ||
-                  !cartData?.items.length
+                  !cartData?.items.length ||
+                  (watch("method") === "DELIVERY" && !selectedShipping)
                 }
               >
                 Buat Pesanan & Lanjutkan Pembayaran

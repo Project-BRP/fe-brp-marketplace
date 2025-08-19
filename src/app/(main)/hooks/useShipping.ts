@@ -2,9 +2,10 @@ import api from "@/lib/api";
 import { ApiError, ApiResponse } from "@/types/api";
 import {
   CheckCostPayload,
+  CheckCostResponse,
   Cities,
+  Districts,
   Provinces,
-  ShippingOption,
   SubDistricts,
 } from "@/types/shipping";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -42,10 +43,10 @@ export const useGetCities = (provinceId: string) => {
 };
 
 export const useGetDistricts = (provinceId: string, cityId: string) => {
-  return useQuery<Cities[], Error>({
+  return useQuery<Districts[], Error>({
     queryKey: [...DISTRICTS_QUERY_KEY, cityId],
     queryFn: async () => {
-      const res = await api.get<ApiResponse<Cities[]>>(
+      const res = await api.get<ApiResponse<Districts[]>>(
         `/shipping/provinces/${provinceId}/cities/${cityId}/districts`,
       );
       return res.data.data;
@@ -73,12 +74,12 @@ export const useGetSubDistricts = (
 
 export const useCheckCost = () => {
   return useMutation<
-    ApiResponse<ShippingOption[]>,
+    ApiResponse<CheckCostResponse>,
     AxiosError<ApiError>,
     CheckCostPayload
   >({
     mutationFn: async (payload) => {
-      const response = await api.post<ApiResponse<ShippingOption[]>>(
+      const response = await api.post<ApiResponse<CheckCostResponse>>(
         "/shipping/check-cost",
         payload,
       );

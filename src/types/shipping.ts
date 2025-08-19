@@ -19,6 +19,10 @@ export interface ShippingOption {
   etd: string;
 }
 
+export interface CheckCostResponse {
+  shippingOptions: ShippingOption[];
+}
+
 export interface CheckCostPayload {
   destinationProvince: number;
   destinationCity: number;
