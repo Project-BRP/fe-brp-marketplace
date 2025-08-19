@@ -9,3 +9,20 @@ export type Districts = IPlace;
 export interface SubDistricts extends IPlace {
   zip_code: string;
 }
+
+export interface ShippingOption {
+  name: string;
+  code: string;
+  service: string;
+  description: string;
+  cost: number;
+  etd: string;
+}
+
+export interface CheckCostPayload {
+  destinationProvince: number;
+  destinationCity: number;
+  destinationDistrict: number;
+  destinationSubDistrict: number;
+  weight_in_kg: number;
+}

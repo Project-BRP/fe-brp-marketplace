@@ -1,7 +1,15 @@
 import api from "@/lib/api";
-import { ApiResponse } from "@/types/api";
-import { Cities, Provinces, SubDistricts } from "@/types/shipping";
-import { useQuery } from "@tanstack/react-query";
+import { ApiError, ApiResponse } from "@/types/api";
+import {
+  CheckCostPayload,
+  Cities,
+  Provinces,
+  ShippingOption,
+  SubDistricts,
+} from "@/types/shipping";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import toast from "react-hot-toast";
 
 const PROVINCE_QUERY_KEY = ["provinces"];
 const CITIES_QUERY_KEY = ["cities"];
@@ -60,5 +68,29 @@ export const useGetSubDistricts = (
       return res.data.data;
     },
     enabled: !!provinceId && !!cityId && !!districtId,
+  });
+};
+
+export const useCheckCost = () => {
+  return useMutation<
+    ApiResponse<ShippingOption[]>,
+    AxiosError<ApiError>,
+    CheckCostPayload
+  >({
+    mutationFn: async (payload) => {
+      const response = await api.post<ApiResponse<ShippingOption[]>>(
+        "/shipping/check-cost",
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: (success) => {
+      toast.success(success.message || "Berhasil memeriksa biaya pengiriman.");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Gagal memeriksa biaya pengiriman.",
+      );
+    },
   });
 };
