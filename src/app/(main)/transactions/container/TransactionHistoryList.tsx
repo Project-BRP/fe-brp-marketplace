@@ -3,6 +3,7 @@
 import getUser from "@/app/(auth)/hooks/getUser";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import Footer from "@/layouts/Footer";
 import Navbar from "@/layouts/Navbar";
 import useUserStore from "@/store/userStore";
 import { Transaction } from "@/types/transaction";
@@ -183,6 +184,7 @@ const TransactionHistoryList = () => {
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 };

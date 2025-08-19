@@ -30,6 +30,7 @@ import NextImage from "@/components/NextImage";
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import Footer from "@/layouts/Footer";
 import Navbar from "@/layouts/Navbar";
 
 type PageView =
@@ -192,39 +193,43 @@ const Index = () => {
           onBack={() => setCurrentPageView("catalog")}
           packagings={packagings}
         />
+        <Footer />
       </>
     );
   }
 
   if (currentPageView === "cart") {
     return (
-      <div className="min-h-screen bg-gradient-earth">
-        <Navbar
-          cartItemCount={cartItemCount}
-          onCartClick={() => setCurrentPageView("cart")}
-        />
-        <div className="container mx-auto px-4 py-6 flex flex-col gap-6">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setCurrentPageView("catalog");
-            }}
-            className="hover:bg-accent border rounded-full flex flex-row items-center justify-center gap-3 p-4 w-fit"
-          >
-            <ArrowLeft className="size-5" />
-            <Typography
-              variant="p"
-              className="hidden min-[400px]:block text-sm font-semibold text-foreground"
-            >
-              Kembali ke Katalog
-            </Typography>
-          </Button>
-          <Cart
-            items={cartItems}
-            onCheckout={() => setCurrentPageView("checkout")}
+      <>
+        <div className="min-h-screen bg-gradient-earth">
+          <Navbar
+            cartItemCount={cartItemCount}
+            onCartClick={() => setCurrentPageView("cart")}
           />
+          <div className="container mx-auto px-4 py-6 flex flex-col gap-6">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setCurrentPageView("catalog");
+              }}
+              className="hover:bg-accent border rounded-full flex flex-row items-center justify-center gap-3 p-4 w-fit"
+            >
+              <ArrowLeft className="size-5" />
+              <Typography
+                variant="p"
+                className="hidden min-[400px]:block text-sm font-semibold text-foreground"
+              >
+                Kembali ke Katalog
+              </Typography>
+            </Button>
+            <Cart
+              items={cartItems}
+              onCheckout={() => setCurrentPageView("checkout")}
+            />
+          </div>
         </div>
-      </div>
+        <Footer />
+      </>
     );
   }
 
@@ -236,6 +241,7 @@ const Index = () => {
           onCartClick={() => setCurrentPageView("cart")}
         />
         <Checkout onBack={() => setCurrentPageView("cart")} />
+        <Footer />
       </div>
     );
   }
@@ -396,6 +402,7 @@ const Index = () => {
           )}
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
