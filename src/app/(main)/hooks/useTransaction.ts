@@ -38,6 +38,7 @@ export const useCreateTransaction = () => {
       }
     },
     onError: (error) => {
+      console.log(error);
       toast.error(error.message || "Gagal membuat transaksi");
     },
   });

@@ -45,6 +45,7 @@ import clsxm from "@/lib/clsxm";
 import useUserStore from "@/store/userStore";
 import { ShippingOption } from "@/types/shipping";
 import { ArrowLeft, MapPin, Truck, User } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Skema validasi tidak berubah
 const formSchema = z.object({
@@ -83,7 +84,7 @@ export default function Checkout({ onBack }: CheckoutProps) {
   const [selectedShipping, setSelectedShipping] =
     useState<ShippingOption | null>(null);
   const [totalWeight, setTotalWeight] = useState(0);
-
+  const router = useRouter();
   const methods = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -238,23 +239,39 @@ export default function Checkout({ onBack }: CheckoutProps) {
   }, [shippingOptions]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const payload = {
-      ...values,
-      provinceId: Number(values.provinceId),
-      cityId: Number(values.cityId),
-      districtId: Number(values.districtId),
-      subdistrictId: Number(values.subdistrictId),
-      shipping_service:
-        watchedMethod === "DELIVERY" ? selectedShipping?.service : undefined,
-      shipping_courier:
-        watchedMethod === "DELIVERY" ? selectedShipping?.code : undefined,
-      shipping_cost:
-        watchedMethod === "DELIVERY" ? selectedShipping?.cost : undefined,
+    const basePayload = {
+      shippingAddress: values.shippingAddress,
+      province: Number(values.provinceId),
+      city: Number(values.cityId),
+      district: Number(values.districtId),
+      subDistrict: Number(values.subdistrictId),
+      postalCode: values.postalCode,
+      method: values.method,
     };
 
-    createTransaction(payload, {
-      onSuccess: () => {
+    let finalPayload;
+
+    if (values.method === "DELIVERY") {
+      // Jika metode adalah DELIVERY...
+      finalPayload = {
+        ...basePayload,
+        shippingCode: selectedShipping?.code, // Ganti dari 'shipping_courier'
+        shippingService: selectedShipping?.service, // Ganti dari 'shipping_service'
+        // 'postalCode' tidak disertakan di sini
+      };
+    } else {
+      // Jika metode adalah MANUAL...
+      finalPayload = {
+        ...basePayload,
+        // 'shippingCode' dan 'shippingService' tidak disertakan di sini
+      };
+    }
+
+    // 4. Kirim payload akhir ke API.
+    createTransaction(finalPayload, {
+      onSuccess: (data) => {
         refetchCart();
+        router.push(`/transactions?transaction_id=${data.data.id}`);
       },
     });
   };
@@ -361,135 +378,127 @@ export default function Checkout({ onBack }: CheckoutProps) {
                   </div>
 
                   {/* Form Alamat hanya muncul jika metode DELIVERY */}
-                  {watchedMethod === "DELIVERY" && (
-                    <div className="space-y-4 pt-4 border-t">
-                      <div className="space-y-2">
-                        <Typography variant="h6" className="font-semibold">
-                          Alamat Lengkap
-                        </Typography>
-                        <Textarea
-                          {...methods.register("shippingAddress")}
-                          id="shippingAddress"
-                          placeholder="Contoh: Jl. Pahlawan No. 10, RT 01/RW 02"
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Select
-                          onValueChange={(value) =>
-                            setValue("provinceId", value)
-                          }
-                          value={watchedProvinceId}
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={
-                                isProvincesLoading
-                                  ? "Memuat..."
-                                  : "Pilih Provinsi"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {provinces?.map((province) => (
-                              <SelectItem
-                                key={province.id}
-                                value={String(province.id)}
-                              >
-                                {province.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select
-                          onValueChange={(value) => setValue("cityId", value)}
-                          value={watchedCityId}
-                          disabled={!watchedProvinceId || isCitiesLoading}
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={
-                                isCitiesLoading
-                                  ? "Memuat..."
-                                  : "Pilih Kota/Kabupaten"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cities?.map((city) => (
-                              <SelectItem key={city.id} value={String(city.id)}>
-                                {city.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select
-                          onValueChange={(value) =>
-                            setValue("districtId", value)
-                          }
-                          value={watchedDistrictId}
-                          disabled={!watchedCityId || isDistrictsLoading}
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={
-                                isDistrictsLoading
-                                  ? "Memuat..."
-                                  : "Pilih Kecamatan"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {districts?.map((district) => (
-                              <SelectItem
-                                key={district.id}
-                                value={String(district.id)}
-                              >
-                                {district.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select
-                          onValueChange={(value) =>
-                            setValue("subdistrictId", value)
-                          }
-                          value={watchedSubdistrictId}
-                          disabled={!watchedDistrictId || isSubdistrictsLoading}
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              placeholder={
-                                isSubdistrictsLoading
-                                  ? "Memuat..."
-                                  : "Pilih Kelurahan/Desa"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {subdistricts?.map((subdistrict) => (
-                              <SelectItem
-                                key={subdistrict.id}
-                                value={String(subdistrict.id)}
-                              >
-                                {subdistrict.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Typography variant="h6" className="font-semibold">
-                          Kode Pos
-                        </Typography>
-                        <Typography
-                          variant="p"
-                          className="text-muted-foreground"
-                        >
-                          {watch("postalCode") || "Otomatis terisi"}
-                        </Typography>
-                      </div>
+
+                  <div className="space-y-4 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Typography variant="h6" className="font-semibold">
+                        Alamat Lengkap
+                      </Typography>
+                      <Textarea
+                        {...methods.register("shippingAddress")}
+                        id="shippingAddress"
+                        placeholder="Contoh: Jl. Pahlawan No. 10, RT 01/RW 02"
+                      />
                     </div>
-                  )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Select
+                        onValueChange={(value) => setValue("provinceId", value)}
+                        value={watchedProvinceId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isProvincesLoading
+                                ? "Memuat..."
+                                : "Pilih Provinsi"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {provinces?.map((province) => (
+                            <SelectItem
+                              key={province.id}
+                              value={String(province.id)}
+                            >
+                              {province.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        onValueChange={(value) => setValue("cityId", value)}
+                        value={watchedCityId}
+                        disabled={!watchedProvinceId || isCitiesLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isCitiesLoading
+                                ? "Memuat..."
+                                : "Pilih Kota/Kabupaten"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cities?.map((city) => (
+                            <SelectItem key={city.id} value={String(city.id)}>
+                              {city.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        onValueChange={(value) => setValue("districtId", value)}
+                        value={watchedDistrictId}
+                        disabled={!watchedCityId || isDistrictsLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isDistrictsLoading
+                                ? "Memuat..."
+                                : "Pilih Kecamatan"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {districts?.map((district) => (
+                            <SelectItem
+                              key={district.id}
+                              value={String(district.id)}
+                            >
+                              {district.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        onValueChange={(value) =>
+                          setValue("subdistrictId", value)
+                        }
+                        value={watchedSubdistrictId}
+                        disabled={!watchedDistrictId || isSubdistrictsLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              isSubdistrictsLoading
+                                ? "Memuat..."
+                                : "Pilih Kelurahan/Desa"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subdistricts?.map((subdistrict) => (
+                            <SelectItem
+                              key={subdistrict.id}
+                              value={String(subdistrict.id)}
+                            >
+                              {subdistrict.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Typography variant="h6" className="font-semibold">
+                        Kode Pos
+                      </Typography>
+                      <Typography variant="p" className="text-muted-foreground">
+                        {watch("postalCode") || "Otomatis terisi"}
+                      </Typography>
+                    </div>
+                  </div>
                 </form>
               </FormProvider>
             </CardContent>

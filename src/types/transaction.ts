@@ -62,12 +62,14 @@ export interface Transaction {
 
 export interface CreateTransactionData {
   shippingAddress: string;
-  provinceId: number;
-  cityId: number;
-  districtId: number;
-  subdistrictId: number;
-  postalCode: string;
+  province: number;
+  city: number;
+  district: number;
+  subDistrict: number;
   method: string;
+  postalCode: string;
+  shippingCode?: string;
+  shippingService?: string;
 }
 
 export type CreateTransactionResponse = ApiResponse<Transaction>;
