@@ -4,15 +4,15 @@ import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import getUser from "@/app/(auth)/hooks/getUser";
+import { useGetCompanyProfile } from "@/app/admin/settings/hooks/useCompanyProfile";
 import NextImage from "@/components/NextImage";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
-import api from "@/lib/api";
 import useUserStore from "@/store/userStore";
 import { IUpdateUserData } from "@/types/auth";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ProfileModal } from "./_container/profileModal";
+import { useGetCompanyInfo } from "./hooks/useCompanyInfo";
 import { useLogout } from "./hooks/useLogout";
 import { useUpdateUser } from "./hooks/useUpdateUser";
 
@@ -23,14 +23,12 @@ export default function AdminNavbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { updateUserProfile, isUpdating } = useUpdateUser();
   const { handleLogout, isLoggingOut } = useLogout();
-  const { data: companyProfile } = useQuery({
-    queryKey: ["company-profile"],
-    queryFn: async () => {
-      const res = await api.get("/config/logo");
-      return res.data.data;
-    },
-  });
+  const { data: companyProfile } = useGetCompanyProfile();
+  const { data: companyInfo } = useGetCompanyInfo();
 
+  const CompanyLogoUrl = companyProfile?.imageUrl
+    ? companyProfile.imageUrl
+    : companyInfo?.logoUrl;
   useEffect(() => {
     const syncUser = async () => {
       const dataToSync = getUserData?.data ?? (await refetch())?.data?.data;
@@ -59,9 +57,9 @@ export default function AdminNavbar() {
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              {companyProfile?.imageUrl ? (
+              {CompanyLogoUrl ? (
                 <NextImage
-                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${companyProfile.imageUrl}`}
+                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${CompanyLogoUrl}`}
                   alt="Company Logo"
                   width={36}
                   height={36}

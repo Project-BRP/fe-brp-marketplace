@@ -2,6 +2,7 @@
 
 import { Mail, MapPin, Phone } from "lucide-react";
 
+import { useGetCompanyProfile } from "@/app/admin/settings/hooks/useCompanyProfile";
 import NextImage from "@/components/NextImage";
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
@@ -15,7 +16,10 @@ import { useGetCompanyInfo } from "./hooks/useCompanyInfo";
  */
 export default function Footer() {
   const { data: companyInfo, isLoading, isError } = useGetCompanyInfo();
-
+  const { data: companyProfile } = useGetCompanyProfile();
+  const CompanyLogoUrl = companyProfile?.imageUrl
+    ? companyProfile.imageUrl
+    : companyInfo?.logoUrl;
   // Show a skeleton loader while the data is being fetched.
   if (isLoading) {
     return <FooterSkeleton />;
@@ -28,7 +32,7 @@ export default function Footer() {
     return null;
   }
 
-  const { companyName, logoUrl, email, phoneNumber, fullAddress } = companyInfo;
+  const { companyName, email, phoneNumber, fullAddress } = companyInfo;
 
   return (
     <footer className="bg-background border-t-2 border-border mt-12">
@@ -37,10 +41,10 @@ export default function Footer() {
           {/* Section 1: Company Info & Logo */}
           <div className="md:col-span-5 lg:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              {logoUrl && (
+              {CompanyLogoUrl && (
                 <div className="flex-shrink-0">
                   <NextImage
-                    src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${logoUrl}`}
+                    src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${CompanyLogoUrl}`}
                     alt={`${companyName} Logo`}
                     width={50}
                     height={50}
