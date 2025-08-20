@@ -9,9 +9,10 @@ const nextConfig = {
         pathname: "/uploads/**", // Sesuaikan path jika perlu
       },
       {
-        protocol: "https",
-        hostname: "example.com", // Added hostname for example.com
-        pathname: "/images/**", // Adjusted path for example.com images
+        protocol: "https", // Ganti ke http jika backend production Anda tidak pakai https
+        hostname: "https://mako-related-miserably.ngrok-free.app",
+        port: "", // Kosongkan jika pakai port default (443 untuk https)
+        pathname: "/uploads/**", // Pastikan path ini sesuai
       },
     ],
   },
