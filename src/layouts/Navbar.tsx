@@ -69,15 +69,6 @@ const Navbar = ({ cartItemCount = 0, onCartClick }: NavbarProps) => {
           <div className="flex items-center justify-between w-full gap-4">
             {/* Logo and Company Name */}
             <div className="flex items-center gap-3">
-              <NextImage
-                src="http://localhost:3001/uploads/logo/company-logo_acd8efe0-e546-4a33-be49-8aca7c931e45_1755687675318.png"
-                alt="Company Logo"
-                width={40}
-                height={40}
-                className="rounded-lg"
-                imgClassName="object-cover w-full h-full rounded-lg"
-                serverStaticImg
-              />
               {CompanyLogoUrl ? (
                 <NextImage
                   src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${CompanyLogoUrl}`}
