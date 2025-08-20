@@ -99,3 +99,8 @@ export type UpdateTransactionStatusPayload = {
   deliveryStatus?: string;
   manualStatus?: string;
 };
+
+export type RequestPaymentResponse = ApiResponse<{
+  snapToken: string;
+  snapUrl: string;
+}>;

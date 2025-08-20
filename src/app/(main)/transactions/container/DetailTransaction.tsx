@@ -10,7 +10,6 @@ import {
   FaBox,
   FaCheckCircle,
   FaClock,
-  FaCreditCard,
   FaMapMarkerAlt,
   FaReceipt,
   FaTimesCircle,
@@ -21,6 +20,7 @@ import {
   useGetTransactionById,
 } from "../../hooks/useTransaction";
 import { CancelModal } from "../components/CancelModal";
+import PaymentGateway from "../components/PaymentGateway";
 
 // --- Helper Components ---
 
@@ -148,45 +148,6 @@ const ProductItem = ({ item }: { item: TransactionItem }) => (
   </div>
 );
 
-// Komponen untuk menampilkan iframe pembayaran Midtrans
-const PaymentGateway = ({ snapUrl }: { snapUrl: string }) => {
-  useEffect(() => {
-    const midtransScriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
-    let script = document.querySelector(`script[src="${midtransScriptUrl}"]`);
-
-    if (!script) {
-      script = document.createElement("script");
-      (script as HTMLScriptElement).src = midtransScriptUrl;
-      const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
-      if (!clientKey) {
-        console.error("NEXT_MIDTRANS_CLIENT_KEY is not defined");
-        return;
-      }
-      script.setAttribute("data-client-key", clientKey);
-      document.head.appendChild(script);
-    }
-
-    return () => {
-      // Optional: Hapus script saat komponen unmount
-    };
-  }, []);
-
-  return (
-    <div className="mt-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-        <FaCreditCard /> Selesaikan Pembayaran
-      </h3>
-      <div className="w-full h-[600px] border rounded-lg overflow-hidden">
-        <iframe
-          src={snapUrl}
-          className="w-full h-full border-0"
-          title="Midtrans Payment"
-        ></iframe>
-      </div>
-    </div>
-  );
-};
-
 // --- Komponen Utama ---
 
 export default function TransactionDetailPage() {
@@ -238,9 +199,8 @@ export default function TransactionDetailPage() {
   const tx = transactionData.data;
 
   const isPendingPayment =
-    tx.snapUrl &&
-    (tx.manualStatus?.toUpperCase().includes("UNPAID") ||
-      tx.deliveryStatus?.toUpperCase().includes("UNPAID"));
+    tx.manualStatus?.toUpperCase().includes("UNPAID") ||
+    tx.deliveryStatus?.toUpperCase().includes("UNPAID");
 
   const canBeCancelled =
     tx.manualStatus?.toUpperCase().includes("PAID") ||
@@ -392,7 +352,7 @@ export default function TransactionDetailPage() {
           </div>
 
           {/* --- Gateway Pembayaran --- */}
-          {isPendingPayment && <PaymentGateway snapUrl={tx.snapUrl} />}
+          {isPendingPayment && <PaymentGateway Id={tx.id} />}
         </div>
         {tx.transactionItems &&
           tx.transactionItems.length > 0 &&

@@ -13,6 +13,7 @@ import {
   CreateTransactionData,
   CreateTransactionResponse,
   GetTransactionsResponse,
+  RequestPaymentResponse,
   StatusListResponse,
   Transaction,
   TransactionsResponseData,
@@ -38,7 +39,6 @@ export const useCreateTransaction = () => {
       }
     },
     onError: (error) => {
-      console.log(error);
       toast.error(error.message || "Gagal membuat transaksi");
     },
   });
@@ -213,6 +213,23 @@ export const useUpdateTransactionStatus = () => {
       toast.error(
         error.response?.data?.message || "Gagal memperbarui Transaksi.",
       );
+    },
+  });
+};
+
+export const useRequestPayment = () => {
+  return useMutation<RequestPaymentResponse, Error, { transactionId: string }>({
+    mutationFn: async ({ transactionId }) => {
+      const res = await api.post(
+        `/transactions/${transactionId}/request-payment`,
+      );
+      return res.data;
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || "Permintaan pembayaran berhasil.");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal mengirim permintaan pembayaran.");
     },
   });
 };
