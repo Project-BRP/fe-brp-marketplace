@@ -41,16 +41,20 @@ export default function Footer() {
           {/* Section 1: Company Info & Logo */}
           <div className="md:col-span-5 lg:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              {CompanyLogoUrl && (
-                <div className="flex-shrink-0">
-                  <NextImage
-                    src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${CompanyLogoUrl}`}
-                    alt={`${companyName} Logo`}
-                    width={50}
-                    height={50}
-                    className="rounded-full"
-                    imgClassName="w-full h-full object-cover rounded-full"
-                  />
+              {CompanyLogoUrl ? (
+                <NextImage
+                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${CompanyLogoUrl}`}
+                  alt="Company Logo"
+                  width={40}
+                  height={40}
+                  className="rounded-lg"
+                  imgClassName="object-cover w-full h-full rounded-lg"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">
+                    B
+                  </span>
                 </div>
               )}
               <Typography
