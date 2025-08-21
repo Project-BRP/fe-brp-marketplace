@@ -16,14 +16,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NODE_ENV
-ARG API_URL
-ARG SITE_URL
-
-ENV NODE_ENV=$NODE_ENV
-ENV NEXT_PUBLIC_API_URL=$API_URL
-ENV SITE_URL=$SITE_URL
-
 RUN pnpm build
 
 FROM gcr.io/distroless/nodejs20-debian12 as runner
@@ -31,7 +23,6 @@ FROM gcr.io/distroless/nodejs20-debian12 as runner
 WORKDIR /app
 
 COPY --from=builder /app/public ./public
-
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 

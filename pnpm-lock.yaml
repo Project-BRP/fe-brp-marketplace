@@ -65,6 +65,9 @@ importers:
       next-sitemap:
         specifier: ^4.2.3
         version: 4.2.3(next@14.2.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+      pnpm:
+        specifier: ^10.15.0
+        version: 10.15.0
       react:
         specifier: ^18
         version: 18.3.1
@@ -1932,6 +1935,11 @@ packages:
   pirates@4.0.7:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
     engines: {node: '>= 6'}
+
+  pnpm@10.15.0:
+    resolution: {integrity: sha512-SG68JZ0+mZpOhpHOA7XKxKccvso5Nyqbdiy1AM/fCHPiyxar49lRse4s8BJQPwJ7mLZYTk3yJSTgx0UNnseqew==}
+    engines: {node: '>=18.12'}
+    hasBin: true
 
   postcss-calc@9.0.1:
     resolution: {integrity: sha512-TipgjGyzP5QzEhsOZUaIkeO5mKeMFpebWzRogWG/ysonUlnHcq5aJe0jOjpfzUU8PeSaBQnrE8ehR0QA5vs8PQ==}
@@ -4392,6 +4400,8 @@ snapshots:
   pify@2.3.0: {}
 
   pirates@4.0.7: {}
+
+  pnpm@10.15.0: {}
 
   postcss-calc@9.0.1(postcss@8.5.6):
     dependencies:

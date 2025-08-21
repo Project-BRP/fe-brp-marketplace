@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>'http://localhost:3000/' # Site URL</loc><lastmod>2025-08-21T04:38:41.908Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/forget-password</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/admin/products</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/sandbox/button</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/sign-up</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/admin</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/sandbox/form</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/dashboard</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/transactions</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/admin/settings</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/sign-in</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/admin/reports</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/admin/orders</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>&apos;http://localhost:3000/&apos; # Site URL/admin/customers</loc><lastmod>2025-08-21T04:38:41.910Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

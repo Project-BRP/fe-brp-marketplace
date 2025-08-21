@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.ngrok-free.app", // Wildcard untuk semua subdomain ngrok
+        hostname: "*.qiqioberon.my.id", // Wildcard untuk semua subdomain qiqioberon
         port: "",
         pathname: "/uploads/**",
       },
@@ -16,7 +17,7 @@ const nextConfig = {
       },
       {
         protocol: "https", // Ganti ke http jika backend production Anda tidak pakai https
-        hostname: "mako-related-miserably.ngrok-free.app",
+        hostname: "api.qiqioberon.my.id",
         port: "", // Kosongkan jika pakai port default (443 untuk https)
         pathname: "/uploads/**", // Pastikan path ini sesuai
       },
