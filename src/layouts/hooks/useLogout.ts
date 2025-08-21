@@ -18,7 +18,7 @@ export function useLogout() {
     AxiosError<ApiError>
   >({
     mutationFn: async () => {
-      const res = await api.post("/auth/logout");
+      const res = await api.post("/auth/logout", {}, { withCredentials: true });
       return res.data;
     },
   });
