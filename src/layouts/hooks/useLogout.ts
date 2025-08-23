@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 import api from "@/lib/api";
@@ -10,7 +9,6 @@ import { IAuthResponse } from "@/types/auth";
 
 export function useLogout() {
   const { resetUserData } = useUserStore();
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   const { mutateAsync, isPending: isLoggingOut } = useMutation<
@@ -34,11 +32,15 @@ export function useLogout() {
         "An error occurred during logout.";
       toast.error(message);
     } finally {
+      // Membersihkan data pengguna dari Zustand dan menghapus cookie
       resetUserData();
-      queryClient.invalidateQueries({
-        refetchType: "none",
-      });
-      router.push("/sign-in");
+
+      // Menghentikan semua query yang sedang berjalan dan membersihkan cache
+      queryClient.cancelQueries();
+      queryClient.clear();
+
+      // Mengarahkan ke halaman sign-in dan memaksa reload
+      window.location.href = "/sign-in";
     }
   };
 

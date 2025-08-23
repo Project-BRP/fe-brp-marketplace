@@ -26,7 +26,6 @@ export default function withAuth<P extends object>(
 
         try {
           const { data: response, isError } = await refetch();
-          console.log(response);
           if (!isError && response?.data) {
             setUserData(response.data);
             router.replace("/dashboard");
