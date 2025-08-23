@@ -1,9 +1,12 @@
+// src/app/(auth)/sign-in/page.tsx
+
 "use client";
 import NextImage from "@/components/NextImage";
 import Layout from "@/layouts/Layout";
+import withAuth from "../components/WithAuth";
 import LoginWithEmail from "./container/LoginWithEmail";
 
-export default function SignInPage() {
+function SignInPage() {
   return (
     <Layout withFooter={false} withNavbar={false}>
       <main className="relative bg-none w-full m-0 flex min-h-screen items-center justify-center gap-4 p-2 lg:flex-row lg:px-8 lg:py-12 ">
@@ -30,3 +33,5 @@ export default function SignInPage() {
     </Layout>
   );
 }
+
+export default withAuth(SignInPage);
