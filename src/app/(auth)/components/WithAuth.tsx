@@ -13,32 +13,31 @@ export default function withAuth<P extends object>(
 ) {
   const WithAuth = (props: P) => {
     const router = useRouter();
-    const { userData, setUserData } = useUserStore();
+    const { setUserData } = useUserStore();
     const [isLoading, setIsLoading] = useState(true);
-    const { refetch } = getUser();
+    const { getUserData } = getUser();
 
     useEffect(() => {
-      const checkAuth = async () => {
-        if (userData && userData.userId) {
+      const checkAuth = () => {
+        // Cek data pengguna di state management (Zustand)
+        if (useUserStore.getState().userData?.userId) {
           router.replace("/dashboard");
           return;
         }
 
-        try {
-          const { data: response, isError } = await refetch();
-          if (!isError && response?.data) {
-            setUserData(response.data);
-            router.replace("/dashboard");
-          } else {
-            setIsLoading(false);
-          }
-        } catch (error) {
+        // Jika tidak ada di state, cek di cache React Query
+        if (getUserData?.data) {
+          setUserData(getUserData.data);
+          router.replace("/dashboard");
+        } else {
+          // Jika tidak ada di mana pun, anggap belum login
           setIsLoading(false);
         }
       };
 
       checkAuth();
-    }, [userData, router, refetch, setUserData]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     if (isLoading) {
       return (
