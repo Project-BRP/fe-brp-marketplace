@@ -58,7 +58,7 @@ export default function EmailForm(): JSX.Element {
             pattern: {
               value: REG_PASS,
               message:
-                "Password harus mengandung huruf besar, huruf kecil, angka, simbol, dan minimal 8 karakter!",
+                "Password harus mengandung huruf besar, huruf kecil, angka, dan minimal 8 karakter!",
             },
           }}
         />

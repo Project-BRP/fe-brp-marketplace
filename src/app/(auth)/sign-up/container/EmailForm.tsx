@@ -91,7 +91,7 @@ export default function EmailForm({
             pattern: {
               value: REG_PASS,
               message:
-                "Password harus mengandung minimal huruf besar, huruf kecil, angka, bukan simbol, dan minimal 8 karakter!",
+                "Password harus mengandung minimal huruf besar, huruf kecil, angka, dan minimal 8 karakter!",
             },
           }}
         />
