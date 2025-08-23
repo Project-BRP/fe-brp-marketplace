@@ -85,9 +85,6 @@ export const useCheckCost = () => {
       );
       return response.data;
     },
-    onSuccess: (success) => {
-      toast.success(success.message || "Berhasil memeriksa biaya pengiriman.");
-    },
     onError: (error) => {
       toast.error(
         error.response?.data?.message || "Gagal memeriksa biaya pengiriman.",
