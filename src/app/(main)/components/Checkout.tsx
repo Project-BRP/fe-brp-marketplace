@@ -363,7 +363,7 @@ export default function Checkout({ onBack }: CheckoutProps) {
                         }
                         onClick={() => setValue("method", "DELIVERY")}
                       >
-                        Antar Barang
+                        DELIVERY
                       </Button>
                       <Button
                         type="button"
@@ -372,9 +372,16 @@ export default function Checkout({ onBack }: CheckoutProps) {
                         }
                         onClick={() => setValue("method", "MANUAL")}
                       >
-                        Ambil Sendiri
+                        MANUAL
                       </Button>
                     </div>
+                    {watchedMethod === "MANUAL" && (
+                      <Typography variant="p" className="text-muted-foreground">
+                        Setelah melakukan transaksi dengan metode "MANUAL".
+                        Silakan tunggu konfirmasi dari admin melalui WhatsApp
+                        untuk langkah selanjutnya.
+                      </Typography>
+                    )}
                   </div>
 
                   {/* Form Alamat hanya muncul jika metode DELIVERY */}
