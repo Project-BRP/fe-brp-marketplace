@@ -149,7 +149,6 @@ export const useGetAllTransactions = (params: GetAllTransactionsParams) => {
   return useQuery<ApiResponse<TransactionsResponseData>, Error>({
     queryKey: ["admin-transactions", params],
     queryFn: async () => {
-      console.log(params);
       const queryParams = new URLSearchParams();
 
       if (params.page) queryParams.set("page", String(params.page));
@@ -159,9 +158,9 @@ export const useGetAllTransactions = (params: GetAllTransactionsParams) => {
         queryParams.set("method", params.method);
       if (params.status) {
         if (params.method === "MANUAL") {
-          queryParams.set("manualStatus", params.status);
+          queryParams.set("status", params.status);
         } else if (params.method === "DELIVERY") {
-          queryParams.set("deliveryStatus", params.status);
+          queryParams.set("status", params.status);
         }
       }
       const res = await api.get(`/transactions?${queryParams.toString()}`);
