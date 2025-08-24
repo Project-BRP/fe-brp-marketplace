@@ -1,6 +1,7 @@
 "use client";
 
 import getUser from "@/app/(auth)/hooks/getUser";
+import LoadingAnimation from "@/components/LoadingAnimation";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Footer from "@/layouts/Footer";
@@ -106,6 +107,7 @@ const TransactionHistoryList = () => {
 
   const {
     data: transactionData,
+    isFetching,
     isLoading,
     error,
     refetch: refetchTransactions,
@@ -139,15 +141,16 @@ const TransactionHistoryList = () => {
   }, [getUserData, refetch, setUserData]);
 
   if (isLoading) {
-    return <div className="p-4 text-center">Memuat riwayat transaksi...</div>;
+    return <LoadingAnimation message="Memuat riwayat transaksi...." />;
+  }
+
+  if (isFetching) {
+    return <LoadingAnimation message="Memuat riwayat transaksi...." />;
   }
 
   if (error) {
-    return (
-      <div className="p-4 text-center text-red-500">
-        Gagal memuat data. Silakan coba lagi.
-      </div>
-    );
+    refetchTransactions();
+    return <LoadingAnimation message="Mencoba kembali...." />;
   }
   return (
     <>

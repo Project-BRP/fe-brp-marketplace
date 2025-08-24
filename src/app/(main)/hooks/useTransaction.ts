@@ -149,7 +149,6 @@ export const useGetAllTransactions = (params: GetAllTransactionsParams) => {
   return useQuery<ApiResponse<TransactionsResponseData>, Error>({
     queryKey: ["admin-transactions", params],
     queryFn: async () => {
-      console.log(params);
       const queryParams = new URLSearchParams();
 
       if (params.page) queryParams.set("page", String(params.page));
@@ -205,7 +204,7 @@ export const useUpdateTransactionStatus = () => {
       );
       return response.data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       toast.success("Transaksi berhasil diperbarui!");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
     },
@@ -224,9 +223,6 @@ export const useRequestPayment = () => {
         `/transactions/${transactionId}/request-payment`,
       );
       return res.data;
-    },
-    onSuccess: (res) => {
-      toast.success(res.message || "Permintaan pembayaran berhasil.");
     },
     onError: (error) => {
       toast.error(error.message || "Gagal mengirim permintaan pembayaran.");

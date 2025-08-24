@@ -41,7 +41,7 @@ export default function CompanyInfoDisplay({
   const { data: logoData } = useGetCompanyProfile();
   // Initialize useForm at the top level of the component.
   const methods = useForm<{ value: string }>();
-  const { handleSubmit, reset, register } = methods;
+  const { handleSubmit, reset } = methods;
 
   const { mutate: updateCompanyInfo, isPending } = useUpdateCompanyInfo();
 

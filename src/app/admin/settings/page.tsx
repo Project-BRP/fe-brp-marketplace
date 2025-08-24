@@ -17,12 +17,7 @@ import PpnSettings from "./_components/PpnSettings";
  * the creation form, or the editing form, alongside the PPN settings.
  */
 export default function SettingsPage() {
-  const {
-    data: companyInfo,
-    isLoading,
-    isError,
-    refetch: refetchCompanyInfo,
-  } = useGetCompanyInfo();
+  const { data: companyInfo, isLoading, isError } = useGetCompanyInfo();
   // State to manage whether the create/edit form is visible.
   const [isFormOpen, setIsFormOpen] = useState(false);
 

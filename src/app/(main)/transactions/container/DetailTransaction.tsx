@@ -1,11 +1,13 @@
 "use client";
 
+import LoadingAnimation from "@/components/LoadingAnimation";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { Transaction, TransactionItem } from "@/types/transaction";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   FaBox,
   FaCheckCircle,
@@ -175,20 +177,16 @@ export default function TransactionDetailPage() {
 
   if (!transactionId) {
     return (
-      <div className="p-6 text-center text-gray-500">
-        Mengalihkan, ID transaksi tidak ditemukan...
-      </div>
+      <LoadingAnimation message="Mengalihkan, ID transaksi tidak ditemukan..." />
     );
   }
 
   if (isLoading)
-    return <div className="p-6 text-center">Memuat detail transaksi...</div>;
-  if (error)
-    return (
-      <div className="p-6 text-center text-red-500">
-        Gagal memuat data transaksi.
-      </div>
-    );
+    return <LoadingAnimation message="Memuat detail transaksi..." />;
+  if (error) {
+    router.replace("/transactions");
+    toast.error("Gagal memuat detail transaksi. Silakan coba lagi.");
+  }
   if (!transactionData)
     return (
       <div className="p-6 text-center text-gray-500">
