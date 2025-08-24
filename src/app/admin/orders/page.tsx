@@ -477,7 +477,7 @@ export default function AdminOrders() {
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
-                                <DialogTitle>
+                                <DialogTitle className="text-lg font-black">
                                   Detail Pesanan {selectedOrder?.id}
                                 </DialogTitle>
                               </DialogHeader>
@@ -485,7 +485,7 @@ export default function AdminOrders() {
                                 <div className="space-y-6 max-h-[70vh] overflow-y-auto p-1">
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                      <h4 className="font-medium mb-2">
+                                      <h4 className="font-black text-lg mb-2">
                                         Informasi Pelanggan
                                       </h4>
                                       <p>
@@ -502,19 +502,21 @@ export default function AdminOrders() {
                                       </p>
                                     </div>
                                     <div>
-                                      <h4 className="font-medium mb-2">
+                                      <h4 className="font-black text-lg mb-2">
                                         Alamat Pengiriman
                                       </h4>
                                       <p>
                                         {selectedOrder.shippingAddress},{" "}
                                         {selectedOrder.city},{" "}
                                         {selectedOrder.province},{" "}
+                                        {selectedOrder.district},{" "}
+                                        {selectedOrder.subDistrict},{" "}
                                         {selectedOrder.postalCode}
                                       </p>
                                     </div>
                                   </div>
                                   <div>
-                                    <h4 className="font-medium mb-2">
+                                    <h4 className="font-black text-lg mb-2">
                                       Produk Dipesan
                                     </h4>
                                     <div className="space-y-2">
@@ -540,6 +542,42 @@ export default function AdminOrders() {
                                         ),
                                       )}
                                     </div>
+                                    {selectedOrder.method === "DELIVERY" && (
+                                      <div className="flex flex-col justify-center items-start gap-4 pt-4 w-full">
+                                        <h4 className="font-black text-lg mb-2">
+                                          Jasa Pengiriman
+                                        </h4>
+                                        <div className="flex w-full flex-col gap-2 border border-slate-400 rounded-xl p-3">
+                                          <div className="flex w-full justify-between items-center">
+                                            <Typography
+                                              variant="p"
+                                              className="font-semibold"
+                                            >
+                                              {selectedOrder.shippingAgent}{" "}
+                                              <span className="text-sm font-normal text-muted-foreground">
+                                                ({selectedOrder.shippingService}
+                                                )
+                                              </span>
+                                            </Typography>
+                                            <Typography
+                                              variant="p"
+                                              className="font-bold"
+                                            >
+                                              {formatPrice(
+                                                selectedOrder.shippingCost ?? 0,
+                                              )}
+                                            </Typography>
+                                          </div>
+                                          <Typography
+                                            variant="p"
+                                            className="text-muted-foreground text-sm mt-1"
+                                          >
+                                            Estimasi:{" "}
+                                            {selectedOrder.shippingEstimate}
+                                          </Typography>
+                                        </div>
+                                      </div>
+                                    )}
                                     <div className="flex justify-between items-center mt-4 pt-4 border-t">
                                       <p className="font-bold">Total:</p>
                                       <p className="font-bold text-lg">
