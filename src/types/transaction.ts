@@ -48,8 +48,14 @@ export interface Transaction {
   snapToken: string;
   snapUrl: string;
   shippingAddress: string;
+  shippingAgent?: string;
+  shippingCode?: string;
+  shippingService?: string;
+  shippingEstimate?: string;
   city: string;
   province: string;
+  district: string;
+  subDistrict: string;
   postalCode: string;
   shippingCost: number | null;
   paymentMethod: string | null;
