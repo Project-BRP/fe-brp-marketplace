@@ -9,6 +9,16 @@ export interface StatusListResponse {
   manualStatusList: manualStatusList;
 }
 
+export interface ITransactionDateRange {
+  firstDate: Date | null;
+  lastDate: Date | null;
+  yearMonthsMap: {
+    [year: number]: {
+      months: number[];
+    };
+  };
+}
+
 export interface TransactionItem {
   id: string;
   quantity: number;
