@@ -15,22 +15,29 @@ export default function withAuth<P extends object>(
     const router = useRouter();
     const { setUserData } = useUserStore();
     const [isLoading, setIsLoading] = useState(true);
-    const { getUserData } = getUser();
+    const { refetch } = getUser(); // Ambil fungsi refetch
 
     useEffect(() => {
-      const checkAuth = () => {
+      const checkAuth = async () => {
         // Cek data pengguna di state management (Zustand)
         if (useUserStore.getState().userData?.userId) {
           router.replace("/dashboard");
           return;
         }
 
-        // Jika tidak ada di state, cek di cache React Query
-        if (getUserData?.data) {
-          setUserData(getUserData.data);
-          router.replace("/dashboard");
-        } else {
-          // Jika tidak ada di mana pun, anggap belum login
+        try {
+          // Coba ambil data pengguna dari server
+          const { data: response, isError } = await refetch();
+
+          if (!isError && response?.data) {
+            setUserData(response.data);
+            router.replace("/dashboard");
+          } else {
+            // Jika gagal atau tidak ada data, anggap belum login
+            setIsLoading(false);
+          }
+        } catch (error) {
+          // Tangani jika terjadi error saat fetch
           setIsLoading(false);
         }
       };
