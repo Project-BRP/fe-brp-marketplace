@@ -1,5 +1,6 @@
 import api from "@/lib/api";
 import { ApiResponse } from "@/types/api";
+import { IDateFilter } from "@/types/dateFilter";
 import {
   IMonthlyRevenueResponse,
   IProductDistributionResponse,
@@ -8,11 +9,6 @@ import {
 import { ITransactionDateRange } from "@/types/transaction";
 import { useQuery } from "@tanstack/react-query";
 import { DateRange } from "react-day-picker";
-
-// Interface untuk filter
-interface IReportFilter {
-  dateRange?: DateRange;
-}
 
 // Helper untuk membuat query params dari objek DateRange
 const createDateQueryParams = (dateRange?: DateRange) => {
@@ -27,7 +23,7 @@ const createDateQueryParams = (dateRange?: DateRange) => {
 };
 
 // Hook untuk mendapatkan statistik utama (Revenue, Transactions, etc.)
-export const useGetReportStats = ({ dateRange }: IReportFilter) => {
+export const useGetReportStats = ({ dateRange }: IDateFilter) => {
   const queryParams = createDateQueryParams(dateRange);
   return useQuery<IReportStats, Error>({
     queryKey: ["report-stats", dateRange],
@@ -61,7 +57,7 @@ export const useGetReportStats = ({ dateRange }: IReportFilter) => {
 };
 
 // Hook untuk mendapatkan data pendapatan bulanan
-export const useGetMonthlyRevenue = ({ dateRange }: IReportFilter) => {
+export const useGetMonthlyRevenue = ({ dateRange }: IDateFilter) => {
   const queryParams = createDateQueryParams(dateRange);
   return useQuery<IMonthlyRevenueResponse, Error>({
     queryKey: ["monthly-revenue", dateRange],
@@ -76,7 +72,7 @@ export const useGetMonthlyRevenue = ({ dateRange }: IReportFilter) => {
 };
 
 // Hook untuk mendapatkan distribusi produk terlaris
-export const useGetMostSoldProducts = ({ dateRange }: IReportFilter) => {
+export const useGetMostSoldProducts = ({ dateRange }: IDateFilter) => {
   const queryParams = createDateQueryParams(dateRange);
   return useQuery<IProductDistributionResponse, Error>({
     queryKey: ["most-sold-products", dateRange],

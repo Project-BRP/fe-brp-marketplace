@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import api from "@/lib/api";
 import useUserStore from "@/store/userStore";
 import { ApiError, ApiResponse } from "@/types/api";
+import { IDateFilter } from "@/types/dateFilter";
 import {
   CancelTransactionData,
   CancelTransactionResponse,
@@ -22,6 +23,7 @@ import {
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { DateRange } from "react-day-picker";
 
 // Hook untuk membuat transaksi baru
 export const useCreateTransaction = () => {
@@ -120,8 +122,22 @@ type GetAllTransactionsParams = {
   status?: string;
 };
 
+const appendDateFilter = (dateRange?: DateRange, params?: URLSearchParams) => {
+  if (dateRange?.from && dateRange?.to && params) {
+    params.append("startYear", String(dateRange.from.getFullYear()));
+    params.append("startMonth", String(dateRange.from.getMonth() + 1));
+    params.append("startDay", String(dateRange.from.getDate()));
+    params.append("endYear", String(dateRange.to.getFullYear()));
+    params.append("endMonth", String(dateRange.to.getMonth() + 1));
+    params.append("endDay", String(dateRange.to.getDate()));
+  }
+};
+
 // Hook untuk admin mendapatkan semua transaksi dengan filter dan paginasi
-export const useGetAllTransactions = (params: GetAllTransactionsParams) => {
+export const useGetAllTransactions = (
+  params: GetAllTransactionsParams,
+  dateFilter?: IDateFilter,
+) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -147,7 +163,7 @@ export const useGetAllTransactions = (params: GetAllTransactionsParams) => {
   }, [queryClient]);
 
   return useQuery<ApiResponse<TransactionsResponseData>, Error>({
-    queryKey: ["admin-transactions", params],
+    queryKey: ["admin-transactions", params, dateFilter],
     queryFn: async () => {
       const queryParams = new URLSearchParams();
 
@@ -162,6 +178,9 @@ export const useGetAllTransactions = (params: GetAllTransactionsParams) => {
         } else if (params.method === "DELIVERY") {
           queryParams.set("status", params.status);
         }
+      }
+      if (dateFilter?.dateRange) {
+        appendDateFilter(dateFilter.dateRange, queryParams);
       }
       const res = await api.get(`/transactions?${queryParams.toString()}`);
       return res.data;

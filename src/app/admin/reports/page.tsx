@@ -112,7 +112,7 @@ export default function AdminReports() {
   const { data: topProductsData, isLoading: isLoadingTopProducts } =
     useGetMostSoldProducts({ dateRange: date });
   const { data: transactionData, isLoading: isLoadingTransactions } =
-    useGetAllTransactions({ page: 1, limit: 5 });
+    useGetAllTransactions({ page: 1, limit: 5 }, { dateRange: date });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
