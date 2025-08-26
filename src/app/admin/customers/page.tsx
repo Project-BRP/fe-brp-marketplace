@@ -1,4 +1,5 @@
 "use client";
+
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { Input } from "@/components/InputLovable";
@@ -19,72 +20,39 @@ import {
   TableRow,
 } from "@/components/Table";
 import Button from "@/components/buttons/Button";
-import { Edit, Filter, Search, Trash2, Users } from "lucide-react";
+import { Edit, Filter, Search, Users } from "lucide-react";
 import { useState } from "react";
-
-// Mock data for customers
-const customers = [
-  {
-    id: "USR001",
-    name: "Budi Santoso",
-    email: "budi.santoso@example.com",
-    avatar: "/dashboard/Hero.jpg",
-    totalOrders: 12,
-    status: "Aktif",
-    joinDate: "2023-01-15",
-  },
-  {
-    id: "USR002",
-    name: "Citra Lestari",
-    email: "citra.lestari@example.com",
-    avatar: "/dashboard/Hero.jpg",
-    totalOrders: 8,
-    status: "Aktif",
-    joinDate: "2023-02-20",
-  },
-  {
-    id: "USR003",
-    name: "Agus Wijaya",
-    email: "agus.wijaya@example.com",
-    avatar: "/dashboard/Hero.jpg",
-    totalOrders: 3,
-    status: "Tidak Aktif",
-    joinDate: "2023-03-10",
-  },
-  {
-    id: "USR004",
-    name: "Dewi Anggraini",
-    email: "dewi.anggraini@example.com",
-    avatar: "/dashboard/Hero.jpg",
-    totalOrders: 25,
-    status: "Aktif",
-    joinDate: "2022-11-05",
-  },
-  {
-    id: "USR005",
-    name: "Eko Prasetyo",
-    email: "eko.prasetyo@example.com",
-    avatar: "/dashboard/Hero.jpg",
-    totalOrders: 1,
-    status: "Aktif",
-    joinDate: "2023-05-01",
-  },
-];
+import { useDebounce } from "use-debounce";
+import { useGetUsers } from "../hooks/useUsers";
 
 const statusOptions = ["Semua", "Aktif", "Tidak Aktif"];
 
 export default function AdminCustomers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
-  const filteredCustomers = customers.filter((customer) => {
-    const matchesSearch =
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      selectedStatus === "Semua" || customer.status === selectedStatus;
-    return matchesSearch && matchesStatus;
+  const {
+    data: customerData,
+    isLoading,
+    isError,
+  } = useGetUsers({
+    page,
+    limit,
+    search: debouncedSearchTerm,
+    isActive: selectedStatus,
   });
+
+  const customers = customerData?.data?.users ?? [];
+  const totalPages = customerData?.data?.totalPage ?? 1;
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -140,7 +108,7 @@ export default function AdminCustomers() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Daftar Pelanggan ({filteredCustomers.length})
+            Daftar Pelanggan ({customers.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -155,59 +123,91 @@ export default function AdminCustomers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCustomers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <NextImage
-                        src={customer.avatar}
-                        alt={customer.name}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                        imgClassName="object-cover w-full h-full rounded-full"
-                      />
-                      <div>
-                        <p className="font-medium">{customer.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {customer.email}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {customer.totalOrders}
-                  </TableCell>
-                  <TableCell>{customer.joinDate}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        customer.status === "Aktif" ? "default" : "secondary"
-                      }
-                    >
-                      {customer.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">
+                    Loading...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : isError ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-red-500">
+                    Gagal memuat data pelanggan.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                customers.map((customer) => (
+                  <TableRow key={customer.userId}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <NextImage
+                          src={
+                            customer.photoProfile
+                              ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${customer.photoProfile}`
+                              : "/dashboard/Hero.jpg"
+                          }
+                          alt={customer.name}
+                          width={40}
+                          height={40}
+                          className="rounded-full"
+                          imgClassName="object-cover w-full h-full rounded-full"
+                        />
+                        <div>
+                          <p className="font-medium">{customer.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {customer.email}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {customer.totalTransaction}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(customer.createdAt).toLocaleDateString("id-ID")}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={customer.isActive ? "default" : "secondary"}
+                      >
+                        {customer.isActive ? "Aktif" : "Tidak Aktif"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-4">
+          <Button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1}
+            variant="outline"
+          >
+            Sebelumnya
+          </Button>
+          <span>
+            Halaman {page} dari {totalPages}
+          </span>
+          <Button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page === totalPages}
+            variant="outline"
+          >
+            Selanjutnya
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

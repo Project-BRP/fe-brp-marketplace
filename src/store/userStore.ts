@@ -16,6 +16,9 @@ const useUserStore = create<UserState>((set) => ({
     role: "",
     phoneNumber: "",
     photoProfile: "",
+    isActive: false,
+    totalTransaction: 0,
+    createdAt: new Date(),
   },
   setUserData: (user) => set({ userData: user }),
   resetUserData: () =>
@@ -27,6 +30,9 @@ const useUserStore = create<UserState>((set) => ({
         role: "",
         phoneNumber: "",
         photoProfile: "",
+        isActive: false,
+        totalTransaction: 0,
+        createdAt: new Date(),
       },
     }),
 }));

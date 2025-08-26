@@ -5,4 +5,7 @@ export type User = {
   role: string;
   phoneNumber: string;
   photoProfile?: string | null;
+  isActive: boolean;
+  totalTransaction: number;
+  createdAt: Date;
 };
