@@ -5,6 +5,10 @@ import {
   IMonthlyRevenueResponse,
   IProductDistributionResponse,
   IReportStats,
+  ITotalActiveUsers,
+  ITotalProductsSold,
+  ITotalRevenue,
+  ITotalTransactions,
 } from "@/types/report";
 import { ITransactionDateRange } from "@/types/transaction";
 import { useQuery } from "@tanstack/react-query";
@@ -33,16 +37,16 @@ export const useGetReportStats = ({ dateRange }: IDateFilter) => {
       const [revenueRes, transactionsRes, productsSoldRes, activeUsersRes] =
         await Promise.all([
           api.get<
-            ApiResponse<{ totalRevenue: number; gainPercentage: number }>
+            ApiResponse<ITotalRevenue>
           >(`/reports/revenue?${queryParams}`),
           api.get<
-            ApiResponse<{ totalTransactions: number; gainPercentage: number }>
+            ApiResponse<ITotalTransactions>
           >(`/reports/total-transactions?${queryParams}`),
           api.get<
-            ApiResponse<{ totalProductsSold: number; gainPercentage: number }>
+            ApiResponse<ITotalProductsSold>
           >(`/reports/total-products-sold?${queryParams}`),
           api.get<
-            ApiResponse<{ totalActiveUsers: number; gainPercentage: number }>
+            ApiResponse<ITotalActiveUsers>
           >(`/reports/total-active-users?${queryParams}`),
         ]);
 

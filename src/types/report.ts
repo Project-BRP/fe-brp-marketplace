@@ -16,6 +16,7 @@ export interface ITotalProductsSold extends IReportStat {
 
 export interface ITotalActiveUsers extends IReportStat {
   totalActiveUsers: number;
+  gain: number;
 }
 
 export interface IReportStats {
@@ -40,8 +41,24 @@ export interface IProductDistribution {
   id: string;
   name: string;
   totalSold: number;
+  currentMonthSold: number;
+  stock: number;
 }
 
 export interface IProductDistributionResponse {
   products: IProductDistribution[];
+}
+
+export interface ICurrentMonthTotalRevenue {
+  totalRevenue: number;
+  gainPercentage: number;
+}
+
+export interface ITodayTotalTransactions {
+  totalTransactions: number;
+  gainPercentage: number;
+}
+
+export interface ITotalProducts {
+  totalProducts: number;
 }
