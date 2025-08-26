@@ -18,7 +18,8 @@ const useUserStore = create<UserState>((set) => ({
     photoProfile: "",
     isActive: false,
     totalTransaction: 0,
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   setUserData: (user) => set({ userData: user }),
   resetUserData: () =>
@@ -32,7 +33,8 @@ const useUserStore = create<UserState>((set) => ({
         photoProfile: "",
         isActive: false,
         totalTransaction: 0,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       },
     }),
 }));
