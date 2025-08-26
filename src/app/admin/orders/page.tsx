@@ -24,6 +24,7 @@ import {
 } from "@/app/(main)/hooks/useTransaction";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import { DateRangePicker } from "@/components/DateRangePicker";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,7 @@ import {
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import { Transaction } from "@/types/transaction";
+import { DateRange } from "react-day-picker";
 import { CancelDialog } from "./components/CancelDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 
@@ -112,6 +114,7 @@ export default function AdminOrders() {
   >("ALL_METHODS");
   const [selectedStatus, setSelectedStatus] = useState("ALL_STATUSES");
   const [selectedOrder, setSelectedOrder] = useState<Transaction | null>(null);
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
   const { mutate: cancelTransaction, isPending: isCancelling } =
     useCancelTransaction();
   // Fetching data
@@ -121,13 +124,16 @@ export default function AdminOrders() {
     isLoading,
     isError,
     refetch,
-  } = useGetAllTransactions({
-    page,
-    limit,
-    search: debouncedSearchTerm,
-    method: selectedMethod === "ALL_METHODS" ? undefined : selectedMethod,
-    status: selectedStatus === "ALL_STATUSES" ? undefined : selectedStatus,
-  });
+  } = useGetAllTransactions(
+    {
+      page,
+      limit,
+      search: debouncedSearchTerm,
+      method: selectedMethod === "ALL_METHODS" ? undefined : selectedMethod,
+      status: selectedStatus === "ALL_STATUSES" ? undefined : selectedStatus,
+    },
+    { dateRange: date },
+  );
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
     useUpdateTransactionStatus();
 
@@ -313,6 +319,7 @@ export default function AdminOrders() {
                   className="pl-10"
                 />
               </div>
+              <DateRangePicker date={date} setDate={setDate} />
               <Select
                 value={selectedMethod}
                 onValueChange={(
@@ -586,7 +593,6 @@ export default function AdminOrders() {
                                     </div>
                                   </div>
 
-                                  {/* BAGIAN YANG DI-REFACTOR */}
                                   <div className="flex justify-between items-center">
                                     <div>
                                       <RenderUpdateStatusSection
