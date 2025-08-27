@@ -2,12 +2,6 @@
 
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/Dialog";
 import { Input } from "@/components/InputLovable";
 import NextImage from "@/components/NextImage";
 import {
@@ -30,6 +24,7 @@ import { User } from "@/types/users";
 import { Eye, Filter, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { useDebounce } from "use-debounce";
+import { DetailPelangganModal } from "../components/userDetail";
 import { useGetUsers } from "../hooks/useUsers";
 
 const statusOptions = ["Semua", "Aktif", "Tidak Aktif"];
@@ -229,75 +224,11 @@ export default function AdminCustomers() {
         </div>
       )}
       {/* User Detail Modal */}
-      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black">
-              Detail Pelanggan {selectedCustomer?.name}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedCustomer && (
-            <div className="space-y-6 max-h-[70vh] overflow-y-auto p-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-black text-lg mb-2">
-                    Informasi Pelanggan
-                  </h4>
-                  <p>
-                    <strong>Nama:</strong> {selectedCustomer.name}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {selectedCustomer.email}
-                  </p>
-                  <p>
-                    <strong>Telepon:</strong> {selectedCustomer.phoneNumber}
-                  </p>
-                  <p>
-                    <strong>Peran:</strong> {selectedCustomer.role}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    {selectedCustomer.isActive ? "Aktif" : "Tidak Aktif"}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-black text-lg mb-2">Lainnya</h4>
-                  <p>
-                    <strong>Total Transaksi:</strong>{" "}
-                    {selectedCustomer.totalTransaction}
-                  </p>
-                  <p>
-                    <strong>Tanggal Bergabung:</strong>{" "}
-                    {new Date(selectedCustomer.createdAt).toLocaleDateString(
-                      "id-ID",
-                    )}
-                  </p>
-                  <p>
-                    <strong>Terakhir Diperbarui:</strong>{" "}
-                    {new Date(selectedCustomer.updatedAt).toLocaleDateString(
-                      "id-ID",
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <NextImage
-                  src={
-                    selectedCustomer.photoProfile
-                      ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${selectedCustomer.photoProfile}`
-                      : "/dashboard/Hero.jpg"
-                  }
-                  alt={selectedCustomer.name}
-                  width={150}
-                  height={150}
-                  className="rounded-full mx-auto"
-                  imgClassName="object-cover w-full h-full rounded-full"
-                />
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <DetailPelangganModal
+        isDetailModalOpen={isDetailModalOpen}
+        setIsDetailModalOpen={setIsDetailModalOpen}
+        selectedCustomer={selectedCustomer}
+      />
     </div>
   );
 }
