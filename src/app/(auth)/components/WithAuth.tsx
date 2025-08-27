@@ -36,7 +36,7 @@ export default function withAuth<P extends object>(
             // Jika gagal atau tidak ada data, anggap belum login
             setIsLoading(false);
           }
-        } catch (error) {
+        } catch {
           // Tangani jika terjadi error saat fetch
           setIsLoading(false);
         }

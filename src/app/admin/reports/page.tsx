@@ -49,8 +49,18 @@ import {
 
 const COLORS = ["#16a34a", "#4ade80", "#86efac", "#d1fae5", "#6ee7b7"];
 const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-  "Jul", "Ags", "Sep", "Okt", "Nov", "Des",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Ags",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
 ];
 
 /* ---------------------- Custom Tooltip PieChart ---------------------- */
@@ -59,10 +69,15 @@ type CustomTooltipProps = {
   payload?: Array<{ name: string; value: number }>;
   totalSold: number;
 };
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, totalSold }) => {
+const CustomTooltip: React.FC<CustomTooltipProps> = ({
+  active,
+  payload,
+  totalSold,
+}) => {
   if (active && payload && payload.length) {
     const { name, value } = payload[0];
-    const percentage = totalSold > 0 ? ((value / totalSold) * 100).toFixed(1) : 0;
+    const percentage =
+      totalSold > 0 ? ((value / totalSold) * 100).toFixed(1) : 0;
     return (
       <div className="rounded-md border bg-background p-2 shadow-sm">
         <p className="font-semibold">{name}</p>
@@ -76,13 +91,25 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, totalSol
 };
 
 /* ---------------------- Custom Tooltip LineChart ---------------------- */
+type LineTooltipPayload = {
+  value: number;
+  payload: {
+    gainPercentage: number;
+    [key: string]: unknown;
+  };
+};
+
 type LineTooltipProps = {
   active?: boolean;
-  payload?: Array<{ value: number; payload: any }>;
+  payload?: LineTooltipPayload[];
   label?: string;
 };
 
-const CustomLineTooltip: React.FC<LineTooltipProps> = ({ active, payload, label }) => {
+const CustomLineTooltip: React.FC<LineTooltipProps> = ({
+  active,
+  payload,
+  label,
+}) => {
   if (active && payload && payload.length) {
     const revenueValue = payload[0].value;
     const gainPercentageValue = payload[0].payload.gainPercentage;
@@ -91,9 +118,16 @@ const CustomLineTooltip: React.FC<LineTooltipProps> = ({ active, payload, label 
       <div className="rounded-md border bg-background p-2 shadow-sm">
         <p className="font-semibold">{label}</p>
         <p className="text-sm text-muted-foreground">
-          Pendapatan: {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(revenueValue)}
+          Pendapatan:{" "}
+          {new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+          }).format(revenueValue)}
         </p>
-        <p className={`text-sm ${gainPercentageValue > 0 ? "text-green-600" : gainPercentageValue < 0 ? "text-red-600" : "text-gray-500"}`}>
+        <p
+          className={`text-sm ${gainPercentageValue > 0 ? "text-green-600" : gainPercentageValue < 0 ? "text-red-600" : "text-gray-500"}`}
+        >
           Perubahan: {gainPercentageValue ?? 0}%
         </p>
       </div>
@@ -117,21 +151,28 @@ export default function AdminReports() {
   const [topProductsLimit, setTopProductsLimit] = React.useState<number>(5);
 
   // Fetch data
-  const { data: reportStats, isLoading: isLoadingStats } = useGetReportStats({ dateRange: date });
-  const { data: monthlyRevenueData, isLoading: isLoadingMonthlyRevenue } = useGetMonthlyRevenue({ dateRange: date });
-  const { data: topProductsData, isLoading: isLoadingTopProducts } = useGetMostSoldProducts({ dateRange: date });
-  const { data: transactionData, isLoading: isLoadingTransactions } = useGetAllTransactions(
-    { page: 1, limit: 5 },
-    { dateRange: date }
-  );
+  const { data: reportStats, isLoading: isLoadingStats } = useGetReportStats({
+    dateRange: date,
+  });
+  const { data: monthlyRevenueData, isLoading: isLoadingMonthlyRevenue } =
+    useGetMonthlyRevenue({ dateRange: date });
+  const { data: topProductsData, isLoading: isLoadingTopProducts } =
+    useGetMostSoldProducts({ dateRange: date });
+  const { data: transactionData, isLoading: isLoadingTransactions } =
+    useGetAllTransactions({ page: 1, limit: 5 }, { dateRange: date });
 
   // Format mata uang
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(amount);
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
 
   // Format sumbu Y agar singkat (dalam Ribu / Juta)
   const formatAxisCurrency = (tickItem: number) => {
-    if (tickItem >= 1000000) return `${(tickItem / 1000000).toFixed(1).replace(/\.0$/, "")} Jt`;
+    if (tickItem >= 1000000)
+      return `${(tickItem / 1000000).toFixed(1).replace(/\.0$/, "")} Jt`;
     if (tickItem >= 1000) return `${(tickItem / 1000).toFixed(0)} Rb`;
     return tickItem.toString();
   };
@@ -143,11 +184,16 @@ export default function AdminReports() {
     gainPercentage: item.gainPercentage,
   }));
 
-  const filteredTopProducts = topProductsData?.products.slice(0, topProductsLimit);
+  const filteredTopProducts = topProductsData?.products.slice(
+    0,
+    topProductsLimit,
+  );
 
-  const totalProductsSoldInChart = React.useMemo(() =>
-    filteredTopProducts?.reduce((sum, item) => sum + item.totalSold, 0) || 0,
-  [filteredTopProducts]);
+  const totalProductsSoldInChart = React.useMemo(
+    () =>
+      filteredTopProducts?.reduce((sum, item) => sum + item.totalSold, 0) || 0,
+    [filteredTopProducts],
+  );
 
   const recentTransactions = transactionData?.data?.transactions ?? [];
 
@@ -156,33 +202,48 @@ export default function AdminReports() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Laporan Penjualan</h1>
-          <p className="text-muted-foreground">Analisis performa penjualan dan data penting lainnya</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Laporan Penjualan
+          </h1>
+          <p className="text-muted-foreground">
+            Analisis performa penjualan dan data penting lainnya
+          </p>
         </div>
-        <MonthRangePicker date={date} setDate={setDate} onInitialDateSet={setDate} />
+        <MonthRangePicker
+          date={date}
+          setDate={setDate}
+          onInitialDateSet={setDate}
+        />
       </div>
 
       {/* KPI */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {isLoadingStats ? (
           <>
-            <Skeleton className="h-28" /><Skeleton className="h-28" />
-            <Skeleton className="h-28" /><Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
+            <Skeleton className="h-28" />
           </>
         ) : (
           <>
             {/* Total Pendapatan */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Pendapatan
+                </CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {formatCurrency(reportStats?.totalRevenue.totalRevenue ?? 0)}
                 </div>
-                <p className={`text-xs ${getGainColor(reportStats?.totalRevenue.gainPercentage)}`}>
-                  {reportStats?.totalRevenue.gainPercentage ?? 0}% dari bulan lalu
+                <p
+                  className={`text-xs ${getGainColor(reportStats?.totalRevenue.gainPercentage)}`}
+                >
+                  {reportStats?.totalRevenue.gainPercentage ?? 0}% dari bulan
+                  lalu
                 </p>
               </CardContent>
             </Card>
@@ -190,15 +251,20 @@ export default function AdminReports() {
             {/* Total Pesanan */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Pesanan</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Pesanan
+                </CardTitle>
                 <ShoppingCart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {reportStats?.totalTransactions.totalTransactions ?? 0}
                 </div>
-                <p className={`text-xs ${getGainColor(reportStats?.totalTransactions.gainPercentage)}`}>
-                  {reportStats?.totalTransactions.gainPercentage ?? 0}% dari bulan lalu
+                <p
+                  className={`text-xs ${getGainColor(reportStats?.totalTransactions.gainPercentage)}`}
+                >
+                  {reportStats?.totalTransactions.gainPercentage ?? 0}% dari
+                  bulan lalu
                 </p>
               </CardContent>
             </Card>
@@ -206,15 +272,20 @@ export default function AdminReports() {
             {/* Produk Terjual */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Produk Terjual</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Produk Terjual
+                </CardTitle>
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {reportStats?.totalProductsSold.totalProductsSold ?? 0}
                 </div>
-                <p className={`text-xs ${getGainColor(reportStats?.totalProductsSold.gainPercentage)}`}>
-                  {reportStats?.totalProductsSold.gainPercentage ?? 0}% dari bulan lalu
+                <p
+                  className={`text-xs ${getGainColor(reportStats?.totalProductsSold.gainPercentage)}`}
+                >
+                  {reportStats?.totalProductsSold.gainPercentage ?? 0}% dari
+                  bulan lalu
                 </p>
               </CardContent>
             </Card>
@@ -222,15 +293,20 @@ export default function AdminReports() {
             {/* Pelanggan Aktif */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pelanggan Aktif</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Pelanggan Aktif
+                </CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {reportStats?.totalActiveUsers.totalActiveUsers ?? 0}
                 </div>
-                <p className={`text-xs ${getGainColor(reportStats?.totalActiveUsers.gainPercentage)}`}>
-                  {reportStats?.totalActiveUsers.gainPercentage ?? 0}% sejak bulan lalu
+                <p
+                  className={`text-xs ${getGainColor(reportStats?.totalActiveUsers.gainPercentage)}`}
+                >
+                  {reportStats?.totalActiveUsers.gainPercentage ?? 0}% sejak
+                  bulan lalu
                 </p>
               </CardContent>
             </Card>
@@ -251,13 +327,35 @@ export default function AdminReports() {
               ) : (
                 <LineChart data={formattedMonthlyData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" stroke="#888" fontSize={12} tickLine={false} axisLine={false}/>
-                  <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false}
-                    tickFormatter={(value) => formatAxisCurrency(value as number)}
-                    domain={[0, "dataMax + 1000000"]}/>
-                  <Tooltip content={<CustomLineTooltip />} cursor={{ fill: "rgba(110, 231, 183, 0.1)" }}/>
-                  <Line type="monotone" dataKey="totalRevenue" stroke="#16a34a"
-                    strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }}/>
+                  <XAxis
+                    dataKey="month"
+                    stroke="#888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) =>
+                      formatAxisCurrency(value as number)
+                    }
+                    domain={[0, "dataMax + 1000000"]}
+                  />
+                  <Tooltip
+                    content={<CustomLineTooltip />}
+                    cursor={{ fill: "rgba(110, 231, 183, 0.1)" }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="totalRevenue"
+                    stroke="#16a34a"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 8 }}
+                  />
                 </LineChart>
               )}
             </ResponsiveContainer>
@@ -268,8 +366,13 @@ export default function AdminReports() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Distribusi Produk Terlaris</CardTitle>
-            <Select value={String(topProductsLimit)} onValueChange={(value) => setTopProductsLimit(Number(value))}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Tampilkan Top 5" /></SelectTrigger>
+            <Select
+              value={String(topProductsLimit)}
+              onValueChange={(value) => setTopProductsLimit(Number(value))}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Tampilkan Top 5" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="3">Top 3</SelectItem>
                 <SelectItem value="5">Top 5</SelectItem>
@@ -283,17 +386,39 @@ export default function AdminReports() {
                 <Skeleton className="h-full w-full" />
               ) : (
                 <PieChart>
-                  <Pie data={filteredTopProducts} cx="40%" cy="50%" innerRadius={50}
-                    outerRadius={80} paddingAngle={2} dataKey="totalSold" nameKey="name"
-                    labelLine={false} label={false}>
+                  <Pie
+                    data={filteredTopProducts}
+                    cx="40%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="totalSold"
+                    nameKey="name"
+                    labelLine={false}
+                    label={false}
+                  >
                     {filteredTopProducts?.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip totalSold={totalProductsSoldInChart} />} />
-                  <Legend align="right" verticalAlign="middle" layout="vertical"
+                  <Tooltip
+                    content={
+                      <CustomTooltip totalSold={totalProductsSoldInChart} />
+                    }
+                  />
+                  <Legend
+                    align="right"
+                    verticalAlign="middle"
+                    layout="vertical"
                     wrapperStyle={{ lineHeight: "24px", paddingLeft: "10px" }}
-                    formatter={(value) => value.length > 25 ? `${value.substring(0, 22)}...` : value}/>
+                    formatter={(value) =>
+                      value.length > 25 ? `${value.substring(0, 22)}...` : value
+                    }
+                  />
                 </PieChart>
               )}
             </ResponsiveContainer>
@@ -303,7 +428,9 @@ export default function AdminReports() {
 
       {/* Tabel Transaksi */}
       <Card>
-        <CardHeader><CardTitle>Transaksi Terkini</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Transaksi Terkini</CardTitle>
+        </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -325,11 +452,19 @@ export default function AdminReports() {
               ) : (
                 recentTransactions.map((transaction) => (
                   <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">{transaction.id}</TableCell>
+                    <TableCell className="font-medium">
+                      {transaction.id}
+                    </TableCell>
                     <TableCell>{transaction.userName}</TableCell>
-                    <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{transaction.deliveryStatus || transaction.manualStatus}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(transaction.totalPrice)}</TableCell>
+                    <TableCell>
+                      {new Date(transaction.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {transaction.deliveryStatus || transaction.manualStatus}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(transaction.totalPrice)}
+                    </TableCell>
                   </TableRow>
                 ))
               )}

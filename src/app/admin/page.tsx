@@ -1,14 +1,28 @@
 "use client";
 
 import {
+  useCancelTransaction,
+  useUpdateTransactionStatus,
+} from "@/app/(main)/hooks/useTransaction";
+import {
   useGetDashboardStats,
-  useGetTopProducts,
   useGetRecentOrders,
+  useGetTopProducts,
 } from "@/app/admin/hooks/useDashboardAnalytics";
+import { CancelDialog } from "@/app/admin/orders/components/CancelDialog";
+import { ConfirmDialog } from "@/app/admin/orders/components/ConfirmDialog";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import Button from "@/components/buttons/Button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/Dialog";
 import { Skeleton } from "@/components/Skeleton";
+import Typography from "@/components/Typography";
+import Button from "@/components/buttons/Button";
+import { Transaction, TransactionItem } from "@/types/transaction";
 import {
   AlertCircle,
   CheckCircle,
@@ -17,23 +31,10 @@ import {
   Package,
   ShoppingCart,
   TrendingUp,
-  Users,
   Truck,
+  Users,
 } from "lucide-react";
 import React, { useState } from "react";
-import {
-  useCancelTransaction,
-  useUpdateTransactionStatus,
-} from "@/app/(main)/hooks/useTransaction";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/Dialog";
-import Typography from "@/components/Typography";
-import { CancelDialog } from "@/app/admin/orders/components/CancelDialog";
-import { ConfirmDialog } from "@/app/admin/orders/components/ConfirmDialog";
 
 const statusConfig: {
   [key: string]: { label: string; color: string; icon: React.ElementType };
@@ -88,13 +89,19 @@ const formatPrice = (price: number) =>
   }).format(price);
 
 // Komponen untuk dialog detail pesanan
-const OrderDetailDialog = ({ order, open, onOpenChange }: { 
-  order: any; 
-  open: boolean; 
-  onOpenChange: (open: boolean) => void 
+const OrderDetailDialog = ({
+  order,
+  open,
+  onOpenChange,
+}: {
+  order: Transaction;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) => {
-  const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateTransactionStatus();
-  const { mutate: cancelTransaction, isPending: isCancelling } = useCancelTransaction();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } =
+    useUpdateTransactionStatus();
+  const { mutate: cancelTransaction, isPending: isCancelling } =
+    useCancelTransaction();
 
   const handleStatusChange = (newStatus: string) => {
     if (!order) return;
@@ -134,7 +141,7 @@ const OrderDetailDialog = ({ order, open, onOpenChange }: {
     );
   };
 
-  const getNextStatus = (order: any): string | null => {
+  const getNextStatus = (order: Transaction): string | null => {
     const currentStatus =
       order.method === "MANUAL" ? order.manualStatus : order.deliveryStatus;
     if (!currentStatus) return null;
@@ -155,7 +162,7 @@ const OrderDetailDialog = ({ order, open, onOpenChange }: {
     order?.manualStatus?.toUpperCase().includes("PAID") ||
     order?.deliveryStatus?.toUpperCase().includes("PAID");
 
-  const RenderUpdateStatusSection = ({ order }: { order: any }) => {
+  const RenderUpdateStatusSection = ({ order }: { order: Transaction }) => {
     const status =
       order.method === "MANUAL" ? order.manualStatus : order.deliveryStatus;
 
@@ -220,9 +227,7 @@ const OrderDetailDialog = ({ order, open, onOpenChange }: {
           <div className="space-y-6 max-h-[70vh] overflow-y-auto p-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-black text-lg mb-2">
-                  Informasi Pelanggan
-                </h4>
+                <h4 className="font-black text-lg mb-2">Informasi Pelanggan</h4>
                 <p>
                   <strong>Nama:</strong> {order.userName}
                 </p>
@@ -234,9 +239,7 @@ const OrderDetailDialog = ({ order, open, onOpenChange }: {
                 </p>
               </div>
               <div>
-                <h4 className="font-black text-lg mb-2">
-                  Alamat Pengiriman
-                </h4>
+                <h4 className="font-black text-lg mb-2">Alamat Pengiriman</h4>
                 <p>
                   {order.shippingAddress}, {order.city}, {order.province},{" "}
                   {order.district}, {order.subDistrict}, {order.postalCode}
@@ -245,50 +248,43 @@ const OrderDetailDialog = ({ order, open, onOpenChange }: {
             </div>
 
             <div>
-              <h4 className="font-black text-lg mb-2">
-                Produk Dipesan
-              </h4>
+              <h4 className="font-black text-lg mb-2">Produk Dipesan</h4>
               <div className="space-y-2">
-                {order.transactionItems?.map((item: any, index: number) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center p-3 bg-muted rounded-lg"
-                  >
-                    <div>
+                {order.transactionItems?.map(
+                  (item: TransactionItem, index: number) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-3 bg-muted rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {item.variant.product.name} (
+                          {item.variant.packaging.name})
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Qty: {item.quantity}
+                        </p>
+                      </div>
                       <p className="font-medium">
-                        {item.variant.product.name} ({item.variant.packaging.name})
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Qty: {item.quantity}
+                        {formatPrice(item.priceRupiah)}
                       </p>
                     </div>
-                    <p className="font-medium">
-                      {formatPrice(item.priceRupiah)}
-                    </p>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
 
               {order.method === "DELIVERY" && (
                 <div className="flex flex-col justify-center items-start gap-4 pt-4 w-full">
-                  <h4 className="font-black text-lg mb-2">
-                    Jasa Pengiriman
-                  </h4>
+                  <h4 className="font-black text-lg mb-2">Jasa Pengiriman</h4>
                   <div className="flex w-full flex-col gap-2 border border-slate-400 rounded-xl p-3">
                     <div className="flex w-full justify-between items-center">
-                      <Typography
-                        variant="p"
-                        className="font-semibold"
-                      >
+                      <Typography variant="p" className="font-semibold">
                         {order.shippingAgent}{" "}
                         <span className="text-sm font-normal text-muted-foreground">
                           ({order.shippingService})
                         </span>
                       </Typography>
-                      <Typography
-                        variant="p"
-                        className="font-bold"
-                      >
+                      <Typography variant="p" className="font-bold">
                         {formatPrice(order.shippingCost ?? 0)}
                       </Typography>
                     </div>
@@ -341,11 +337,7 @@ const OrderDetailDialog = ({ order, open, onOpenChange }: {
 };
 
 export default function AdminDashboard() {
-  const {
-    data: statsData,
-    isLoading: isLoadingStats,
-    isError: isErrorStats,
-  } = useGetDashboardStats();
+  const { data: statsData, isLoading: isLoadingStats } = useGetDashboardStats();
   const {
     data: topProductsData,
     isLoading: isLoadingTopProducts,
@@ -358,7 +350,7 @@ export default function AdminDashboard() {
   } = useGetRecentOrders();
 
   // State untuk dialog detail
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Transaction | null>(null);
   const [isDetailDialogOpen, setDetailDialogOpen] = useState(false);
 
   const statsCards = [
@@ -367,14 +359,18 @@ export default function AdminDashboard() {
       value: statsData?.todayTransactions.totalTransactions ?? "0",
       change: `${statsData?.todayTransactions.gainPercentage ?? 0}% dari kemarin`,
       icon: ShoppingCart,
-      trend: (statsData?.todayTransactions.gainPercentage ?? 0) >= 0 ? "up" : "down",
+      trend:
+        (statsData?.todayTransactions.gainPercentage ?? 0) >= 0 ? "up" : "down",
     },
     {
       title: "Penjualan Bulan Ini",
       value: formatPrice(statsData?.currentMonthRevenue.totalRevenue ?? 0),
       change: `${statsData?.currentMonthRevenue.gainPercentage ?? 0}% dari bulan lalu`,
       icon: DollarSign,
-      trend: (statsData?.currentMonthRevenue.gainPercentage ?? 0) >= 0 ? "up" : "down",
+      trend:
+        (statsData?.currentMonthRevenue.gainPercentage ?? 0) >= 0
+          ? "up"
+          : "down",
     },
     {
       title: "Total Produk",
@@ -427,12 +423,13 @@ export default function AdminDashboard() {
                     {stat.value}
                   </div>
                   <p
-                    className={`text-xs mt-1 ${stat.trend === "up"
-                      ? "text-green-600"
-                      : stat.trend === "down"
-                        ? "text-red-600"
-                        : "text-muted-foreground"
-                      }`}
+                    className={`text-xs mt-1 ${
+                      stat.trend === "up"
+                        ? "text-green-600"
+                        : stat.trend === "down"
+                          ? "text-red-600"
+                          : "text-muted-foreground"
+                    }`}
                   >
                     {stat.change}
                   </p>
@@ -464,7 +461,9 @@ export default function AdminDashboard() {
                     className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
                   >
                     <div>
-                      <p className="font-bold text-foreground">{product.name}</p>
+                      <p className="font-bold text-foreground">
+                        {product.name}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Terjual bulan ini: {product.currentMonthSold}
                       </p>
@@ -473,9 +472,7 @@ export default function AdminDashboard() {
                       <p className="text-lg font-bold text-foreground">
                         {product.totalSold}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        Terjual
-                      </p>
+                      <p className="text-sm text-muted-foreground">Terjual</p>
                     </div>
                   </div>
                 ))
@@ -501,7 +498,8 @@ export default function AdminDashboard() {
                 <p className="text-red-500">Gagal memuat pesanan terbaru.</p>
               ) : (
                 recentOrdersData?.transactions.map((order) => {
-                  const status = order.deliveryStatus ?? order.manualStatus ?? "N/A";
+                  const status =
+                    order.deliveryStatus ?? order.manualStatus ?? "N/A";
                   const config = status ? statusConfig[status] : null;
                   const StatusIcon = config?.icon;
                   return (
@@ -510,13 +508,14 @@ export default function AdminDashboard() {
                       className="w-full flex justify-between items-start justify-between p-3 rounded-lg bg-muted/50 gap-8"
                     >
                       <div className="flex-1 flex-col">
-                        <p className="font-medium text-foreground pb-1 truncate">{order.id}</p>
+                        <p className="font-medium text-foreground pb-1 truncate">
+                          {order.id}
+                        </p>
                         {config && (
-                          <Badge
-                            variant="secondary"
-                            className={config.color}
-                          >
-                            {StatusIcon && <StatusIcon className="w-3 h-3 mr-1" />}
+                          <Badge variant="secondary" className={config.color}>
+                            {StatusIcon && (
+                              <StatusIcon className="w-3 h-3 mr-1" />
+                            )}
                             {config.label}
                           </Badge>
                         )}
@@ -538,7 +537,7 @@ export default function AdminDashboard() {
                         </Button>
                       </div>
                     </div>
-                  )
+                  );
                 })
               )}
             </div>
@@ -548,10 +547,10 @@ export default function AdminDashboard() {
 
       {/* Dialog untuk detail pesanan */}
       {selectedOrder && (
-        <OrderDetailDialog 
-          order={selectedOrder} 
-          open={isDetailDialogOpen} 
-          onOpenChange={setDetailDialogOpen} 
+        <OrderDetailDialog
+          order={selectedOrder}
+          open={isDetailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
         />
       )}
     </div>
