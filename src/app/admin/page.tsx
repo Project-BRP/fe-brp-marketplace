@@ -22,6 +22,7 @@ import {
 import { Skeleton } from "@/components/Skeleton";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
+import clsxm from "@/lib/clsxm";
 import { Transaction, TransactionItem } from "@/types/transaction";
 import {
   AlertCircle,
@@ -489,7 +490,7 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-4 relative w-full">
               {isLoadingRecentOrders ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <Skeleton key={index} className="h-20 w-full" />
@@ -505,14 +506,17 @@ export default function AdminDashboard() {
                   return (
                     <div
                       key={order.id}
-                      className="w-full flex justify-between items-start justify-between p-3 rounded-lg bg-muted/50 gap-8"
+                      className="w-full flex justify-between items-start  p-3 rounded-lg bg-muted/50 gap-8"
                     >
-                      <div className="flex-1 flex-col">
+                      <div className="flex flex-col w-[40%] sm:w-[70%] lg:w-[50%] xl:w-[70%]">
                         <p className="font-medium text-foreground pb-1 truncate">
                           {order.id}
                         </p>
                         {config && (
-                          <Badge variant="secondary" className={config.color}>
+                          <Badge
+                            variant="secondary"
+                            className={clsxm(config.color, "w-fit")}
+                          >
                             {StatusIcon && (
                               <StatusIcon className="w-3 h-3 mr-1" />
                             )}
@@ -521,7 +525,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-foreground">
+                        <p className="font-medium text-foreground text-sm sm:text-base">
                           {formatPrice(order.totalPrice)}
                         </p>
                         <Button

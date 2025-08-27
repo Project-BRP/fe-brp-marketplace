@@ -1,16 +1,16 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { socket } from "@/lib/socket";
 import { ApiResponse } from "@/types/api";
 import {
-  IProductDistributionResponse,
   ICurrentMonthTotalRevenue,
+  IProductDistributionResponse,
   ITodayTotalTransactions,
-  ITotalProducts,
   ITotalActiveUsers,
+  ITotalProducts,
 } from "@/types/report";
 import { TransactionsResponseData } from "@/types/transaction";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { socket } from "@/lib/socket";
 import toast from "react-hot-toast";
 
 interface IDashboardStats {
@@ -32,10 +32,10 @@ export const useGetDashboardStats = () => {
         totalActiveUsersRes,
       ] = await Promise.all([
         api.get<ApiResponse<ITodayTotalTransactions>>(
-          "/reports/today-total-transactions"
+          "/reports/today-total-transactions",
         ),
         api.get<ApiResponse<ICurrentMonthTotalRevenue>>(
-          "/reports/current-month-revenue"
+          "/reports/current-month-revenue",
         ),
         api.get<ApiResponse<ITotalProducts>>("/reports/total-products"),
         api.get<ApiResponse<ITotalActiveUsers>>("/reports/total-active-users"),
@@ -57,7 +57,7 @@ export const useGetTopProducts = () => {
     queryKey: ["dashboard-top-products"],
     queryFn: async () => {
       const res = await api.get<ApiResponse<IProductDistributionResponse>>(
-        "/reports/most-sold-products-distribution"
+        "/reports/most-sold-products-distribution",
       );
       return res.data.data;
     },
@@ -94,7 +94,7 @@ export const useGetRecentOrders = () => {
     queryKey: ["dashboard-recent-orders"],
     queryFn: async () => {
       const res = await api.get<ApiResponse<TransactionsResponseData>>(
-        `/transactions?limit=5`
+        `/transactions?limit=5`,
       );
       return res.data.data;
     },

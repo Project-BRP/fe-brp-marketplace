@@ -36,18 +36,18 @@ export const useGetReportStats = ({ dateRange }: IDateFilter) => {
     queryFn: async () => {
       const [revenueRes, transactionsRes, productsSoldRes, activeUsersRes] =
         await Promise.all([
-          api.get<
-            ApiResponse<ITotalRevenue>
-          >(`/reports/revenue?${queryParams}`),
-          api.get<
-            ApiResponse<ITotalTransactions>
-          >(`/reports/total-transactions?${queryParams}`),
-          api.get<
-            ApiResponse<ITotalProductsSold>
-          >(`/reports/total-products-sold?${queryParams}`),
-          api.get<
-            ApiResponse<ITotalActiveUsers>
-          >(`/reports/total-active-users?${queryParams}`),
+          api.get<ApiResponse<ITotalRevenue>>(
+            `/reports/revenue?${queryParams}`,
+          ),
+          api.get<ApiResponse<ITotalTransactions>>(
+            `/reports/total-transactions?${queryParams}`,
+          ),
+          api.get<ApiResponse<ITotalProductsSold>>(
+            `/reports/total-products-sold?${queryParams}`,
+          ),
+          api.get<ApiResponse<ITotalActiveUsers>>(
+            `/reports/total-active-users?${queryParams}`,
+          ),
         ]);
 
       return {
