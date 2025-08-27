@@ -7,6 +7,7 @@ export interface CompanyInfoPayload {
   district: number; // ID of the district
   subDistrict: number; // ID of the sub-district
   fullAddress: string; // Full address including street, city, and province
+  npwp: string; // NPWP (Tax Identification Number)
 }
 
 export interface UpdateCompanyInfoPayload {
@@ -18,6 +19,7 @@ export interface UpdateCompanyInfoPayload {
   district?: number; // ID of the district
   subDistrict?: number; // ID of the sub-district
   fullAddress?: string; // Full address including street, city, and province
+  npwp?: string; // NPWP (Tax Identification Number)
 }
 
 export interface CompanyInfo {
@@ -36,6 +38,7 @@ export interface CompanyInfo {
   subDistrictId: number; // ID of the sub-district
   postalCode: string; // Postal code for the address
   fullAddress: string; // Full address including street, city, and province
+  npwp: string; // NPWP (Tax Identification Number)
   createdAt: string; // Timestamp when this info was created
   updatedAt: string; // Timestamp when this info was last updated
 }

@@ -46,6 +46,7 @@ const companyInfoSchema = z.object({
   cityId: z.string().min(1, "Kota/Kabupaten harus dipilih"),
   districtId: z.string().min(1, "Kecamatan harus dipilih"),
   subDistrictId: z.string().min(1, "Kelurahan/Desa harus dipilih"),
+  npwp: z.string().min(1, "NPWP harus diisi"),
 });
 
 type CompanyInfoFormValues = z.infer<typeof companyInfoSchema>;
@@ -157,6 +158,7 @@ export default function CompanyInfoForm({
       city: Number(data.cityId),
       district: Number(data.districtId),
       subDistrict: Number(data.subDistrictId),
+      npwp: data.npwp,
     };
 
     if (isEditMode) {
@@ -226,6 +228,15 @@ export default function CompanyInfoForm({
                     <ErrorMessage>
                       {errors.phoneNumber?.message || ""}
                     </ErrorMessage>
+                  </div>
+                  <div>
+                    <LabelText>NPWP</LabelText>
+                    <Input
+                      {...register("npwp")}
+                      id="npwp"
+                      placeholder="Masukkan NPWP"
+                    />
+                    <ErrorMessage>{errors.npwp?.message || ""}</ErrorMessage>
                   </div>
                 </div>
               </CardContent>

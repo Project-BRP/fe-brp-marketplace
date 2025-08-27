@@ -9,6 +9,7 @@ import Button from "@/components/buttons/Button";
 import { useGetCompanyInfo } from "@/layouts/hooks/useCompanyInfo";
 import CompanyInfoDisplay from "./_components/CompanyInfoDisplay";
 import CompanyInfoForm from "./_components/CompanyInfoForm";
+import NpwpSettings from "./_components/NPWPSettings";
 import PpnSettings from "./_components/PpnSettings";
 
 /**
@@ -84,11 +85,18 @@ export default function SettingsPage() {
         {/* Render Company Info or Form */}
         {companyInfoSection()}
 
-        {/* Render PPN Settings only if not in company form mode */}
-        {!isFormOpen && (
-          <div className="lg:col-span-1">
-            <PpnSettings />
-          </div>
+        {/* Render PPN Settings & NPWP Section only if not in company form mode */}
+        {!isFormOpen && companyInfo && (
+          <>
+            <div className="lg:col-span-1">
+              <PpnSettings />
+            </div>
+
+            {/* NPWP Section */}
+            <div className="lg:col-span-1">
+              <NpwpSettings />
+            </div>
+          </>
         )}
       </div>
     </div>
