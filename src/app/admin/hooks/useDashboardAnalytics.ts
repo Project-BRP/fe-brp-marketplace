@@ -22,8 +22,33 @@ interface IDashboardStats {
 
 // Hook untuk Statistik Utama Dasbor
 export const useGetDashboardStats = () => {
+  const queryClient = useQueryClient();
+  const queryKey = ["dashboard-stats"];
+
+  useEffect(() => {
+    socket.connect();
+
+    const handleNewTransaction = () => {
+      toast.success("Transaksi baru diterima!");
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    const handleUpdateTransaction = () => {
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    socket.on("newTransaction", handleNewTransaction);
+    socket.on("transactions", handleUpdateTransaction);
+
+    return () => {
+      socket.off("newTransaction", handleNewTransaction);
+      socket.off("transactions", handleUpdateTransaction);
+      socket.disconnect();
+    };
+  }, [queryClient, queryKey]);
+
   return useQuery<IDashboardStats, Error>({
-    queryKey: ["dashboard-stats"],
+    queryKey,
     queryFn: async () => {
       const [
         todayTransactionsRes,
@@ -53,8 +78,33 @@ export const useGetDashboardStats = () => {
 
 // Hook untuk Produk Terlaris
 export const useGetTopProducts = () => {
+  const queryClient = useQueryClient();
+  const queryKey = ["dashboard-top-products"];
+
+  useEffect(() => {
+    socket.connect();
+
+    const handleNewTransaction = () => {
+      toast.success("Transaksi baru diterima!");
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    const handleUpdateTransaction = () => {
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    socket.on("newTransaction", handleNewTransaction);
+    socket.on("transactions", handleUpdateTransaction);
+
+    return () => {
+      socket.off("newTransaction", handleNewTransaction);
+      socket.off("transactions", handleUpdateTransaction);
+      socket.disconnect();
+    };
+  }, [queryClient, queryKey]);
+
   return useQuery<IProductDistributionResponse, Error>({
-    queryKey: ["dashboard-top-products"],
+    queryKey,
     queryFn: async () => {
       const res = await api.get<ApiResponse<IProductDistributionResponse>>(
         "/reports/most-sold-products-distribution",
@@ -72,7 +122,7 @@ export const useGetRecentOrders = () => {
     socket.connect();
 
     const handleNewTransaction = () => {
-      toast.success("Pesanan baru diterima!");
+      toast.success("Transaksi baru diterima!");
       queryClient.invalidateQueries({ queryKey: ["dashboard-recent-orders"] });
     };
 

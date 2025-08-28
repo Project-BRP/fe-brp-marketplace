@@ -1,3 +1,8 @@
+import { socket } from "@/lib/socket";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+
 import api from "@/lib/api";
 import { ApiResponse } from "@/types/api";
 import { IDateFilter } from "@/types/dateFilter";
@@ -11,10 +16,9 @@ import {
   ITotalTransactions,
 } from "@/types/report";
 import { ITransactionDateRange } from "@/types/transaction";
-import { useQuery } from "@tanstack/react-query";
 import { DateRange } from "react-day-picker";
 
-// Helper untuk membuat query params dari objek DateRange
+// Helper to create query params from a DateRange object
 const createDateQueryParams = (dateRange?: DateRange) => {
   const params = new URLSearchParams();
   if (dateRange?.from && dateRange?.to) {
@@ -26,14 +30,38 @@ const createDateQueryParams = (dateRange?: DateRange) => {
   return params.toString();
 };
 
-// Hook untuk mendapatkan statistik utama (Revenue, Transactions, etc.)
+// Hook for the main dashboard statistics (Revenue, Transactions, etc.)
 export const useGetReportStats = ({ dateRange }: IDateFilter) => {
-  const queryParams = createDateQueryParams(dateRange);
+  const queryClient = useQueryClient();
+  const queryKey = ["report-stats", dateRange];
+
+  useEffect(() => {
+    socket.connect();
+
+    const handleNewTransaction = () => {
+      toast.success("Transaksi baru diterima, laporan diperbarui!");
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    const handleUpdateTransaction = () => {
+      queryClient.invalidateQueries({ queryKey });
+    };
+
+    socket.on("newTransaction", handleNewTransaction);
+    socket.on("transactions", handleUpdateTransaction);
+
+    return () => {
+      socket.off("newTransaction", handleNewTransaction);
+      socket.off("transactions", handleUpdateTransaction);
+      socket.disconnect();
+    };
+  }, [queryClient, queryKey]);
   return useQuery<IReportStats, Error>({
     queryKey: ["report-stats", dateRange],
-    // Query hanya akan berjalan jika `dateRange` sudah ada nilainya
+    // Query will only run if `dateRange` has a value
     enabled: !!dateRange,
     queryFn: async () => {
+      const queryParams = createDateQueryParams(dateRange);
       const [revenueRes, transactionsRes, productsSoldRes, activeUsersRes] =
         await Promise.all([
           api.get<ApiResponse<ITotalRevenue>>(
@@ -60,13 +88,34 @@ export const useGetReportStats = ({ dateRange }: IDateFilter) => {
   });
 };
 
-// Hook untuk mendapatkan data pendapatan bulanan
+// Hook for monthly revenue data
 export const useGetMonthlyRevenue = ({ dateRange }: IDateFilter) => {
-  const queryParams = createDateQueryParams(dateRange);
+  const queryClient = useQueryClient();
+  const queryKey = ["monthly-revenue", dateRange];
+
+  useEffect(() => {
+    socket.connect();
+    const handleNewTransaction = () => {
+      toast.success("Transaksi baru diterima, laporan diperbarui!");
+      queryClient.invalidateQueries({ queryKey });
+    };
+    const handleUpdateTransaction = () => {
+      queryClient.invalidateQueries({ queryKey });
+    };
+    socket.on("newTransaction", handleNewTransaction);
+    socket.on("transactions", handleUpdateTransaction);
+    return () => {
+      socket.off("newTransaction", handleNewTransaction);
+      socket.off("transactions", handleUpdateTransaction);
+      socket.disconnect();
+    };
+  }, [queryClient, queryKey]);
+
   return useQuery<IMonthlyRevenueResponse, Error>({
-    queryKey: ["monthly-revenue", dateRange],
+    queryKey,
     enabled: !!dateRange,
     queryFn: async () => {
+      const queryParams = createDateQueryParams(dateRange);
       const res = await api.get<ApiResponse<IMonthlyRevenueResponse>>(
         `/reports/monthly-revenue?${queryParams}`,
       );
@@ -75,13 +124,34 @@ export const useGetMonthlyRevenue = ({ dateRange }: IDateFilter) => {
   });
 };
 
-// Hook untuk mendapatkan distribusi produk terlaris
+// Hook for top-selling product distribution
 export const useGetMostSoldProducts = ({ dateRange }: IDateFilter) => {
-  const queryParams = createDateQueryParams(dateRange);
+  const queryClient = useQueryClient();
+  const queryKey = ["most-sold-products", dateRange];
+
+  useEffect(() => {
+    socket.connect();
+    const handleNewTransaction = () => {
+      toast.success("Transaksi baru diterima, laporan diperbarui!");
+      queryClient.invalidateQueries({ queryKey });
+    };
+    const handleUpdateTransaction = () => {
+      queryClient.invalidateQueries({ queryKey });
+    };
+    socket.on("newTransaction", handleNewTransaction);
+    socket.on("transactions", handleUpdateTransaction);
+    return () => {
+      socket.off("newTransaction", handleNewTransaction);
+      socket.off("transactions", handleUpdateTransaction);
+      socket.disconnect();
+    };
+  }, [queryClient, queryKey]);
+
   return useQuery<IProductDistributionResponse, Error>({
-    queryKey: ["most-sold-products", dateRange],
+    queryKey,
     enabled: !!dateRange,
     queryFn: async () => {
+      const queryParams = createDateQueryParams(dateRange);
       const res = await api.get<ApiResponse<IProductDistributionResponse>>(
         `/reports/most-sold-products-distribution?${queryParams}`,
       );
