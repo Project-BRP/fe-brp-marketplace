@@ -17,7 +17,6 @@ export const DetailPelangganModal = ({
   selectedCustomer,
 }: DetailPelangganModalProps) => {
   if (!selectedCustomer) return null;
-  console.log(selectedCustomer);
   const InfoItem = ({
     label,
     value,

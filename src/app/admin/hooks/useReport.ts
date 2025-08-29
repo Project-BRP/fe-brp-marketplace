@@ -1,6 +1,7 @@
 import { socket } from "@/lib/socket";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import type { QueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 
 import api from "@/lib/api";
@@ -18,7 +19,7 @@ import {
 import { ITransactionDateRange } from "@/types/transaction";
 import { DateRange } from "react-day-picker";
 
-// Helper to create query params from a DateRange object
+// === Helper untuk query params ===
 const createDateQueryParams = (dateRange?: DateRange) => {
   const params = new URLSearchParams();
   if (dateRange?.from && dateRange?.to) {
@@ -30,35 +31,72 @@ const createDateQueryParams = (dateRange?: DateRange) => {
   return params.toString();
 };
 
-// Hook for the main dashboard statistics (Revenue, Transactions, etc.)
+// === Variabel Global untuk Socket ===
+let isSocketConnected = false;
+let toastShown = false;
+
+const setupSocketListeners = (
+  queryClient: QueryClient,
+  queryKeys: Array<unknown[]>,
+) => {
+  if (isSocketConnected) return;
+
+  isSocketConnected = true;
+  socket.connect();
+
+  const invalidateAll = () => {
+    queryKeys.forEach((key) => {
+      queryClient.invalidateQueries({ queryKey: key });
+    });
+  };
+
+  const handleNewTransaction = () => {
+    if (!toastShown) {
+      toast.success("Transaksi baru diterima, laporan diperbarui!");
+      toastShown = true;
+      setTimeout(() => {
+        toastShown = false;
+      }, 1000);
+    }
+    invalidateAll();
+  };
+
+  const handleUpdateTransaction = () => {
+    invalidateAll();
+  };
+
+  socket.on("newTransaction", handleNewTransaction);
+  socket.on("transactions", handleUpdateTransaction);
+};
+
+const cleanupSocketListeners = () => {
+  if (isSocketConnected) {
+    socket.off("newTransaction");
+    socket.off("transactions");
+    socket.disconnect();
+    isSocketConnected = false;
+  }
+};
+
+// === Hook untuk Statistik Utama ===
 export const useGetReportStats = ({ dateRange }: IDateFilter) => {
   const queryClient = useQueryClient();
-  const queryKey = ["report-stats", dateRange];
+  const queryKey: unknown[] = ["report-stats", dateRange];
+  const setupRef = useRef(false);
 
   useEffect(() => {
-    socket.connect();
-
-    const handleNewTransaction = () => {
-      toast.success("Transaksi baru diterima, laporan diperbarui!");
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    const handleUpdateTransaction = () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    socket.on("newTransaction", handleNewTransaction);
-    socket.on("transactions", handleUpdateTransaction);
+    if (!setupRef.current) {
+      setupSocketListeners(queryClient, [queryKey]);
+      setupRef.current = true;
+    }
 
     return () => {
-      socket.off("newTransaction", handleNewTransaction);
-      socket.off("transactions", handleUpdateTransaction);
-      socket.disconnect();
+      cleanupSocketListeners();
     };
   }, [queryClient, queryKey]);
+
   return useQuery<IReportStats, Error>({
-    queryKey: ["report-stats", dateRange],
-    // Query will only run if `dateRange` has a value
+    queryKey,
     enabled: !!dateRange,
     queryFn: async () => {
       const queryParams = createDateQueryParams(dateRange);
@@ -88,26 +126,20 @@ export const useGetReportStats = ({ dateRange }: IDateFilter) => {
   });
 };
 
-// Hook for monthly revenue data
+// === Hook untuk Revenue Bulanan ===
 export const useGetMonthlyRevenue = ({ dateRange }: IDateFilter) => {
   const queryClient = useQueryClient();
-  const queryKey = ["monthly-revenue", dateRange];
+  const queryKey: unknown[] = ["monthly-revenue", dateRange];
+  const setupRef = useRef(false);
 
   useEffect(() => {
-    socket.connect();
-    const handleNewTransaction = () => {
-      toast.success("Transaksi baru diterima, laporan diperbarui!");
-      queryClient.invalidateQueries({ queryKey });
-    };
-    const handleUpdateTransaction = () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
-    socket.on("newTransaction", handleNewTransaction);
-    socket.on("transactions", handleUpdateTransaction);
+    if (!setupRef.current) {
+      setupSocketListeners(queryClient, [queryKey]);
+      setupRef.current = true;
+    }
+
     return () => {
-      socket.off("newTransaction", handleNewTransaction);
-      socket.off("transactions", handleUpdateTransaction);
-      socket.disconnect();
+      cleanupSocketListeners();
     };
   }, [queryClient, queryKey]);
 
@@ -124,26 +156,20 @@ export const useGetMonthlyRevenue = ({ dateRange }: IDateFilter) => {
   });
 };
 
-// Hook for top-selling product distribution
+// === Hook untuk Produk Paling Laris ===
 export const useGetMostSoldProducts = ({ dateRange }: IDateFilter) => {
   const queryClient = useQueryClient();
-  const queryKey = ["most-sold-products", dateRange];
+  const queryKey: unknown[] = ["most-sold-products", dateRange];
+  const setupRef = useRef(false);
 
   useEffect(() => {
-    socket.connect();
-    const handleNewTransaction = () => {
-      toast.success("Transaksi baru diterima, laporan diperbarui!");
-      queryClient.invalidateQueries({ queryKey });
-    };
-    const handleUpdateTransaction = () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
-    socket.on("newTransaction", handleNewTransaction);
-    socket.on("transactions", handleUpdateTransaction);
+    if (!setupRef.current) {
+      setupSocketListeners(queryClient, [queryKey]);
+      setupRef.current = true;
+    }
+
     return () => {
-      socket.off("newTransaction", handleNewTransaction);
-      socket.off("transactions", handleUpdateTransaction);
-      socket.disconnect();
+      cleanupSocketListeners();
     };
   }, [queryClient, queryKey]);
 
@@ -160,6 +186,7 @@ export const useGetMostSoldProducts = ({ dateRange }: IDateFilter) => {
   });
 };
 
+// === Hook untuk Rentang Tanggal Transaksi ===
 export const useGetTransactionDateRanges = () => {
   return useQuery<ITransactionDateRange, Error>({
     queryKey: ["transaction-date-ranges"],

@@ -10,7 +10,8 @@ import {
 } from "@/types/report";
 import { TransactionsResponseData } from "@/types/transaction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import type { QueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 
 interface IDashboardStats {
@@ -20,32 +21,71 @@ interface IDashboardStats {
   totalActiveUsers: ITotalActiveUsers;
 }
 
+// Variable global untuk mencegah toast duplikat
+let isSocketConnected = false;
+let toastShown = false;
+
+const setupSocketListeners = (queryClient: QueryClient) => {
+  if (isSocketConnected) return;
+
+  isSocketConnected = true;
+  socket.connect();
+
+  const handleNewTransaction = () => {
+    // Hanya tampilkan toast jika belum ditampilkan untuk event ini
+    if (!toastShown) {
+      toast.success("Transaksi baru diterima!");
+      toastShown = true;
+
+      // Reset flag setelah 1 detik untuk mencegah spam
+      setTimeout(() => {
+        toastShown = false;
+      }, 1000);
+    }
+
+    // Invalidate semua query terkait dashboard
+    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-top-products"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-recent-orders"] });
+  };
+
+  const handleUpdateTransaction = () => {
+    // Invalidate semua query terkait dashboard
+    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-top-products"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-recent-orders"] });
+  };
+
+  socket.on("newTransaction", handleNewTransaction);
+  socket.on("transactions", handleUpdateTransaction);
+};
+
+const cleanupSocketListeners = () => {
+  if (isSocketConnected) {
+    socket.off("newTransaction");
+    socket.off("transactions");
+    socket.disconnect();
+    isSocketConnected = false;
+  }
+};
+
 // Hook untuk Statistik Utama Dasbor
 export const useGetDashboardStats = () => {
   const queryClient = useQueryClient();
   const queryKey = ["dashboard-stats"];
+  const setupRef = useRef(false);
 
   useEffect(() => {
-    socket.connect();
-
-    const handleNewTransaction = () => {
-      toast.success("Transaksi baru diterima!");
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    const handleUpdateTransaction = () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    socket.on("newTransaction", handleNewTransaction);
-    socket.on("transactions", handleUpdateTransaction);
+    if (!setupRef.current) {
+      setupSocketListeners(queryClient);
+      setupRef.current = true;
+    }
 
     return () => {
-      socket.off("newTransaction", handleNewTransaction);
-      socket.off("transactions", handleUpdateTransaction);
-      socket.disconnect();
+      // Cleanup hanya saat komponen terakhir unmount
+      cleanupSocketListeners();
     };
-  }, [queryClient, queryKey]);
+  }, [queryClient]);
 
   return useQuery<IDashboardStats, Error>({
     queryKey,
@@ -78,30 +118,7 @@ export const useGetDashboardStats = () => {
 
 // Hook untuk Produk Terlaris
 export const useGetTopProducts = () => {
-  const queryClient = useQueryClient();
   const queryKey = ["dashboard-top-products"];
-
-  useEffect(() => {
-    socket.connect();
-
-    const handleNewTransaction = () => {
-      toast.success("Transaksi baru diterima!");
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    const handleUpdateTransaction = () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
-
-    socket.on("newTransaction", handleNewTransaction);
-    socket.on("transactions", handleUpdateTransaction);
-
-    return () => {
-      socket.off("newTransaction", handleNewTransaction);
-      socket.off("transactions", handleUpdateTransaction);
-      socket.disconnect();
-    };
-  }, [queryClient, queryKey]);
 
   return useQuery<IProductDistributionResponse, Error>({
     queryKey,
@@ -116,30 +133,6 @@ export const useGetTopProducts = () => {
 
 // Hook untuk Pesanan Terbaru
 export const useGetRecentOrders = () => {
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    socket.connect();
-
-    const handleNewTransaction = () => {
-      toast.success("Transaksi baru diterima!");
-      queryClient.invalidateQueries({ queryKey: ["dashboard-recent-orders"] });
-    };
-
-    const handleUpdateTransaction = () => {
-      queryClient.invalidateQueries({ queryKey: ["dashboard-recent-orders"] });
-    };
-
-    socket.on("newTransaction", handleNewTransaction);
-    socket.on("transactions", handleUpdateTransaction);
-
-    return () => {
-      socket.off("newTransaction", handleNewTransaction);
-      socket.off("transactions", handleUpdateTransaction);
-      socket.disconnect();
-    };
-  }, [queryClient]);
-
   return useQuery<TransactionsResponseData, Error>({
     queryKey: ["dashboard-recent-orders"],
     queryFn: async () => {
