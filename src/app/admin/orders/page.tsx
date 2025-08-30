@@ -21,6 +21,7 @@ import {
   useCancelTransaction,
   useGetAllTransactions,
   useGetStatusList,
+  useUpdateShippingReceipt,
   useUpdateTransactionStatus,
 } from "@/app/(main)/hooks/useTransaction";
 import { Badge } from "@/components/Badge";
@@ -141,6 +142,8 @@ export default function AdminOrders() {
     useUpdateTransactionStatus();
   const { mutate: addManualShippingCost, isPending: isAddingManualShipping } =
     useAddManualShippingCost();
+  const { mutate: updateShippingReceipt, isPending: isUpdatingReceipt } =
+    useUpdateShippingReceipt();
 
   const orders = transactionData?.data?.transactions ?? [];
   const totalPages = transactionData?.data?.totalPage ?? 1;
@@ -152,6 +155,9 @@ export default function AdminOrders() {
     ["PAID", "PROCESSING"].includes(
       (selectedOrder?.manualStatus ?? "").toUpperCase(),
     );
+  const canEditReceipt =
+    selectedOrder?.method === "DELIVERY" &&
+    selectedOrder?.deliveryStatus === "SHIPPED";
   // Helper functions
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -724,6 +730,46 @@ export default function AdminOrders() {
                                           Batalkan Transaksi
                                         </Button>
                                       </CancelDialog>
+                                    )}
+                                    {canEditReceipt && (
+                                      <ShippingReceiptDialog
+                                        title="Edit Nomor Resi"
+                                        description="Masukkan nomor resi pengiriman baru untuk memperbarui resi."
+                                        isLoading={isUpdatingReceipt}
+                                        onSubmit={(receipt) => {
+                                          if (!selectedOrder) return;
+                                          updateShippingReceipt(
+                                            {
+                                              id: selectedOrder.id,
+                                              payload: {
+                                                shippingReceipt: receipt,
+                                              },
+                                            },
+                                            {
+                                              onSuccess: () => {
+                                                refetch();
+                                                setSelectedOrder((prev) =>
+                                                  prev
+                                                    ? {
+                                                        ...prev,
+                                                        shippingReceipt:
+                                                          receipt,
+                                                      }
+                                                    : prev,
+                                                );
+                                              },
+                                            },
+                                          );
+                                        }}
+                                      >
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          disabled={isUpdatingReceipt}
+                                        >
+                                          Edit Nomor Resi
+                                        </Button>
+                                      </ShippingReceiptDialog>
                                     )}
                                   </div>
                                 </div>

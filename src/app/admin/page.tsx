@@ -3,6 +3,7 @@
 import {
   useAddManualShippingCost,
   useCancelTransaction,
+  useUpdateShippingReceipt,
   useUpdateTransactionStatus,
 } from "@/app/(main)/hooks/useTransaction";
 import {
@@ -108,6 +109,8 @@ const OrderDetailDialog = ({
     useCancelTransaction();
   const { mutate: addManualShippingCost, isPending: isAddingManualShipping } =
     useAddManualShippingCost();
+  const { mutate: updateShippingReceipt, isPending: isUpdatingReceipt } =
+    useUpdateShippingReceipt();
 
   const handleStatusChange = (newStatus: string, shippingReceipt?: string) => {
     if (!order) return;
@@ -181,6 +184,8 @@ const OrderDetailDialog = ({
   const canAddManualShipping =
     order?.method === "MANUAL" &&
     ["PAID", "PROCESSING"].includes((order?.manualStatus ?? "").toUpperCase());
+  const canEditReceipt =
+    order?.method === "DELIVERY" && order?.deliveryStatus === "SHIPPED";
 
   const RenderUpdateStatusSection = ({ order }: { order: Transaction }) => {
     const status =
@@ -401,6 +406,31 @@ const OrderDetailDialog = ({
                     Batalkan Transaksi
                   </Button>
                 </CancelDialog>
+              )}
+              {canEditReceipt && (
+                <ShippingReceiptDialog
+                  title="Edit Nomor Resi"
+                  description="Masukkan nomor resi pengiriman baru untuk memperbarui resi."
+                  isLoading={isUpdatingReceipt}
+                  onSubmit={(receipt) => {
+                    updateShippingReceipt(
+                      { id: order.id, payload: { shippingReceipt: receipt } },
+                      {
+                        onSuccess: () => {
+                          onOpenChange(false);
+                        },
+                      },
+                    );
+                  }}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isUpdatingReceipt}
+                  >
+                    Edit Nomor Resi
+                  </Button>
+                </ShippingReceiptDialog>
               )}
             </div>
           </div>
