@@ -306,6 +306,14 @@ export default function TransactionDetailPage() {
                   {tx.shippingAddress}, {tx.city}, {tx.province},{" "}
                   {tx.postalCode}
                 </p>
+                {/* Nomor Resi (untuk DELIVERY) */}
+                {tx.method?.toUpperCase() === "DELIVERY" &&
+                  tx.shippingReceipt && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      No. Resi:{" "}
+                      <span className="font-medium">{tx.shippingReceipt}</span>
+                    </p>
+                  )}
               </div>
 
               {/* Rincian Pembayaran */}
@@ -314,6 +322,22 @@ export default function TransactionDetailPage() {
                   <FaReceipt /> Rincian Pembayaran
                 </h3>
                 <div className="space-y-2 text-sm">
+                  {/* Jenis Transaksi */}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Jenis Transaksi</span>{" "}
+                    <span className="font-medium">
+                      {tx.method?.toUpperCase() === "DELIVERY"
+                        ? "Delivery"
+                        : "Manual"}
+                    </span>
+                  </div>
+                  {/* Metode Pembayaran (jika ada) */}
+                  {tx.paymentMethod && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Metode Pembayaran</span>{" "}
+                      <span className="font-medium">{tx.paymentMethod}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>{" "}
                     <span className="font-medium">
@@ -337,6 +361,18 @@ export default function TransactionDetailPage() {
                       Rp {tx.shippingCost?.toLocaleString("id-ID") ?? "0"}
                     </span>
                   </div>
+                  {/* Ongkos Kirim Manual (jika method manual dan ada nilainya) */}
+                  {tx.method?.toUpperCase() === "MANUAL" &&
+                    typeof tx.manualShippingCost === "number" && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          Ongkos Kirim (Manual)
+                        </span>{" "}
+                        <span className="font-medium">
+                          Rp {tx.manualShippingCost.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    )}
                   <div className="border-t my-2"></div>
                   <div className="flex justify-between font-bold text-base">
                     <span className="text-gray-900">Total</span>{" "}
