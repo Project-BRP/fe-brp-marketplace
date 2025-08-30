@@ -69,46 +69,56 @@ export const useCancelTransaction = () => {
 };
 
 // Hook untuk mendapatkan semua transaksi oleh pengguna
-export const useGetTransactionsByUser = () => {
+export const useGetTransactionsByUser = (
+  params: GetAllTransactionsParams = {},
+  dateFilter?: IDateFilter,
+) => {
   const { userData } = useUserStore();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (userData?.userId) {
-      socket.connect();
+    if (!userData?.userId) return;
 
-      const handleNewTransaction = (transactions: GetTransactionsResponse) => {
-        queryClient.setQueryData(
-          ["transactions", userData.userId],
-          transactions,
-        );
-      };
+    socket.connect();
 
-      const handleTransactionUpdate = (
-        transactions: GetTransactionsResponse,
-      ) => {
-        queryClient.setQueryData(
-          ["transactions", userData.userId],
-          transactions,
-        );
-      };
+    const invalidateUserTransactions = () => {
+      // Invalidate all queries for this user's transactions regardless of filters
+      queryClient.invalidateQueries({
+        queryKey: ["transactions", "user", userData.userId],
+      });
+    };
 
-      socket.on("newTransaction", handleNewTransaction);
-      socket.on("transactions", handleTransactionUpdate);
+    socket.on("newTransaction", invalidateUserTransactions);
+    socket.on("transactions", invalidateUserTransactions);
 
-      return () => {
-        socket.off("newTransaction", handleNewTransaction);
-        socket.off("transactions", handleTransactionUpdate);
-        socket.disconnect();
-      };
-    }
+    return () => {
+      socket.off("newTransaction", invalidateUserTransactions);
+      socket.off("transactions", invalidateUserTransactions);
+      socket.disconnect();
+    };
   }, [userData?.userId, queryClient]);
 
   return useQuery<GetTransactionsResponse, Error>({
-    queryKey: ["transactions", userData?.userId],
+    queryKey: ["transactions", "user", userData?.userId, params, dateFilter],
     queryFn: async () => {
       if (!userData?.userId) throw new Error("User tidak ditemukan");
-      const res = await api.get(`/transactions/user/${userData.userId}`);
+
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.set("page", String(params.page));
+      if (params.limit) queryParams.set("limit", String(params.limit));
+      if (params.search) queryParams.set("search", params.search);
+      if (params.method && params.method !== undefined)
+        queryParams.set("method", params.method);
+      if (params.status) queryParams.set("status", params.status);
+      if (dateFilter?.dateRange) {
+        appendDateFilter(dateFilter.dateRange, queryParams);
+      }
+
+      const qs = queryParams.toString();
+      const url = qs
+        ? `/transactions/user/${userData.userId}?${qs}`
+        : `/transactions/user/${userData.userId}`;
+      const res = await api.get(url);
       return res.data;
     },
     enabled: !!userData?.userId,

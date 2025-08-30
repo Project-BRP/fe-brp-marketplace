@@ -1,18 +1,32 @@
 "use client";
 
 import getUser from "@/app/(auth)/hooks/getUser";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import { DateRangePicker } from "@/components/DateRangePicker";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/Select";
 import Typography from "@/components/Typography";
 import Button from "@/components/buttons/Button";
 import Footer from "@/layouts/Footer";
 import Navbar from "@/layouts/Navbar";
 import useUserStore from "@/store/userStore";
 import { Transaction } from "@/types/transaction";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useGetTransactionsByUser } from "../../hooks/useTransaction";
+import { DateRange } from "react-day-picker";
+// removed search debounce
+import {
+  useGetStatusList,
+  useGetTransactionsByUser,
+} from "../../hooks/useTransaction";
 
 // Komponen untuk menampilkan status dengan warna yang sesuai
 const StatusBadge = ({ status }: { status: string }) => {
@@ -105,29 +119,37 @@ const TransactionCard = ({ tx }: { tx: Transaction }) => {
 const TransactionHistoryList = () => {
   const router = useRouter();
 
+  // Filters & pagination state
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [selectedMethod, setSelectedMethod] = useState<
+    "ALL_METHODS" | "MANUAL" | "DELIVERY"
+  >("ALL_METHODS");
+  const [selectedStatus, setSelectedStatus] = useState("ALL_STATUSES");
+
+  const { data: statusLists } = useGetStatusList();
   const {
     data: transactionData,
     isFetching,
     isLoading,
     error,
     refetch: refetchTransactions,
-  } = useGetTransactionsByUser();
+  } = useGetTransactionsByUser(
+    {
+      page,
+      limit,
+      method: selectedMethod === "ALL_METHODS" ? undefined : selectedMethod,
+      status: selectedStatus === "ALL_STATUSES" ? undefined : selectedStatus,
+    },
+    { dateRange: date },
+  );
 
   const { setUserData } = useUserStore();
   const { getUserData, refetch } = getUser();
 
-  const [transactions, setTransactions] = useState<Transaction[]>(
-    transactionData?.data?.transactions || [],
-  );
-
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      const fetchedTransactions = await refetchTransactions();
-      setTransactions(fetchedTransactions?.data?.data?.transactions || []);
-    };
-
-    fetchTransactions();
-  }, [refetchTransactions]);
+  const transactions: Transaction[] = transactionData?.data?.transactions || [];
+  const totalPages = transactionData?.data?.totalPage || 1;
 
   useEffect(() => {
     const syncUser = async () => {
@@ -139,14 +161,6 @@ const TransactionHistoryList = () => {
 
     syncUser();
   }, [getUserData, refetch, setUserData]);
-
-  if (isLoading) {
-    return <LoadingAnimation message="Memuat riwayat transaksi...." />;
-  }
-
-  if (isFetching) {
-    return <LoadingAnimation message="Memuat riwayat transaksi...." />;
-  }
 
   if (error) {
     refetchTransactions();
@@ -172,7 +186,95 @@ const TransactionHistoryList = () => {
               Riwayat Transaksi
             </Typography>
           </div>
-          {transactions.length > 0 ? (
+
+          {/* Filters */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-5 w-5" /> Filter
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-4">
+                <DateRangePicker date={date} setDate={setDate} />
+                <Select
+                  value={selectedMethod}
+                  onValueChange={(
+                    value: "ALL_METHODS" | "MANUAL" | "DELIVERY",
+                  ) => {
+                    setSelectedMethod(value);
+                    setSelectedStatus("ALL_STATUSES");
+                  }}
+                >
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Semua Metode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL_METHODS">Semua Metode</SelectItem>
+                    <SelectItem value="MANUAL">Manual</SelectItem>
+                    <SelectItem value="DELIVERY">Delivery</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                  disabled={selectedMethod === "ALL_METHODS"}
+                >
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <SelectValue placeholder="Semua Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL_STATUSES">Semua Status</SelectItem>
+                    {(selectedMethod === "MANUAL"
+                      ? statusLists?.data.manualStatusList
+                      : selectedMethod === "DELIVERY"
+                        ? statusLists?.data.deliveryStatusList
+                        : []
+                    )?.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {statusConfig[status]?.label || status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Header with per-page select */}
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Typography variant="h4" className="font-bold">
+                Daftar Transaksi ({transactions.length})
+              </Typography>
+            </div>
+            <Select
+              value={limit.toString()}
+              onValueChange={(value) => setLimit(Number(value))}
+              disabled={transactions.length === 0}
+            >
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Pilih Jumlah Halaman" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 per halaman</SelectItem>
+                <SelectItem value="10">10 per halaman</SelectItem>
+                <SelectItem value="20">20 per halaman</SelectItem>
+                <SelectItem value="50">50 per halaman</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isLoading ? (
+            <LoadingAnimation
+              message="Memuat riwayat transaksi...."
+              className="opacity-30 bg-background"
+            />
+          ) : isFetching ? (
+            <LoadingAnimation
+              message="Memuat riwayat transaksi...."
+              className="opacity-30 bg-background"
+            />
+          ) : transactions.length > 0 ? (
             <div className="space-y-4">
               {transactions.map((tx: Transaction) => (
                 <TransactionCard key={tx.id} tx={tx} />
@@ -185,6 +287,30 @@ const TransactionHistoryList = () => {
               </p>
             </div>
           )}
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" /> Sebelumnya
+              </Button>
+              <span>
+                Halaman {page} dari {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              >
+                Berikutnya <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
       <Footer />
@@ -193,3 +319,41 @@ const TransactionHistoryList = () => {
 };
 
 export default TransactionHistoryList;
+
+// Status configuration for labels (for filter display)
+const statusConfig: {
+  [key: string]: { label: string; color: string };
+} = {
+  UNPAID: {
+    label: "Belum Dibayar",
+    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  },
+  PAID: {
+    label: "Dibayar",
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+  },
+  PROCESSING: {
+    label: "Diproses",
+    color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  },
+  SHIPPED: {
+    label: "Dikirim",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+  },
+  DELIVERED: {
+    label: "Terkirim",
+    color: "bg-cyan-100 text-cyan-800 border-cyan-200",
+  },
+  COMPLETE: {
+    label: "Selesai",
+    color: "bg-green-100 text-green-800 border-green-200",
+  },
+  COMPLETED: {
+    label: "Selesai",
+    color: "bg-green-100 text-green-800 border-green-200",
+  },
+  CANCELLED: {
+    label: "Dibatalkan",
+    color: "bg-red-100 text-red-800 border-red-200",
+  },
+};
