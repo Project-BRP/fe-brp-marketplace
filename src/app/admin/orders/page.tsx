@@ -622,6 +622,14 @@ export default function AdminOrders() {
                                             Estimasi:{" "}
                                             {selectedOrder.shippingEstimate}
                                           </Typography>
+                                          <Typography
+                                            variant="p"
+                                            className="text-muted-foreground text-sm mt-1"
+                                          >
+                                            Nomor Resi:{" "}
+                                            {selectedOrder.shippingReceipt ||
+                                              "Resi Belum Diatur"}
+                                          </Typography>
                                         </div>
                                       </div>
                                     )}

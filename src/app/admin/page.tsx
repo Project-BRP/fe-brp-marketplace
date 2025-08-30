@@ -331,6 +331,12 @@ const OrderDetailDialog = ({
                     >
                       Estimasi: {order.shippingEstimate}
                     </Typography>
+                    <Typography
+                      variant="p"
+                      className="text-muted-foreground text-sm mt-1"
+                    >
+                      Nomor Resi: {order.shippingReceipt || "Resi Belum Diatur"}
+                    </Typography>
                   </div>
                 </div>
               )}
