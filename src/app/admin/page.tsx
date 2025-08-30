@@ -334,12 +334,23 @@ const OrderDetailDialog = ({
                   </div>
                 </div>
               )}
-
-              <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                <p className="font-bold">Total:</p>
-                <p className="font-bold text-lg">
-                  {formatPrice(order.totalPrice)}
-                </p>
+              <div className="flex flex-col w-full gap-4">
+                {order.method === "MANUAL" && order.manualShippingCost && (
+                  <div className="flex justify-between items-center mt-4 pt-4 border-t-2">
+                    <p className="font-bold">Biaya Pengiriman Manual:</p>
+                    <p className="font-bold text-lg">
+                      {formatPrice(order.manualShippingCost)}
+                    </p>
+                  </div>
+                )}
+                <div
+                  className={`flex justify-between items-center  ${order.method === "MANUAL" && order.manualShippingCost ? "" : "border-t-2"}`}
+                >
+                  <p className="font-bold">Total:</p>
+                  <p className="font-bold text-lg">
+                    {formatPrice(order.totalPrice)}
+                  </p>
+                </div>
               </div>
             </div>
 

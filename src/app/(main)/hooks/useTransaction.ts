@@ -19,6 +19,7 @@ import {
   StatusListResponse,
   Transaction,
   TransactionsResponseData,
+  UpdateShippingReceiptPayload,
   UpdateTransactionStatusPayload,
 } from "@/types/transaction";
 import { AxiosError } from "axios";
@@ -265,6 +266,33 @@ export const useAddManualShippingCost = () => {
     onError: (error) => {
       toast.error(
         error.message || "Gagal menambahkan biaya pengiriman manual.",
+      );
+    },
+  });
+};
+
+// Hook untuk memperbarui produk yang ada
+export const useUpdateShippingReceipt = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<Transaction>,
+    AxiosError<ApiError>,
+    { id: string; payload: UpdateShippingReceiptPayload }
+  >({
+    mutationFn: async ({ id, payload }) => {
+      const response = await api.patch<ApiResponse<Transaction>>(
+        `/transactions/${id}/shipping-receipt`,
+        payload,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Transaksi berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Gagal memperbarui Transaksi.",
       );
     },
   });

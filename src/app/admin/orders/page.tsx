@@ -625,11 +625,30 @@ export default function AdminOrders() {
                                         </div>
                                       </div>
                                     )}
-                                    <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                                      <p className="font-bold">Total:</p>
-                                      <p className="font-bold text-lg">
-                                        {formatPrice(selectedOrder.totalPrice)}
-                                      </p>
+                                    <div className="flex flex-col w-full gap-4">
+                                      {selectedOrder.method === "MANUAL" &&
+                                        selectedOrder.manualShippingCost && (
+                                          <div className="flex justify-between items-center mt-4 pt-4 border-t-2">
+                                            <p className="font-bold">
+                                              Biaya Pengiriman Manual:
+                                            </p>
+                                            <p className="font-bold text-lg">
+                                              {formatPrice(
+                                                selectedOrder.manualShippingCost,
+                                              )}
+                                            </p>
+                                          </div>
+                                        )}
+                                      <div
+                                        className={`flex justify-between items-center  ${selectedOrder.method === "MANUAL" && selectedOrder.manualShippingCost ? "" : "border-t-2 mt-4 pt-4"}`}
+                                      >
+                                        <p className="font-bold">Total:</p>
+                                        <p className="font-bold text-lg">
+                                          {formatPrice(
+                                            selectedOrder.totalPrice,
+                                          )}
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
 

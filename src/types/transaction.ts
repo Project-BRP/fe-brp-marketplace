@@ -62,6 +62,8 @@ export interface Transaction {
   shippingCode?: string;
   shippingService?: string;
   shippingEstimate?: string;
+  manualShippingCost?: number;
+  shippingReceipt?: string;
   city: string;
   province: string;
   district: string;
@@ -115,6 +117,10 @@ export type UpdateTransactionStatusPayload = {
   deliveryStatus?: string;
   manualStatus?: string;
   shippingReceipt?: string;
+};
+
+export type UpdateShippingReceiptPayload = {
+  shippingReceipt: string;
 };
 
 export type RequestPaymentResponse = ApiResponse<{
