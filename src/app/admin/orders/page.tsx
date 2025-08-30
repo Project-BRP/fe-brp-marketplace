@@ -17,6 +17,7 @@ import React, { useState } from "react";
 import { useDebounce } from "use-debounce";
 
 import {
+  useAddManualShippingCost,
   useCancelTransaction,
   useGetAllTransactions,
   useGetStatusList,
@@ -54,6 +55,7 @@ import { Transaction } from "@/types/transaction";
 import { DateRange } from "react-day-picker";
 import { CancelDialog } from "./components/CancelDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { ManualShippingCostDialog } from "./components/ManualShippingCostDialog";
 import { ShippingReceiptDialog } from "./components/ShippingReceiptDialog";
 
 // Konfigurasi untuk setiap status
@@ -137,12 +139,19 @@ export default function AdminOrders() {
   );
   const { mutate: updateStatus, isPending: isUpdatingStatus } =
     useUpdateTransactionStatus();
+  const { mutate: addManualShippingCost, isPending: isAddingManualShipping } =
+    useAddManualShippingCost();
 
   const orders = transactionData?.data?.transactions ?? [];
   const totalPages = transactionData?.data?.totalPage ?? 1;
   const canBeCancelled =
     selectedOrder?.manualStatus?.toUpperCase().includes("PAID") ||
     selectedOrder?.deliveryStatus?.toUpperCase().includes("PAID");
+  const canAddManualShipping =
+    selectedOrder?.method === "MANUAL" &&
+    ["PAID", "PROCESSING"].includes(
+      (selectedOrder?.manualStatus ?? "").toUpperCase(),
+    );
   // Helper functions
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -624,12 +633,51 @@ export default function AdminOrders() {
                                     </div>
                                   </div>
 
-                                  <div className="flex justify-between items-center">
+                                  <div className="flex justify-between items-center gap-4">
                                     <div>
                                       <RenderUpdateStatusSection
                                         order={selectedOrder}
                                       />
                                     </div>
+                                    {canAddManualShipping && (
+                                      <ManualShippingCostDialog
+                                        isLoading={isAddingManualShipping}
+                                        defaultCost={
+                                          selectedOrder.shippingCost ??
+                                          undefined
+                                        }
+                                        onSubmit={(cost) => {
+                                          if (!selectedOrder) return;
+                                          addManualShippingCost(
+                                            {
+                                              transactionId: selectedOrder.id,
+                                              manualShippingCost: cost,
+                                            },
+                                            {
+                                              onSuccess: () => {
+                                                refetch();
+                                                setSelectedOrder((prev) =>
+                                                  prev
+                                                    ? {
+                                                        ...prev,
+                                                        shippingCost: cost,
+                                                      }
+                                                    : prev,
+                                                );
+                                              },
+                                            },
+                                          );
+                                        }}
+                                      >
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          disabled={isAddingManualShipping}
+                                        >
+                                          Tambah Ongkir Manual
+                                        </Button>
+                                      </ManualShippingCostDialog>
+                                    )}
                                     {canBeCancelled && (
                                       <CancelDialog
                                         onSubmit={handleCancelTransaction}

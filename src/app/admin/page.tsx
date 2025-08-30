@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useAddManualShippingCost,
   useCancelTransaction,
   useUpdateTransactionStatus,
 } from "@/app/(main)/hooks/useTransaction";
@@ -11,6 +12,7 @@ import {
 } from "@/app/admin/hooks/useDashboardAnalytics";
 import { CancelDialog } from "@/app/admin/orders/components/CancelDialog";
 import { ConfirmDialog } from "@/app/admin/orders/components/ConfirmDialog";
+import { ManualShippingCostDialog } from "@/app/admin/orders/components/ManualShippingCostDialog";
 import { ShippingReceiptDialog } from "@/app/admin/orders/components/ShippingReceiptDialog";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
@@ -104,6 +106,8 @@ const OrderDetailDialog = ({
     useUpdateTransactionStatus();
   const { mutate: cancelTransaction, isPending: isCancelling } =
     useCancelTransaction();
+  const { mutate: addManualShippingCost, isPending: isAddingManualShipping } =
+    useAddManualShippingCost();
 
   const handleStatusChange = (newStatus: string, shippingReceipt?: string) => {
     if (!order) return;
@@ -174,6 +178,9 @@ const OrderDetailDialog = ({
   const canBeCancelled =
     order?.manualStatus?.toUpperCase().includes("PAID") ||
     order?.deliveryStatus?.toUpperCase().includes("PAID");
+  const canAddManualShipping =
+    order?.method === "MANUAL" &&
+    ["PAID", "PROCESSING"].includes((order?.manualStatus ?? "").toUpperCase());
 
   const RenderUpdateStatusSection = ({ order }: { order: Transaction }) => {
     const status =
@@ -336,10 +343,30 @@ const OrderDetailDialog = ({
               </div>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-4">
               <div>
                 <RenderUpdateStatusSection order={order} />
               </div>
+              {canAddManualShipping && (
+                <ManualShippingCostDialog
+                  isLoading={isAddingManualShipping}
+                  defaultCost={order.shippingCost ?? undefined}
+                  onSubmit={(cost) => {
+                    addManualShippingCost({
+                      transactionId: order.id,
+                      manualShippingCost: cost,
+                    });
+                  }}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isAddingManualShipping}
+                  >
+                    Tambah Ongkir Manual
+                  </Button>
+                </ManualShippingCostDialog>
+              )}
               {canBeCancelled && (
                 <CancelDialog
                   onSubmit={handleCancelTransaction}

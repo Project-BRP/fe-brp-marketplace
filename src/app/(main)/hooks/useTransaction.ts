@@ -14,6 +14,7 @@ import {
   CreateTransactionData,
   CreateTransactionResponse,
   GetTransactionsResponse,
+  ManualShippingCostPayload,
   RequestPaymentResponse,
   StatusListResponse,
   Transaction,
@@ -245,6 +246,26 @@ export const useRequestPayment = () => {
     },
     onError: (error) => {
       toast.error(error.message || "Gagal mengirim permintaan pembayaran.");
+    },
+  });
+};
+
+export const useAddManualShippingCost = () => {
+  return useMutation<RequestPaymentResponse, Error, ManualShippingCostPayload>({
+    mutationFn: async ({ transactionId, manualShippingCost }) => {
+      const res = await api.post(
+        `/transactions/${transactionId}/add-manual-shipping-cost`,
+        { manualShippingCost },
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Biaya pengiriman manual berhasil ditambahkan.");
+    },
+    onError: (error) => {
+      toast.error(
+        error.message || "Gagal menambahkan biaya pengiriman manual.",
+      );
     },
   });
 };

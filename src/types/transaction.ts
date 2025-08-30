@@ -121,3 +121,8 @@ export type RequestPaymentResponse = ApiResponse<{
   snapToken: string;
   snapUrl: string;
 }>;
+
+export type ManualShippingCostPayload = {
+  transactionId: string;
+  manualShippingCost: number;
+};
