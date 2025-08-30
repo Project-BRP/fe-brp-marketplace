@@ -1,17 +1,20 @@
 // src/components/Calendar.tsx
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import clsxm from "@/lib/clsxm";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
-
-import clsxm from "@/lib/clsxm";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 function Calendar({
   className,
-  classNames,
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
@@ -19,39 +22,64 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={clsxm("p-3", className)}
+      navLayout="after"
+      /* NOTE: Using react-day-picker v9 classNames keys so modifier styles apply */
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
-        nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
-        day_outside: "day-outside text-muted-foreground opacity-50",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
+        // Containers
+        root: "p-0",
+        months: "flex flex-col gap-6",
+        month: "relative space-y-2",
+        month_caption: "relative flex items-center justify-center py-2 mb-1",
+        caption_label: "text-sm font-medium text-gray-900",
+        // Place nav inside month, overlaying the caption area
+        nav: "absolute inset-x-0 top-2 z-10 flex items-center justify-between px-1",
+        button_previous:
+          "h-6 w-6 rounded-md p-0.5 text-muted-foreground hover:text-foreground transition-colors",
+        button_next:
+          "h-6 w-6 rounded-md p-0.5 text-muted-foreground hover:text-foreground transition-colors",
+        chevron: "h-4 w-4",
+
+        // Grid
+        month_grid: "w-full border-separate border-spacing-1",
+        weekdays: "",
+        weekday: "w-9 text-center font-medium text-xs text-muted-foreground",
+        weeks: "",
+        week: "",
+
+        // Day cells and button
+        day: "p-0 text-center align-middle",
+        day_button:
+          "mx-auto h-9 w-9 rounded-md p-0 font-normal text-sm text-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+
+        // Selection states & flags (v9 keys)
+        selected:
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+        today: "bg-accent text-accent-foreground",
+        outside:
+          "text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+        disabled: "text-muted-foreground opacity-50",
+        hidden: "invisible",
+        range_end: "",
+        range_start: "",
+        range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        day_hidden: "invisible",
-        ...classNames,
       }}
+      // Custom chevrons (v9 uses a single Chevron component)
       components={{
-        Chevron: (props) =>
-          props.orientation === "left" ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          ),
+        Chevron: ({ orientation, className }) => {
+          const common = clsxm("h-4 w-4", className);
+          switch (orientation) {
+            case "left":
+              return <ChevronLeft className={common} />;
+            case "right":
+              return <ChevronRight className={common} />;
+            case "up":
+              return <ChevronUp className={common} />;
+            case "down":
+            default:
+              return <ChevronDown className={common} />;
+          }
+        },
       }}
       {...props}
     />

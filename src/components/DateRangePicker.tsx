@@ -70,6 +70,7 @@ export function DateRangePicker({
               <Calendar
                 mode="single"
                 selected={startDate}
+                disabled={endDate ? { after: endDate } : undefined}
                 onSelect={(day) => {
                   setStartDate(day || undefined);
                   // Reset endDate jika tanggal mulai baru > tanggal akhir lama
@@ -86,6 +87,7 @@ export function DateRangePicker({
               <Calendar
                 mode="single"
                 selected={endDate}
+                disabled={startDate ? { before: startDate } : undefined}
                 onSelect={(day) => {
                   // Pastikan tidak bisa pilih tanggal akhir sebelum tanggal mulai
                   if (startDate && day && day < startDate) return;
