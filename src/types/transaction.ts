@@ -114,6 +114,7 @@ export type CancelTransactionData = {
 export type UpdateTransactionStatusPayload = {
   deliveryStatus?: string;
   manualStatus?: string;
+  shippingReceipt?: string;
 };
 
 export type RequestPaymentResponse = ApiResponse<{

@@ -54,6 +54,7 @@ import { Transaction } from "@/types/transaction";
 import { DateRange } from "react-day-picker";
 import { CancelDialog } from "./components/CancelDialog";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { ShippingReceiptDialog } from "./components/ShippingReceiptDialog";
 
 // Konfigurasi untuk setiap status
 const statusConfig: {
@@ -156,18 +157,31 @@ export default function AdminOrders() {
       day: "numeric",
     });
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = (newStatus: string, shippingReceipt?: string) => {
     if (!selectedOrder) return;
 
-    const confirmUpdate = window.confirm(
-      "Apakah Anda yakin ingin mengupdate status?",
+    // Jika menggunakan dialog khusus (mis. input resi), konfirmasi sudah di-handle di dialog itu.
+    // Untuk kasus umum, tetap minta konfirmasi sederhana.
+    const needsSimpleConfirm = !(
+      selectedOrder.method === "DELIVERY" &&
+      newStatus === "SHIPPED" &&
+      shippingReceipt
     );
-    if (!confirmUpdate) return;
+
+    if (needsSimpleConfirm) {
+      const confirmUpdate = window.confirm(
+        "Apakah Anda yakin ingin mengupdate status?",
+      );
+      if (!confirmUpdate) return;
+    }
 
     const payload =
       selectedOrder.method === "MANUAL"
         ? { manualStatus: newStatus }
-        : { deliveryStatus: newStatus };
+        : {
+            deliveryStatus: newStatus,
+            ...(shippingReceipt ? { shippingReceipt } : {}),
+          };
 
     updateStatus(
       { id: selectedOrder.id, payload },
@@ -273,18 +287,35 @@ export default function AdminOrders() {
     const nextStatusLabel =
       statusConfig[nextStatus]?.label ?? "Status Berikutnya";
 
+    const isDeliveryPaidToShipped =
+      order.method === "DELIVERY" &&
+      status === "PAID" &&
+      nextStatus === "SHIPPED";
+
     return (
       <div className="flex items-center gap-4">
-        <ConfirmDialog
-          title="Konfirmasi Update Status"
-          description={`Apakah Anda yakin ingin mengubah status pesanan menjadi "${nextStatusLabel}"?`}
-          onConfirm={() => handleStatusChange(nextStatus)}
-          isConfirming={isUpdatingStatus}
-        >
-          <Button size="sm" disabled={isUpdatingStatus}>
-            Ubah ke {nextStatusLabel}
-          </Button>
-        </ConfirmDialog>
+        {isDeliveryPaidToShipped ? (
+          <ShippingReceiptDialog
+            onSubmit={(receipt) => handleStatusChange(nextStatus, receipt)}
+            isLoading={isUpdatingStatus}
+            description={`Masukkan nomor resi untuk mengubah status pesanan menjadi "${nextStatusLabel}".`}
+          >
+            <Button size="sm" disabled={isUpdatingStatus}>
+              Ubah ke {nextStatusLabel}
+            </Button>
+          </ShippingReceiptDialog>
+        ) : (
+          <ConfirmDialog
+            title="Konfirmasi Update Status"
+            description={`Apakah Anda yakin ingin mengubah status pesanan menjadi "${nextStatusLabel}"?`}
+            onConfirm={() => handleStatusChange(nextStatus)}
+            isConfirming={isUpdatingStatus}
+          >
+            <Button size="sm" disabled={isUpdatingStatus}>
+              Ubah ke {nextStatusLabel}
+            </Button>
+          </ConfirmDialog>
+        )}
       </div>
     );
   };
