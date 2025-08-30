@@ -6,6 +6,7 @@ import {
   useUpdateShippingReceipt,
   useUpdateTransactionStatus,
 } from "@/app/(main)/hooks/useTransaction";
+import { useResolveStockIssue } from "@/app/(main)/hooks/useTransaction";
 import {
   useGetDashboardStats,
   useGetRecentOrders,
@@ -14,6 +15,7 @@ import {
 import { CancelDialog } from "@/app/admin/orders/components/CancelDialog";
 import { ConfirmDialog } from "@/app/admin/orders/components/ConfirmDialog";
 import { ManualShippingCostDialog } from "@/app/admin/orders/components/ManualShippingCostDialog";
+import { ResolveStockIssueDialog } from "@/app/admin/orders/components/ResolveStockIssueDialog";
 import { ShippingReceiptDialog } from "@/app/admin/orders/components/ShippingReceiptDialog";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
@@ -111,6 +113,8 @@ const OrderDetailDialog = ({
     useAddManualShippingCost();
   const { mutate: updateShippingReceipt, isPending: isUpdatingReceipt } =
     useUpdateShippingReceipt();
+  const { mutate: resolveStockIssue, isPending: isResolvingStock } =
+    useResolveStockIssue();
 
   const handleStatusChange = (newStatus: string, shippingReceipt?: string) => {
     if (!order) return;
@@ -296,9 +300,9 @@ const OrderDetailDialog = ({
                   (item: TransactionItem, index: number) => (
                     <div
                       key={index}
-                      className="flex justify-between items-center p-3 bg-muted rounded-lg"
+                      className="flex justify-between items-center p-3 bg-muted rounded-lg gap-3"
                     >
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">
                           {item.variant.product.name} (
                           {item.variant.packaging.name})
@@ -306,10 +310,36 @@ const OrderDetailDialog = ({
                         <p className="text-sm text-muted-foreground">
                           Qty: {item.quantity}
                         </p>
+                        {item.isStockIssue && (
+                          <p className="text-xs mt-1 px-2 py-1 rounded bg-red-100 text-red-800 w-fit">
+                            Peringatan: Item ini memiliki masalah stok.
+                          </p>
+                        )}
                       </div>
-                      <p className="font-medium">
-                        {formatPrice(item.priceRupiah)}
-                      </p>
+                      <div className="flex items-center gap-3">
+                        <p className="font-medium whitespace-nowrap">
+                          {formatPrice(item.priceRupiah)}
+                        </p>
+                        {item.isStockIssue && (
+                          <ResolveStockIssueDialog
+                            isLoading={isResolvingStock}
+                            onSubmit={(stock) =>
+                              resolveStockIssue({
+                                transactionItemId: item.id,
+                                stock,
+                              })
+                            }
+                          >
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-300 text-red-700"
+                            >
+                              Perbaiki Stok
+                            </Button>
+                          </ResolveStockIssueDialog>
+                        )}
+                      </div>
                     </div>
                   ),
                 )}
@@ -606,12 +636,20 @@ export default function AdminDashboard() {
                     order.deliveryStatus ?? order.manualStatus ?? "N/A";
                   const config = status ? statusConfig[status] : null;
                   const StatusIcon = config?.icon;
+                  const hasStockIssue = order.transactionItems?.some(
+                    (it) => it.isStockIssue,
+                  );
                   return (
                     <div
                       key={order.id}
                       className="w-full flex justify-between items-start  p-3 rounded-lg bg-muted/50 gap-8"
                     >
                       <div className="flex flex-col w-[40%] sm:w-[70%] lg:w-[50%] xl:w-[70%]">
+                        {hasStockIssue && (
+                          <span className="mb-1 inline-block text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 w-fit">
+                            Stok Bermasalah
+                          </span>
+                        )}
                         <p className="font-medium text-foreground pb-1 truncate">
                           {order.id}
                         </p>

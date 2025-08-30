@@ -14,6 +14,7 @@ import {
   CreateTransactionData,
   CreateTransactionResponse,
   GetTransactionsResponse,
+  IResolveStockIssueResponse,
   ManualShippingCostPayload,
   RequestPaymentResponse,
   StatusListResponse,
@@ -303,6 +304,36 @@ export const useUpdateShippingReceipt = () => {
     onError: (error) => {
       toast.error(
         error.response?.data?.message || "Gagal memperbarui Transaksi.",
+      );
+    },
+  });
+};
+
+// Hook: resolve stock issue for a transaction item
+export const useResolveStockIssue = () => {
+  const queryClient = useQueryClient();
+  return useMutation<
+    ApiResponse<IResolveStockIssueResponse>,
+    AxiosError<ApiError>,
+    { transactionItemId: string; stock: number }
+  >({
+    mutationFn: async ({ transactionItemId, stock }) => {
+      const response = await api.post(
+        `/items/${transactionItemId}/resolve-stock-issue`,
+        { stock },
+      );
+      return response.data;
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || "Masalah stok berhasil diatasi.");
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["detail-transaction"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-recent-orders"] });
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Gagal mengatasi masalah stok.",
       );
     },
   });

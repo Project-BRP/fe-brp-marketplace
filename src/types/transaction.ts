@@ -1,6 +1,7 @@
 // src/types/transaction.ts
 
 import { ApiResponse } from "./api";
+import { ProductVariant } from "./product";
 
 export type deliveryStatusList = string[];
 export type manualStatusList = string[];
@@ -132,3 +133,14 @@ export type ManualShippingCostPayload = {
   transactionId: string;
   manualShippingCost: number;
 };
+
+export interface IResolveStockIssueResponse {
+  id: string;
+  transactionId: string;
+  variantId: string;
+  quantity: number;
+  priceRupiah: number;
+  productVariant: ProductVariant;
+  createdAt: Date;
+  updatedAt: Date;
+}
